@@ -94,3 +94,13 @@ def test_snapshot_reports_blocked_hostnames_and_window_end():
         "blocked": ["reddit.com", "www.reddit.com"],
         "windowEnd": "17:00",
     }
+
+
+def test_status_text_with_empty_list_says_nothing_blocked():
+    assert status_text(Config(), at(5, 14)) == "Window active, nothing blocked — 3h 00m remaining"
+
+
+def test_status_text_with_every_domain_overridden_says_nothing_blocked():
+    config = make_config()
+    override(config, "reddit.com", "work thread", at(5, 14))
+    assert status_text(config, at(5, 14)) == "Window active, nothing blocked — 3h 00m remaining"
