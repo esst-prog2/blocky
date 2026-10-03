@@ -45,3 +45,5 @@
 2026-10-03 | early-block-redirect check 2.2 PASSED: youtube.com shows Blocky's block page on three visits after reloading the extension; debug logging removed | observed by you
 2026-10-03 | early-block-redirect check 2.3 PASSED: an ordinary site (wikipedia.org) loads normally | observed by you
 2026-10-03 | early-block-redirect check 2.4 PASSED: with Blocky closed, reddit.com shows the browser's normal error page | observed by you
+2026-10-03 | Spike brave-restart question: does the early redirect still work after Brave is closed and reopened? | you decided
+2026-10-03 | Spike brave-restart answer criteria: three restarts; each time, fully close Brave, reopen it with the Blocky extension loaded, keep Blocky running with the window active, and visit https://reddit.com; the answer is the count of restarts where Blocky's block page appears, out of three | you decided
