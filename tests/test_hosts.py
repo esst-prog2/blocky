@@ -1,3 +1,5 @@
+import os
+
 import pytest
 
 from blocky import hosts
@@ -50,3 +52,38 @@ def test_apply_creates_missing_file(tmp_path):
     path = tmp_path / "hosts"
     assert hosts.apply(["reddit.com"], path) is True
     assert path.read_text(encoding="utf-8").startswith("# BEGIN BLOCKY")
+
+
+def test_apply_retries_when_the_swap_is_briefly_locked(tmp_path, monkeypatch):
+    path = tmp_path / "hosts"
+    path.write_text("127.0.0.1 localhost\n", encoding="utf-8")
+    real_replace = os.replace
+    failures = {"left": 3}
+
+    def locked_replace(source, target):
+        if failures["left"]:
+            failures["left"] -= 1
+            raise PermissionError(13, "Access is denied")
+        real_replace(source, target)
+
+    monkeypatch.setattr(hosts.os, "replace", locked_replace)
+    monkeypatch.setattr(hosts, "REPLACE_DELAY", 0)
+
+    assert hosts.apply(["reddit.com"], path)
+    assert "127.0.0.1 reddit.com" in path.read_text(encoding="utf-8")
+    assert not (tmp_path / "hosts.tmp").exists()
+
+
+def test_apply_writes_in_place_when_the_swap_stays_locked(tmp_path, monkeypatch):
+    path = tmp_path / "hosts"
+    path.write_text("127.0.0.1 localhost\n" + hosts.BEGIN + "\n127.0.0.1 reddit.com\n" + hosts.END + "\n", encoding="utf-8")
+
+    def always_locked(source, target):
+        raise PermissionError(13, "Access is denied")
+
+    monkeypatch.setattr(hosts.os, "replace", always_locked)
+    monkeypatch.setattr(hosts, "REPLACE_DELAY", 0)
+
+    assert hosts.apply([], path)
+    assert path.read_text(encoding="utf-8") == "127.0.0.1 localhost\n"
+    assert not (tmp_path / "hosts.tmp").exists()

@@ -3,6 +3,7 @@ import os
 import sys
 import threading
 from datetime import datetime
+from pathlib import Path
 
 from blocky import config as config_module
 from blocky import rules
@@ -16,11 +17,34 @@ def is_admin() -> bool:
     return bool(ctypes.windll.shell32.IsUserAnAdmin())
 
 
-def relaunch_as_admin() -> None:
+ADMIN_NEEDED = "Blocky needs administrator rights to edit the hosts file. Start it again and choose Yes."
+
+
+def relaunch_as_admin() -> bool:
     arguments = " ".join(f'"{argument}"' for argument in sys.argv[1:])
-    ctypes.windll.shell32.ShellExecuteW(
+    result = ctypes.windll.shell32.ShellExecuteW(
         None, "runas", sys.executable, f"-m blocky {arguments}".strip(), os.getcwd(), 1
     )
+    return result > 32
+
+
+def show_admin_needed() -> None:
+    ctypes.windll.user32.MessageBoxW(None, ADMIN_NEEDED, "Blocky", 0x30)
+
+
+def stop_blocking(stop: threading.Event, worker: threading.Thread, checker: Checker, error_log: Path) -> None:
+    stop.set()
+    worker.join()
+    try:
+        checker.clear()
+    except Exception as error:
+        message = f"{datetime.now():%Y-%m-%d %H:%M:%S} Could not remove Blocky's hosts entries: {error!r}\n"
+        try:
+            error_log.parent.mkdir(parents=True, exist_ok=True)
+            with error_log.open("a", encoding="utf-8") as log:
+                log.write(message)
+        except OSError:
+            pass
 
 
 def start_block_page(load_state) -> tuple[Server | None, str | None]:
@@ -34,13 +58,15 @@ def start_block_page(load_state) -> tuple[Server | None, str | None]:
 
 def main() -> None:
     if os.name == "nt" and not is_admin():
-        relaunch_as_admin()
+        if not relaunch_as_admin():
+            show_admin_needed()
         return
 
     config_path = config_module.default_path()
     stop = threading.Event()
     checker = Checker(config_path)
-    threading.Thread(target=checker.run, args=(stop,), daemon=True).start()
+    worker = threading.Thread(target=checker.run, args=(stop,), daemon=True)
+    worker.start()
 
     server, server_warning = start_block_page(
         lambda: rules.snapshot(config_module.load(config_path), datetime.now())
@@ -49,7 +75,7 @@ def main() -> None:
     try:
         App(config_path, warning=lambda: warning_text(checker.last_error, server_warning)).mainloop()
     finally:
-        stop.set()
+        stop_blocking(stop, worker, checker, config_path.parent / "errors.log")
         if server is not None:
             server.stop()
 
