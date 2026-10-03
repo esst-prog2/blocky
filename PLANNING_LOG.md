@@ -47,3 +47,4 @@
 2026-10-03 | early-block-redirect check 2.4 PASSED: with Blocky closed, reddit.com shows the browser's normal error page | observed by you
 2026-10-03 | Spike window-start-delay question: how many seconds pass between a block window opening and Blocky's entries appearing in the hosts file? | you decided
 2026-10-03 | Spike window-start-delay answer criteria: set the schedule to start at HH:MM:00 five times (on different starts); run spike/window-start-delay/measure.ps1 before each start, which prints when the entries appear; delay = appearance time minus HH:MM:00; the answer is the average and the maximum of the five delays, in seconds | you decided
+2026-10-03 | Spike window-start-delay answer: blocking starts 46 seconds after a window opens (average and maximum of five runs at 14:42, 14:46, 14:51, 14:59 and 15:04). Evidence in spike/window-start-delay/ | observed by you
