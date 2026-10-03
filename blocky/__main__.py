@@ -12,12 +12,11 @@ from blocky.checker import Checker
 from blocky.controller import warning_text
 from blocky.server import Server
 
+ADMIN_NEEDED = "Blocky needs administrator rights to edit the hosts file. Start it again and choose Yes."
+
 
 def is_admin() -> bool:
     return bool(ctypes.windll.shell32.IsUserAnAdmin())
-
-
-ADMIN_NEEDED = "Blocky needs administrator rights to edit the hosts file. Start it again and choose Yes."
 
 
 def relaunch_as_admin() -> bool:

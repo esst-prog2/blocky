@@ -1,4 +1,5 @@
 import os
+import threading
 import time
 from pathlib import Path
 
@@ -8,6 +9,8 @@ END = "# END BLOCKY"
 # Antivirus can briefly lock the new file, so the swap is retried before writing in place.
 REPLACE_ATTEMPTS = 10
 REPLACE_DELAY = 0.1
+# The app window and the background check both write the hosts file, one at a time.
+_write_lock = threading.Lock()
 
 
 def render(text: str, hostnames: list[str]) -> str:
@@ -34,6 +37,11 @@ def render(text: str, hostnames: list[str]) -> str:
 
 
 def apply(hostnames: list[str], path: Path = HOSTS_PATH) -> bool:
+    with _write_lock:
+        return _apply(hostnames, path)
+
+
+def _apply(hostnames: list[str], path: Path) -> bool:
     text = path.read_bytes().decode("utf-8", errors="surrogateescape") if path.exists() else ""
     updated = render(text, hostnames)
     if updated == text:
