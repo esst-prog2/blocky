@@ -4,7 +4,7 @@ A small Windows desktop app that blocks distracting websites on a schedule I set
  
 ## 1. The demo
  
-I open the app. It shows my block list (`reddit.com`, `youtube.com`, `x.com`) and the current schedule — Study Mode, Mon–Fri 09:00–17:00 — with the status panel reading **"Blocking active — 3h 00m remaining"**, since it's 14:00 on a Tuesday. I try to open reddit.com anyway; instead of a broken connection, the browser shows a local page: "reddit.com is blocked until 17:00" with a shortlist underneath — *read tomorrow's lecture notes, 10-minute walk*. I click **Override** in the app, type a reason ("checking a work thread"), and reddit.com unblocks — the panel now reads **"reddit.com unblocked until 17:00"** with a countdown. Switching to the History tab, I see the override logged with the domain, timestamp, and my reason.
+I open the app. It shows my block list (`reddit.com`, `youtube.com`, `x.com`) and the current schedule — Mon–Fri 09:00–17:00 — with the status panel reading **"Blocking active — 3h 00m remaining"**, since it's 14:00 on a Tuesday. I try to open reddit.com anyway; instead of a broken connection, the Brave extension sends the tab to a local page served by the app: "reddit.com is blocked until 17:00" with a shortlist underneath — *read tomorrow's lecture notes, 10-minute walk*. I click **Override** in the app, type a reason ("checking a work thread"), and reddit.com unblocks — the panel now reads **"reddit.com unblocked until 17:00"** with a countdown. Switching to the History tab, I see the override logged with the domain, timestamp, and my reason.
  
 ## 2. The shape
  
@@ -25,18 +25,19 @@ in between   a background checker compares the current time against each
 ## 3. The size
  
 **First useful version:**
-- Add, edit, and remove blocked domains through a text input in the UI
-- Define a weekly schedule (days + time range) that applies to the block list
+- Add, edit, and remove blocked domains through a text input in the UI; each entry also blocks its www. variant
+- Define a weekly schedule: one time range that applies to the block list on the days I select
 - A background check (roughly once a minute) compares the clock against the schedule and writes/removes entries in the Windows hosts file accordingly
 - A live status panel showing which domains are currently blocked and time remaining until the next change
-- A manual override: pick a domain, type a required reason, and it's unblocked until the next scheduled window — logged with domain, timestamp, and reason
+- A manual override: pick a domain, type a required reason, and it's unblocked until the current scheduled block window ends — logged with domain, timestamp, and reason
 - A history tab listing past overrides
-- A shared shortlist of productive suggestions, defined once in the app, shown on a local page in the browser whenever a blocked domain (over plain HTTP) is requested
+- A shared shortlist of productive suggestions, defined once in the app, shown on a local page served by the app; a Brave extension sends the tab there whenever a blocked domain is requested or a new tab is opened
 **Not this term:**
 - Blocking specific pages/paths rather than whole domains (would need a proxy or browser extension)
 - Multiple named schedule profiles (e.g. "Study Mode" vs "Deep Work") — one active schedule only
 - Per-site suggestion lists — one shared shortlist covers every block for now
-- A working suggestion page for HTTPS sites — without a trusted certificate, HTTPS requests to a blocked domain will show the browser's own security warning instead of the custom page; see risks below
+- Per-day schedule ranges or several time windows per day
+- Hosting the block page on a Raspberry Pi or in the cloud (blocking stays local)
 - Running as a persistent background service that survives a reboot without me relaunching it
 - Any tamper-resistance — since I have admin rights on my own machine, I can always edit the hosts file back myself; this tool isn't meant to be uncircumventable
 - macOS/Linux support
@@ -46,15 +47,15 @@ in between   a background checker compares the current time against each
 - Given a domain on the block list and the current time inside its scheduled window, the Windows hosts file contains a `127.0.0.1` redirect entry for that domain.
 - Given an override submitted with a reason for a currently-blocked domain, the hosts file entry for that domain is removed, and the history log gains an entry with the domain, timestamp, and reason.
 - Given the current time outside the scheduled window for a domain, the hosts file contains no entry for that domain — including cleaning up any leftover entry from before the schedule changed.
-- Given a blocked domain requested over plain HTTP while its block window is active, the browser displays the local block page with the shared suggestion shortlist, rather than a connection error.
+- Given a blocked domain requested while its block window is active, Brave displays the local block page with the shared suggestion shortlist, rather than the browser's error page.
 - Given a malformed domain entered into the block list (e.g. missing a dot, containing spaces), the app rejects it with an error message and never writes it to the hosts file.
 ## 5. What could stop this
  
-- **Admin privileges.** Editing `C:\Windows\System32\drivers\etc\hosts` requires elevated rights. The app needs to either run elevated from the start or trigger a UAC prompt — I haven't tested which is smoother in Tkinter/customtkinter yet.
+- **Admin privileges.** Editing `C:\Windows\System32\drivers\etc\hosts` requires elevated rights. The app needs to either run elevated from the start or trigger a UAC prompt — The app runs elevated from the start; whether that is smoother than a UAC prompt in customtkinter is still to be tested in a spike.
 - **Domain-level blunt blocking.** This blocks whole domains, not specific pages, and doesn't reliably handle sites served across many IPs/CDNs without extra care.
-- **HTTPS.** Most sites redirect HTTP to HTTPS by default, and a local server can't present a valid certificate for someone else's domain. So for HTTPS sites, the browser will most likely show its own "connection not private" warning rather than my suggestion page — the friendly block page reliably works for plain-HTTP requests only. I'm treating this as an accepted limitation rather than solving it with self-signed certificates, which would add real scope.
+- **HSTS-preloaded sites.** Reddit and YouTube are HSTS-preloaded, so browsers never send them as plain HTTP. The block page therefore relies on the Brave extension reacting to the failed connection, not on HTTP. This is unverified until tested in Brave.
 - **Not tamper-proof by design.** Since I'm the same user with admin rights, I could edit the hosts file directly and bypass the tool entirely. That's acceptable here — the point is friction and logging, not enforcement — but worth stating plainly.
 - **Data/privacy.** All data is local config (my own block list and schedule) with no personal or sensitive third-party data involved, so the full real setup can be shown in class.
 ## Tech
  
-Python, with a `customtkinter` UI for a modern look with minimal setup overhead. Config (block list + schedule) is stored as YAML under the hood but never hand-edited — all changes go through the app.
+Python, with a `customtkinter` UI for a modern look with minimal setup overhead. A local HTTP server in the app serves the shortlist and block page; a Brave extension (Chromium, Manifest V3) redirects blocked requests and replaces the new-tab page. Config (block list + schedule) is stored as YAML under the hood but never hand-edited — all changes go through the app.
