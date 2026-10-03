@@ -52,3 +52,4 @@
 2026-10-03 | open-tab-block check 2.3 PASSED: wikipedia.org loads normally while reddit.com is blocked during an active window | observed by you
 2026-10-03 | open-tab-block check 2.4 PASSED: reloading reddit.com during an active window still shows the block page | observed by you
 2026-10-03 | README risks section updated with the private-window, VPN and early-redirect results | you decided
+2026-10-03 | Fix for robustness gaps: the background checker now catches any error and keeps running, and the hosts file is written to a temporary file and then swapped in, so a failed write leaves the original intact. All 71 tests pass | agent proposed, you decided

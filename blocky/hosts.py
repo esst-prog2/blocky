@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 HOSTS_PATH = Path(r"C:\Windows\System32\drivers\etc\hosts")
@@ -33,5 +34,7 @@ def apply(hostnames: list[str], path: Path = HOSTS_PATH) -> bool:
     updated = render(text, hostnames)
     if updated == text:
         return False
-    path.write_bytes(updated.encode("utf-8", errors="surrogateescape"))
+    temporary = path.with_name(path.name + ".tmp")
+    temporary.write_bytes(updated.encode("utf-8", errors="surrogateescape"))
+    os.replace(temporary, path)
     return True
