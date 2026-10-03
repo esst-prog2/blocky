@@ -68,7 +68,8 @@ def status_text(config: Config, now: datetime) -> str:
     if end is None:
         return "No blocking right now"
     remaining = int((end - now).total_seconds()) // 60
-    return f"Blocking active — {remaining // 60}h {remaining % 60:02d}m remaining"
+    state = "Blocking active" if blocked_domains(config, now) else "Window active, nothing blocked"
+    return f"{state} — {remaining // 60}h {remaining % 60:02d}m remaining"
 
 
 def snapshot(config: Config, now: datetime) -> dict:

@@ -1,9 +1,4 @@
-# status-panel Specification
-
-## Purpose
-Shows the user at a glance which domains are blocked right now and how long until the next change, so the state of the system is never a mystery.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Status panel shows blocked domains and time remaining
 The system SHALL display the currently blocked domains and the time remaining until the next change in blocking state. During an active window in which no domain is blocked, because the block list is empty or every domain is overridden, the system SHALL say that nothing is blocked instead of that blocking is active.
@@ -19,10 +14,3 @@ The system SHALL display the currently blocked domains and the time remaining un
 #### Scenario: Window active but nothing blocked
 - **WHEN** the current time is inside an active window at 14:00 that ends at 17:00, and every domain on the list is overridden or the list is empty
 - **THEN** the panel reads "Window active, nothing blocked — 3h 00m remaining"
-
-### Requirement: Status panel updates live
-The system SHALL update the status panel at least once per minute without the user reopening the app.
-
-#### Scenario: Countdown advances
-- **WHEN** the app stays open across a minute boundary
-- **THEN** the remaining time shown is reduced accordingly

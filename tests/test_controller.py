@@ -145,4 +145,4 @@ def test_countdown_advances_with_clock(make):
     controller.add_domain("reddit.com")
     controller.override("reddit.com", "reason")
     make.clock["now"] = datetime(2026, 10, 5, 15, 30)
-    assert controller.status()["text"] == "Blocking active — 1h 30m remaining"
+    assert controller.status()["text"] == "Window active, nothing blocked — 1h 30m remaining"
