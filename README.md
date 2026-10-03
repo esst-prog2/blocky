@@ -55,6 +55,10 @@ in between   a background checker compares the current time against each
 - **Domain-level blunt blocking.** This blocks whole domains, not specific pages, and doesn't reliably handle sites served across many IPs/CDNs without extra care.
 - **HSTS-preloaded sites.** Reddit and YouTube are HSTS-preloaded, so browsers never send them as plain HTTP. The block page therefore relies on the Brave extension reacting to the failed connection, not on HTTP. This is unverified until tested in Brave.
 - **Not tamper-proof by design.** Since I'm the same user with admin rights, I could edit the hosts file directly and bypass the tool entirely. That's acceptable here — the point is friction and logging, not enforcement — but worth stating plainly.
+- **Other browsers.** Blocking is at the system level, so Firefox and Edge are blocked too, but they show their own "can't connect" page rather than Blocky's. Only Brave with the extension shows the block page. Tested with default settings and no extension.
+- **Timing.** Blocking starts about 46 seconds after a window opens, since the app checks once a minute. A window can therefore take up to a minute to start blocking.
+- **Sleep.** When the PC wakes during an active window with Blocky open, its entries are back in the hosts file within 38 seconds, averaging 12 seconds across five cycles.
+- **IP addresses and secure DNS.** Typing a blocked site's IP address didn't load the real site in five tests. With Brave's secure DNS on (Cloudflare), none of ten blocked sites got past the block.
 - **Data/privacy.** All data is local config (my own block list and schedule) with no personal or sensitive third-party data involved, so the full real setup can be shown in class.
 ## Tech
  
