@@ -4,11 +4,11 @@ Connects Brave to Blocky, so that a blocked site sends the user to the block pag
 
 ## ADDED Requirements
 
-### Requirement: Failed navigation to a blocked domain redirects to the block page
-The extension SHALL redirect a tab to the app's block page when a navigation to a blocked domain fails during an active block window.
+### Requirement: Navigation to a blocked domain redirects to the block page
+The extension SHALL redirect a tab to the app's block page when a navigation to a blocked domain starts during an active block window, before the request is made.
 
 #### Scenario: Blocked site redirected
-- **WHEN** the user navigates to `reddit.com` during an active block window and the connection fails
+- **WHEN** the user navigates to `reddit.com` during an active block window
 - **THEN** the tab shows the block page instead of the browser's error page
 
 #### Scenario: Ordinary failure not redirected
