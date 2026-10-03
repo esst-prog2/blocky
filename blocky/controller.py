@@ -57,7 +57,13 @@ class Controller:
         self.save()
 
     def set_schedule(self, weekdays: list[int], start: str, end: str) -> None:
-        schedule = Schedule(weekdays=weekdays, start=start, end=end)
+        if not weekdays:
+            raise ValueError("Pick at least one day")
+        schedule = Schedule(
+            weekdays=weekdays,
+            start=schedule_module.parse_time(start),
+            end=schedule_module.parse_time(end),
+        )
         schedule_module.validate(schedule)
         self.config.schedule = schedule
         self.save()
