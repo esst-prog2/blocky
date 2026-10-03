@@ -1,15 +1,14 @@
 from collections.abc import Callable
-from datetime import datetime, time
+from datetime import datetime
 from pathlib import Path
 
 import customtkinter as ctk
 
 from blocky import hosts
 from blocky.controller import Controller
+from blocky.timefield import TimeField
 
 DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-HOURS = [f"{hour:02d}" for hour in range(24)]
-MINUTES = [f"{minute:02d}" for minute in range(60)]
 
 
 class App(ctk.CTk):
@@ -194,30 +193,20 @@ class App(ctk.CTk):
         times = ctk.CTkFrame(frame, fg_color="transparent")
         times.pack(anchor="w", padx=12, pady=8)
         ctk.CTkLabel(times, text="From").pack(side="left", padx=(0, 6))
-        self.start_hour, self.start_minute = self._time_menus(times, schedule.start)
+        self.start_time = TimeField(times, schedule.start)
+        self.start_time.pack(side="left")
         ctk.CTkLabel(times, text="To").pack(side="left", padx=(10, 6))
-        self.end_hour, self.end_minute = self._time_menus(times, schedule.end)
+        self.end_time = TimeField(times, schedule.end)
+        self.end_time.pack(side="left")
         ctk.CTkButton(times, text="Save", command=self._save_schedule).pack(side="left", padx=(10, 0))
 
         self.schedule_message = ctk.CTkLabel(frame, text="", text_color="red")
         self.schedule_message.pack(anchor="w", padx=12)
 
-    @staticmethod
-    def _time_menus(parent: ctk.CTkFrame, value: str) -> tuple[ctk.CTkOptionMenu, ctk.CTkOptionMenu]:
-        saved = time.fromisoformat(value)
-        hour = ctk.CTkOptionMenu(parent, values=HOURS, width=64)
-        hour.set(f"{saved.hour:02d}")
-        hour.pack(side="left")
-        ctk.CTkLabel(parent, text=":").pack(side="left", padx=2)
-        minute = ctk.CTkOptionMenu(parent, values=MINUTES, width=64)
-        minute.set(f"{saved.minute:02d}")
-        minute.pack(side="left")
-        return hour, minute
-
     def _save_schedule(self) -> None:
         weekdays = [index for index, box in enumerate(self.day_boxes) if box.get()]
-        start = f"{self.start_hour.get()}:{self.start_minute.get()}"
-        end = f"{self.end_hour.get()}:{self.end_minute.get()}"
+        start = self.start_time.get()
+        end = self.end_time.get()
         if self._attempt(lambda: self.controller.set_schedule(weekdays, start, end), self.schedule_message):
             self._refresh_status()
 

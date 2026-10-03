@@ -60,7 +60,7 @@ def test_override_and_undo_update_status_and_history(app):
 
 
 def test_invalid_schedule_shows_an_error(app):
-    app.start_hour.set("18")
+    type_into(app.start_time.hour, "18")
     app._save_schedule()
     assert "start time must be before the end time" in app.schedule_message.cget("text")
 
@@ -80,21 +80,40 @@ def test_warning_is_shown_on_the_status_tab(tmp_path, open_app):
         window.destroy()
 
 
-def test_schedule_times_are_picked_from_menus(app):
-    app.start_hour.set("09")
-    app.start_minute.set("05")
+def type_into(box, text):
+    box.delete(0, "end")
+    for character in text:
+        box.insert("end", character)
+
+
+def test_schedule_times_are_typed_into_guarded_fields(app):
+    type_into(app.start_time.hour, "9")
+    type_into(app.start_time.minute, "05")
     app._save_schedule()
     assert app.controller.config.schedule.start == "09:05"
+    assert app.start_time.hour.get() == "09"
     assert app.schedule_message.cget("text") == ""
 
 
-def test_saved_times_are_shown_in_the_menus(tmp_path, open_app):
+def test_invalid_typing_is_ignored(app):
+    type_into(app.start_time.hour, "2a5")
+    assert app.start_time.hour.get() == "2"
+    type_into(app.start_time.minute, "75")
+    assert app.start_time.minute.get() == "7"
+
+
+def test_emptied_field_falls_back_to_the_saved_time(app):
+    app.end_time.hour.delete(0, "end")
+    app._save_schedule()
+    assert app.controller.config.schedule.end == "17:00"
+
+
+def test_saved_times_are_shown_in_the_fields(tmp_path, open_app):
     path = tmp_path / "config.yaml"
     config_module.save(path, Config(schedule=Schedule(start="09:00", end="17:58")))
     window = open_app(path, hosts_path=tmp_path / "hosts", clock=lambda: MONDAY_2PM)
     try:
-        shown = [menu.get() for menu in (window.start_hour, window.start_minute, window.end_hour, window.end_minute)]
-        assert shown == ["09", "00", "17", "58"]
-        assert window.start_minute.cget("values") == [f"{minute:02d}" for minute in range(60)]
+        assert window.start_time.get() == "09:00"
+        assert window.end_time.get() == "17:58"
     finally:
         window.destroy()

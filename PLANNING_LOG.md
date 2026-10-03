@@ -110,3 +110,4 @@
 2026-10-04 | Schedule times are picked with an hour menu (00-23) and a minute menu (00-59) instead of typed text, so an invalid time cannot be entered; every minute stays possible for short test windows. Through the time-menus OpenSpec change | agent proposed, you decided
 2026-10-04 | Time menus manual check PASSED for function: the Schedule tab shows the saved times and saves from the menus | observed by you
 2026-10-04 | The time menus look unpolished; forcing correct input comes first and the look of the app is left for a later design pass | you decided
+2026-10-04 | Schedule times use guarded HH : MM fields instead of menus: only digits, at most two, within 00-23 and 00-59; arrow keys and mouse wheel step with wrap-around; leaving pads a single digit and an empty field restores the previous value. Through the time-fields OpenSpec change. 153 tests pass | agent proposed, you decided
