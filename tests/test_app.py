@@ -128,13 +128,13 @@ def test_override_and_undo_update_status_and_history(app):
     assert app.status_label.cget("text") == "Window active, nothing blocked — 3h 00m remaining"
     assert app.released_texts() == ["reddit.com unblocked until 17:00 (3h 00m left)"]
     assert app.blocked_chip_texts() == ["No sites are blocked."]
-    assert "work thread" in app.history_box.get("1.0", "end")
+    assert app.history_table()[0][1:] == ["Override", "reddit.com", "work thread"]
 
     app._undo("reddit.com")
     app.update()
     assert app.blocked_chip_texts() == ["reddit.com"]
     assert app.released_texts() == []
-    assert "override undone" in app.history_box.get("1.0", "end")
+    assert app.history_table()[0][1:] == ["Override undone", "reddit.com", ""]
 
 
 def test_invalid_schedule_shows_an_error(app):
@@ -143,10 +143,65 @@ def test_invalid_schedule_shows_an_error(app):
     assert "start time must be before the end time" in app.schedule_message.cget("text")
 
 
-def test_shortlist_is_saved_without_blank_lines(app):
-    app.shortlist_box.insert("1.0", "10-minute walk\n\nread notes\n")
-    app._save_shortlist()
-    assert app.controller.config.shortlist == ["10-minute walk", "read notes"]
+def type_suggestion(app, text):
+    app.new_suggestion_entry.insert("end", text)
+    app._update_suggestion_hint()
+
+
+def suggestion_row(app, index):
+    row = app.suggestion_list.winfo_children()[index]
+    return row.winfo_children()[0], row.winfo_children()[1]
+
+
+def test_suggestion_is_added_from_the_box(app):
+    assert app.add_suggestion_button.cget("state") == "disabled"
+    type_suggestion(app, "10-minute walk")
+    assert app.add_suggestion_button.cget("state") == "normal"
+    app._add_suggestion()
+    assert app.controller.config.shortlist == ["10-minute walk"]
+    assert app.new_suggestion_entry.get() == ""
+    assert app.shortlist_title.cget("text") == "Suggestions (1)"
+
+
+def test_duplicate_suggestion_cannot_be_added(app):
+    type_suggestion(app, "10-minute walk")
+    app._add_suggestion()
+    type_suggestion(app, "10-Minute Walk")
+    assert app.add_suggestion_button.cget("state") == "disabled"
+    assert "already in the list" in app.suggestion_hint.cget("text")
+
+
+def test_suggestion_box_refuses_text_over_120_characters(app):
+    app.new_suggestion_entry.insert("end", "x" * 121)
+    assert app.new_suggestion_entry.get() == ""
+    app.new_suggestion_entry.insert("end", "x" * 120)
+    assert len(app.new_suggestion_entry.get()) == 120
+
+
+def test_suggestion_can_be_edited_and_removed(app):
+    type_suggestion(app, "Tidy desk")
+    app._add_suggestion()
+    entry, save = suggestion_row(app, 0)
+    assert save.cget("state") == "disabled"
+    entry.delete(0, "end")
+    entry.insert(0, "Tidy the desk")
+    entry.on_change()
+    assert save.cget("state") == "normal"
+    app._edit_suggestion(0, entry.get())
+    assert app.controller.config.shortlist == ["Tidy the desk"]
+    app._remove_suggestion(0)
+    assert app.controller.config.shortlist == []
+
+
+def test_history_table_lists_changes_newest_first_in_columns(app):
+    add(app, "reddit.com")
+    type_suggestion(app, "10-minute walk")
+    app._add_suggestion()
+    table = app.history_table()
+    assert table[0] == ["WHEN", "EVENT", "ITEM", "DETAILS"] or table[0][1] == "Suggestion added"
+    events = [row[1] for row in table]
+    assert events == ["Suggestion added", "Site added"]
+    assert table[0][0] == "Mon 5 Oct 2026, 14:00"
 
 
 def test_warning_is_shown_on_the_status_tab(tmp_path, open_app):

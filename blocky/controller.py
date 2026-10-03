@@ -3,8 +3,9 @@ from datetime import datetime
 from pathlib import Path
 
 from blocky import config as config_module
-from blocky import rules
+from blocky import history, rules
 from blocky import schedule as schedule_module
+from blocky import suggestions as suggestions_module
 from blocky.checker import Checker
 from blocky.config import Config
 from blocky.domains import validate
@@ -43,17 +44,22 @@ class Controller:
         if domain in self.config.domains:
             raise ValueError(f"{domain} is already in the list")
         self.config.domains.append(domain)
+        self._record("site_added", domain)
         self.save()
 
     def edit_domain(self, index: int, entry: str) -> None:
         domain = validate(entry)
         if domain != self.config.domains[index] and domain in self.config.domains:
             raise ValueError(f"{domain} is already in the list")
+        old = self.config.domains[index]
         self.config.domains[index] = domain
+        if domain != old:
+            self._record("site_edited", domain, f"{old} → {domain}")
         self.save()
 
     def remove_domain(self, index: int) -> None:
-        del self.config.domains[index]
+        removed = self.config.domains.pop(index)
+        self._record("site_removed", removed)
         self.save()
 
     def set_schedule(self, weekdays: list[int], start: str, end: str) -> None:
@@ -65,12 +71,34 @@ class Controller:
             end=schedule_module.parse_time(end),
         )
         schedule_module.validate(schedule)
+        if schedule != self.config.schedule:
+            details = history.describe_schedule(schedule.weekdays, schedule.start, schedule.end)
+            self._record("schedule_changed", "", details)
         self.config.schedule = schedule
         self.save()
 
-    def set_shortlist(self, lines: list[str]) -> None:
-        self.config.shortlist = [line.strip() for line in lines if line.strip()]
+    def add_suggestion(self, text: str) -> None:
+        suggestion = suggestions_module.check(text, self.config.shortlist)
+        self.config.shortlist.append(suggestion)
+        self._record("suggestion_added", suggestion)
         self.save()
+
+    def edit_suggestion(self, index: int, text: str) -> None:
+        old = self.config.shortlist[index]
+        suggestion = suggestions_module.check(text, self.config.shortlist, original=old)
+        self.config.shortlist[index] = suggestion
+        if suggestion != old:
+            self._record("suggestion_edited", suggestion, f"{old} → {suggestion}")
+        self.save()
+
+    def remove_suggestion(self, index: int) -> None:
+        removed = self.config.shortlist.pop(index)
+        self._record("suggestion_removed", removed)
+        self.save()
+
+    def _record(self, kind: str, item: str, details: str = "") -> None:
+        timestamp = self.clock().isoformat(timespec="seconds")
+        self.config.events.append({"type": kind, "timestamp": timestamp, "item": item, "details": details})
 
     def override(self, domain: str, reason: str) -> None:
         rules.override(self.config, domain, reason, self.clock())
@@ -89,11 +117,5 @@ class Controller:
             "overridable": rules.overridable_domains(self.config, now),
         }
 
-    def history_lines(self) -> list[str]:
-        lines = []
-        for entry in self.config.overrides:
-            moment = datetime.fromisoformat(entry["timestamp"])
-            when = f"{moment:%a} {moment.day} {moment:%b %Y, %H:%M}"
-            what = "override undone" if entry.get("type") == "undo" else entry["reason"]
-            lines.append(f"{when}   ·   {entry['domain']}   ·   {what}")
-        return lines
+    def history_rows(self) -> list[history.Row]:
+        return history.rows(self.config.events, self.config.overrides)

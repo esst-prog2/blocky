@@ -4,7 +4,8 @@ from pathlib import Path
 
 import customtkinter as ctk
 
-from blocky import hosts
+from blocky import history, hosts
+from blocky import suggestions as suggestions_module
 from blocky import theme as t
 from blocky.controller import Controller
 from blocky.domainfield import DomainField, can_save_edit, hint
@@ -299,6 +300,7 @@ class App(ctk.CTk):
     def _after_domain_change(self) -> None:
         self._render_domains()
         self._refresh_status()
+        self._render_history()
 
     # Schedule tab
 
@@ -340,37 +342,147 @@ class App(ctk.CTk):
         end = self.end_time.get()
         if self._attempt(lambda: self.controller.set_schedule(weekdays, start, end), self.schedule_message):
             self._refresh_status()
+            self._render_history()
 
-    # Shortlist and History tabs
+    # Shortlist tab
 
     def _build_shortlist(self, frame: ctk.CTkFrame) -> None:
         ctk.CTkFrame(frame, fg_color="transparent", height=t.GAP).pack()
         body = self._section(
-            frame, "Suggestions", "Shown on the block page and in new tabs. One suggestion per line.", expand=True
+            frame, "Add a suggestion", "Something better to do, shown on the block page and in new tabs."
         )
-        self.shortlist_box = t.textbox(body)
-        self.shortlist_box.pack(fill="both", expand=True)
-        self.shortlist_box.insert("1.0", "\n".join(self.controller.config.shortlist))
-        actions = ctk.CTkFrame(frame, fg_color="transparent")
-        actions.pack(fill="x")
-        t.primary_button(actions, "Save suggestions", self._save_shortlist, width=150).pack(side="left")
-        self.shortlist_message = t.Message(actions, t.DANGER)
-        self.shortlist_message.pack(side="left", padx=t.PAD)
+        row = ctk.CTkFrame(body, fg_color="transparent")
+        row.pack(fill="x")
+        self.new_suggestion_entry = self._suggestion_entry(row, placeholder_text="e.g. 10-minute walk")
+        self.new_suggestion_entry.pack(side="left", fill="x", expand=True, padx=(0, t.GAP))
+        self.new_suggestion_entry.bind("<KeyRelease>", lambda _event: self._update_suggestion_hint(), add="+")
+        self.new_suggestion_entry.bind("<Return>", lambda _event: self._add_suggestion())
+        self.add_suggestion_button = t.primary_button(row, "Add", self._add_suggestion, width=96)
+        self.add_suggestion_button.pack(side="left")
+        t.set_enabled(self.add_suggestion_button, False)
+        self.suggestion_hint = t.Message(body, t.WARNING)
+        self.suggestion_hint.pack(fill="x", pady=(t.GAP, 0))
+        self.shortlist_message = t.Message(body, t.DANGER)
+        self.shortlist_message.pack(fill="x", pady=(t.GAP, 0))
 
-    def _save_shortlist(self) -> None:
-        lines = self.shortlist_box.get("1.0", "end").splitlines()
-        self._attempt(lambda: self.controller.set_shortlist(lines), self.shortlist_message)
+        box = t.card(frame)
+        box.pack(fill="both", expand=True, pady=(0, t.GAP + 4))
+        self.shortlist_title = t.label(box, "", "title")
+        self.shortlist_title.pack(fill="x", padx=t.PAD, pady=(t.PAD - 2, t.GAP))
+        self.suggestion_list = ctk.CTkScrollableFrame(
+            box, fg_color="transparent", scrollbar_button_color=t.DISABLED,
+            scrollbar_button_hover_color=t.BORDER,
+        )
+        self.suggestion_list.pack(fill="both", expand=True, padx=t.PAD - 6, pady=(0, t.PAD - 6))
+        self._render_suggestions()
+
+    def _suggestion_entry(self, parent: ctk.CTkFrame, **kwargs) -> ctk.CTkEntry:
+        entry = t.entry(parent, **kwargs)
+        too_long = self.register(lambda text: len(text) <= suggestions_module.MAX_LENGTH)
+        entry.configure(validate="key", validatecommand=(too_long, "%P"))
+        return entry
+
+    def _render_suggestions(self) -> None:
+        for child in self.suggestion_list.winfo_children():
+            child.destroy()
+        shortlist = self.controller.config.shortlist
+        self.shortlist_title.configure(text=f"Suggestions ({len(shortlist)})")
+        if not shortlist:
+            t.label(self.suggestion_list, "No suggestions yet. Add one above.", "body", t.MUTED).pack(
+                fill="x", padx=6
+            )
+        for index, suggestion in enumerate(shortlist):
+            row = ctk.CTkFrame(self.suggestion_list, fg_color="transparent")
+            row.pack(fill="x", pady=(0, t.GAP - 2))
+            entry = self._suggestion_entry(row)
+            t.list_entry_focus(entry)
+            entry.insert(0, suggestion)
+            entry.pack(side="left", fill="x", expand=True, padx=(6, t.GAP))
+            save = t.quiet_button(row, "Save", lambda i=index, e=entry: self._edit_suggestion(i, e.get()), width=64)
+            save.pack(side="left", padx=(0, 2))
+            t.set_enabled(save, False)
+            entry.on_change = lambda e=entry, b=save, original=suggestion: t.set_enabled(
+                b, suggestions_module.can_save_edit(e.get(), original, self.controller.config.shortlist)
+            )
+            entry.bind("<KeyRelease>", lambda _event, e=entry: e.on_change(), add="+")
+            remove = t.quiet_button(row, "Remove", lambda i=index: self._remove_suggestion(i), width=80)
+            t.danger_on_hover(remove)
+            remove.pack(side="left")
+
+    def _update_suggestion_hint(self) -> None:
+        addable, text = suggestions_module.hint(self.new_suggestion_entry.get(), self.controller.config.shortlist)
+        self.suggestion_hint.configure(text=text)
+        t.set_enabled(self.add_suggestion_button, addable)
+
+    def _add_suggestion(self) -> None:
+        if not suggestions_module.hint(self.new_suggestion_entry.get(), self.controller.config.shortlist)[0]:
+            return
+        if self._attempt(
+            lambda: self.controller.add_suggestion(self.new_suggestion_entry.get()), self.shortlist_message
+        ):
+            self.new_suggestion_entry.delete(0, "end")
+            self._update_suggestion_hint()
+            self._after_suggestion_change()
+
+    def _edit_suggestion(self, index: int, text: str) -> None:
+        original = self.controller.config.shortlist[index]
+        if not suggestions_module.can_save_edit(text, original, self.controller.config.shortlist):
+            return
+        if self._attempt(lambda: self.controller.edit_suggestion(index, text), self.shortlist_message):
+            self._after_suggestion_change()
+
+    def _remove_suggestion(self, index: int) -> None:
+        if self._attempt(lambda: self.controller.remove_suggestion(index), self.shortlist_message):
+            self._after_suggestion_change()
+
+    def _after_suggestion_change(self) -> None:
+        self._render_suggestions()
+        self._render_history()
+
+    # History tab
+
+    HISTORY_COLUMNS = (("When", 160), ("Event", 148), ("Item", 150), ("Details", 0))
+    HISTORY_LIMIT = 300
 
     def _build_history(self, frame: ctk.CTkFrame) -> None:
         ctk.CTkFrame(frame, fg_color="transparent", height=t.GAP).pack()
-        body = self._section(frame, "Override history", "Every override and undo, oldest first.", expand=True)
-        self.history_box = t.textbox(body, state="disabled", wrap="word")
-        self.history_box.pack(fill="both", expand=True)
+        body = self._section(frame, "History", "Every change you make in Blocky, newest first.", expand=True)
+        header = self._history_row(body, [name for name, _ in self.HISTORY_COLUMNS], header=True)
+        header.pack(fill="x", padx=(6, 22))
+        self.history_list = ctk.CTkScrollableFrame(
+            body, fg_color="transparent", scrollbar_button_color=t.DISABLED,
+            scrollbar_button_hover_color=t.BORDER,
+        )
+        self.history_list.pack(fill="both", expand=True)
         self._render_history()
 
+    def _history_row(self, parent: ctk.CTkFrame, cells: list[str], header: bool = False,
+                     shaded: bool = False) -> ctk.CTkFrame:
+        """One table row. Every cell has a fixed, DPI-scaled width, so the columns line up from row to row."""
+        row = ctk.CTkFrame(parent, fg_color=t.HOVER if shaded else "transparent", corner_radius=6)
+        for column, ((_, width), text) in enumerate(zip(self.HISTORY_COLUMNS, cells, strict=True)):
+            if header:
+                role, color = "caption", t.MUTED
+                text = text.upper()
+            elif column == 1:
+                role, color = "button", t.SAGE if text.startswith("Override") else t.TEXT
+            else:
+                role, color = "body", t.MUTED if column == 0 else t.TEXT
+            last = width == 0
+            cell = t.label(row, text, role, color, width=width or 120, wraplength=(width or 210) - 12)
+            cell.pack(side="left", fill="x", expand=last, anchor="n", padx=(12 if column == 0 else 0, 8), pady=7)
+        return row
+
     def _render_history(self) -> None:
-        lines = self.controller.history_lines()
-        self.history_box.configure(state="normal")
-        self.history_box.delete("1.0", "end")
-        self.history_box.insert("1.0", "\n".join(lines) or "No overrides yet.")
-        self.history_box.configure(state="disabled")
+        for child in self.history_list.winfo_children():
+            child.destroy()
+        rows = self.controller.history_rows()[: self.HISTORY_LIMIT]
+        if not rows:
+            t.label(self.history_list, "No changes yet.", "body", t.MUTED).pack(fill="x", padx=10, pady=6)
+        for number, entry in enumerate(rows):
+            cells = [history.when(entry.moment), entry.event, entry.item, entry.details]
+            self._history_row(self.history_list, cells, shaded=number % 2 == 1).pack(fill="x")
+
+    def history_table(self) -> list[list[str]]:
+        rows = [row for row in self.history_list.winfo_children() if isinstance(row, ctk.CTkFrame)]
+        return [[cell.cget("text") for cell in row.winfo_children()] for row in rows]
