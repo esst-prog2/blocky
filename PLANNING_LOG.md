@@ -45,3 +45,5 @@
 2026-10-03 | early-block-redirect check 2.2 PASSED: youtube.com shows Blocky's block page on three visits after reloading the extension; debug logging removed | observed by you
 2026-10-03 | early-block-redirect check 2.3 PASSED: an ordinary site (wikipedia.org) loads normally | observed by you
 2026-10-03 | early-block-redirect check 2.4 PASSED: with Blocky closed, reddit.com shows the browser's normal error page | observed by you
+2026-10-03 | Spike sleep-resume question: after the PC wakes from sleep during an active window, how many seconds pass before Blocky's entries are in the hosts file? | you decided
+2026-10-03 | Spike sleep-resume answer criteria: five sleep cycles, each with the window start falling inside the sleep (schedule start set 4 minutes ahead, PC asleep before it and woken after it); after each wake, run spike/sleep-resume/measure.ps1 right away and record the wake time (the 'watching since' line) and the appearance time; delay = appearance minus wake, in seconds; answer is the average and maximum of five; also note whether Blocky's window is still open after waking | you decided
