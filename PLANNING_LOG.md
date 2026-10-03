@@ -53,3 +53,5 @@
 2026-10-03 | open-tab-block check 2.4 PASSED: reloading reddit.com during an active window still shows the block page | observed by you
 2026-10-03 | README risks section updated with the private-window, VPN and early-redirect results | you decided
 2026-10-03 | Fix for robustness gaps: the background checker now catches any error and keeps running, and the hosts file is written to a temporary file and then swapped in, so a failed write leaves the original intact. All 71 tests pass | agent proposed, you decided
+2026-10-03 | Spike p1-automated question: for three P1 cases that can be tested without a live machine (clock jump, port 8765 in use, background hosts failure), does Blocky behave as expected? | you decided
+2026-10-03 | Spike p1-automated answer criteria: one automated test per case in tests/test_p1.py; pass = behaviour as expected; fail = gap; results in spike/p1-automated/results.md | you decided
