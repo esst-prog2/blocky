@@ -78,3 +78,4 @@
 2026-10-03 | errors.log showed the close-time cause: PermissionError 13 (access denied) when swapping hosts.tmp into place, likely antivirus briefly locking the new file. Fix: the swap is retried 10 times, 0.1 s apart, and if it still fails the hosts file is written in place as a last resort. 81 tests pass | agent proposed
 2026-10-03 | Manual check of the close fix PASSED: Blocky closed during an active window at 20:10:37; at 20:10:47 the hosts file had no Blocky entries, no hosts.tmp was left and errors.log had no new line | observed by you
 2026-10-03 | Manual check of the UAC fix PASSED: clicking No on the UAC prompt shows the 'Blocky needs administrator rights' message box | observed by you
+2026-10-03 | P2: only the subdomain check is done now (old.reddit.com, new.reddit.com, m.youtube.com, music.youtube.com, mobile.x.com during an active window; pass = none load; checklist in spike/subdomains/checklist.md) | you decided
