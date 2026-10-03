@@ -21,6 +21,7 @@ class Config:
     schedule: Schedule = field(default_factory=Schedule)
     shortlist: list[str] = field(default_factory=list)
     overrides: list[dict] = field(default_factory=list)
+    events: list[dict] = field(default_factory=list)
 
 
 def default_path() -> Path:
@@ -42,6 +43,15 @@ def _check_override(entry: object) -> None:
             datetime.fromisoformat(entry["until"])
         except (KeyError, TypeError, ValueError):
             raise DamagedConfig("an override entry has no valid end time") from None
+
+
+def _check_event(entry: object) -> None:
+    if not isinstance(entry, dict) or not isinstance(entry.get("type"), str):
+        raise DamagedConfig("a history entry has no type")
+    try:
+        datetime.fromisoformat(entry["timestamp"])
+    except (KeyError, TypeError, ValueError):
+        raise DamagedConfig("a history entry has no valid time") from None
 
 
 def _parse(text: str) -> tuple[Config, list[str]]:
@@ -76,9 +86,13 @@ def _parse(text: str) -> tuple[Config, list[str]]:
     for entry in overrides:
         _check_override(entry)
     shortlist = [str(item) for item in _list(data, "shortlist", [])]
+    events = _list(data, "events", [])
+    for entry in events:
+        _check_event(entry)
 
     warnings = [f"Skipped invalid domains in the config: {', '.join(skipped)}."] if skipped else []
-    return Config(domains=domains, schedule=schedule, shortlist=shortlist, overrides=overrides), warnings
+    config = Config(domains=domains, schedule=schedule, shortlist=shortlist, overrides=overrides, events=events)
+    return config, warnings
 
 
 def load(path: Path) -> Config:

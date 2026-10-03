@@ -73,3 +73,15 @@ def test_unknown_path_returns_404(server):
     with pytest.raises(urllib.error.HTTPError) as error:
         fetch(server, "/nope")
     assert error.value.code == 404
+
+
+def test_favicon_is_served(server):
+    with urllib.request.urlopen(f"http://127.0.0.1:{server.port}/favicon.ico") as response:
+        assert response.status == 200
+        assert response.headers.get("Content-Type") == "image/x-icon"
+        assert response.read()[:4] == b"\x00\x00\x01\x00"
+
+
+def test_pages_link_the_favicon(server):
+    _, _, body = fetch(server, "/blocked?domain=reddit.com")
+    assert '<link rel="icon" href="/favicon.ico">' in body

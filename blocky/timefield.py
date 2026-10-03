@@ -2,6 +2,8 @@ from datetime import time
 
 import customtkinter as ctk
 
+from blocky import theme
+
 
 def allowed(text: str, maximum: int) -> bool:
     """Whether a box may hold this text while the user types: at most two digits, not above the maximum."""
@@ -20,7 +22,7 @@ def finish(text: str, previous: str) -> str:
 
 class _Box(ctk.CTkEntry):
     def __init__(self, parent: ctk.CTkFrame, value: int, maximum: int) -> None:
-        super().__init__(parent, width=40, justify="center")
+        super().__init__(parent, justify="center", **{**theme.entry_style(), "width": 48})
         self.maximum = maximum
         self.settled = f"{value:02d}"
         self.insert(0, self.settled)
@@ -56,7 +58,7 @@ class TimeField(ctk.CTkFrame):
         saved = time.fromisoformat(value)
         self.hour = _Box(self, saved.hour, 23)
         self.hour.pack(side="left")
-        ctk.CTkLabel(self, text=":", width=8).pack(side="left")
+        theme.label(self, ":", "title", theme.MUTED, width=14, anchor="center").pack(side="left", padx=2)
         self.minute = _Box(self, saved.minute, 59)
         self.minute.pack(side="left")
 

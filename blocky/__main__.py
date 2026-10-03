@@ -56,6 +56,8 @@ def main() -> None:
             show_admin_needed()
         return
 
+    # Lets Windows show Blocky's own icon in the taskbar instead of Python's.
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("Blocky")
     config_path = config_module.default_path()
     error_log = config_path.parent / "errors.log"
     # Recover a damaged config before the background check reads it.

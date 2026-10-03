@@ -78,3 +78,18 @@ def test_a_good_config_loads_without_a_warning(tmp_path):
     config, warning = config_module.load_or_recover(path, MONDAY_2PM)
     assert config.domains == ["reddit.com"]
     assert warning is None
+
+
+def test_config_without_events_loads_with_an_empty_history(tmp_path):
+    path = tmp_path / "config.yaml"
+    path.write_text("domains:\n- reddit.com\n", encoding="utf-8")
+    config, warning = config_module.load_or_recover(path, MONDAY_2PM)
+    assert config.events == []
+    assert warning is None
+
+
+def test_config_with_a_broken_history_entry_counts_as_damaged(tmp_path):
+    path = tmp_path / "config.yaml"
+    path.write_text("domains: []\nevents:\n- type: site_added\n  timestamp: yesterday\n", encoding="utf-8")
+    config, warning = config_module.load_or_recover(path, MONDAY_2PM)
+    assert "history entry" in warning

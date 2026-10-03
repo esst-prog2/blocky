@@ -72,3 +72,7 @@ Python, with a `customtkinter` UI for a modern look with minimal setup overhead.
 3. Load the browser extension: open `brave://extensions`, turn on Developer mode, click "Load unpacked", and select the `extension` folder.
 
 Use `python -m blocky` instead of `pythonw` to see error messages in a console window.
+
+To start Blocky from the Start menu or the taskbar, run `powershell -ExecutionPolicy Bypass -File tools\create_shortcut.ps1` once. It adds a Blocky shortcut with Blocky's icon to the Start menu; right-click it there and choose **Pin to taskbar**.
+
+The icon is drawn by `tools/make_icons.py`, which writes every size used by the app, the block page and the extension. Run `python tools/make_icons.py` after changing it.
