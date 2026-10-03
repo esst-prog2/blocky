@@ -68,9 +68,9 @@ Does the one-minute sweep still redirect an open tab after Brave has been idle f
 Do blocked sites load in Firefox with secure DNS on?
 
 1. Blocky running, inside a window (reddit.com blocked in Brave).
-2. In Firefox, go to Settings → Privacy & Security → DNS over HTTPS and select **Increased Protection** (Cloudflare).
+2. In Firefox, go to Settings → Privacy & Security → DNS over HTTPS and select **Increased Protection** (Cloudflare). In newer Firefox versions this is **Custom** (Aangepast) with Cloudflare and "always warn me if secure DNS is unavailable" unticked.
 3. Open reddit.com, youtube.com and x.com. Reload each with Ctrl+Shift+R. Also open wikipedia.org.
-4. Switch to **Max Protection** and repeat step 3.
+4. Switch to **Max Protection** (in newer versions: Custom with that box ticked) and repeat step 3.
 5. Put the setting back to what it was before.
 
 **Pass:** at both levels, none of the blocked sites load (any error page counts), and wikipedia.org loads.
