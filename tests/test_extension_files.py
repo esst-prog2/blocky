@@ -18,6 +18,9 @@ def test_manifest_references_existing_files():
     manifest = json.loads((EXTENSION / "manifest.json").read_text(encoding="utf-8"))
     assert (EXTENSION / manifest["background"]["service_worker"]).exists()
     assert (EXTENSION / manifest["chrome_url_overrides"]["newtab"]).exists()
+    for size, icon in manifest["icons"].items():
+        assert (EXTENSION / icon).exists(), icon
+        assert size in ("16", "32", "48", "128")
 
 
 def test_extension_keeps_no_editable_copy_of_data():
