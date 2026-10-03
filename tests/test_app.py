@@ -2,6 +2,10 @@ from datetime import datetime
 
 import pytest
 
+from blocky import config as config_module
+from blocky.config import Config
+from blocky.schedule import Schedule
+
 MONDAY_2PM = datetime(2026, 10, 5, 14, 0)
 
 
@@ -56,8 +60,7 @@ def test_override_and_undo_update_status_and_history(app):
 
 
 def test_invalid_schedule_shows_an_error(app):
-    app.start_entry.delete(0, "end")
-    app.start_entry.insert(0, "18:00")
+    app.start_hour.set("18")
     app._save_schedule()
     assert "start time must be before the end time" in app.schedule_message.cget("text")
 
@@ -73,5 +76,25 @@ def test_warning_is_shown_on_the_status_tab(tmp_path, open_app):
     window.update()
     try:
         assert window.warning_label.cget("text") == "Warning: test"
+    finally:
+        window.destroy()
+
+
+def test_schedule_times_are_picked_from_menus(app):
+    app.start_hour.set("09")
+    app.start_minute.set("05")
+    app._save_schedule()
+    assert app.controller.config.schedule.start == "09:05"
+    assert app.schedule_message.cget("text") == ""
+
+
+def test_saved_times_are_shown_in_the_menus(tmp_path, open_app):
+    path = tmp_path / "config.yaml"
+    config_module.save(path, Config(schedule=Schedule(start="09:00", end="17:58")))
+    window = open_app(path, hosts_path=tmp_path / "hosts", clock=lambda: MONDAY_2PM)
+    try:
+        shown = [menu.get() for menu in (window.start_hour, window.start_minute, window.end_hour, window.end_minute)]
+        assert shown == ["09", "00", "17", "58"]
+        assert window.start_minute.cget("values") == [f"{minute:02d}" for minute in range(60)]
     finally:
         window.destroy()
