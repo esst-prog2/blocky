@@ -1,7 +1,7 @@
 ## 1. Spikes (verify assumptions before building)
 
 - [x] 1.1 Confirm the app can run elevated and write the hosts file without a UAC prompt in customtkinter; record the result in design.md
-- [ ] 1.2 Confirm in Brave that a failed navigation to a blocked domain fires an event the extension can see, for `reddit.com`, `youtube.com`, and `x.com`; record the result in design.md
+- [x] 1.2 Confirm in Brave that a failed navigation to a blocked domain fires an event the extension can see, for `reddit.com`, `youtube.com`, and `x.com`; record the result in design.md
 - [x] 1.3 Confirm in Brave that an extension's new-tab page override replaces the default new tab; record the result in design.md
 
 ## 2. Project setup
