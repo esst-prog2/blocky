@@ -16,11 +16,13 @@ class App(ctk.CTk):
         config_path: Path,
         hosts_path: Path = hosts.HOSTS_PATH,
         clock: Callable[[], datetime] = datetime.now,
+        warning: Callable[[], str] = lambda: "",
     ) -> None:
         super().__init__()
         self.title("Blocky")
         self.geometry("680x560")
         self.controller = Controller(config_path, hosts_path, clock)
+        self.warning = warning
         self._tick_id: str | None = None
 
         self.tabs = ctk.CTkTabview(self)
@@ -79,6 +81,8 @@ class App(ctk.CTk):
 
         self.status_message = ctk.CTkLabel(frame, text="", text_color="red")
         self.status_message.pack(anchor="w", padx=12, pady=4)
+        self.warning_label = ctk.CTkLabel(frame, text="", text_color="orange", wraplength=600, justify="left")
+        self.warning_label.pack(anchor="w", padx=12, pady=4)
 
     @staticmethod
     def _remaining(until: datetime, now: datetime) -> str:
@@ -89,6 +93,7 @@ class App(ctk.CTk):
         now = self.controller.clock()
         view = self.controller.status()
         self.status_label.configure(text=view["text"])
+        self.warning_label.configure(text=self.warning())
         self.blocked_label.configure(text="Blocked: " + (", ".join(view["blocked"]) or "none"))
         released = view["released"]
         self.released_label.configure(

@@ -8,6 +8,7 @@ from blocky import config as config_module
 from blocky import rules
 from blocky.app import App
 from blocky.checker import Checker
+from blocky.controller import warning_text
 from blocky.server import Server
 
 
@@ -22,6 +23,15 @@ def relaunch_as_admin() -> None:
     )
 
 
+def start_block_page(load_state) -> tuple[Server | None, str | None]:
+    try:
+        server = Server(load_state)
+    except OSError as error:
+        return None, f"The block page could not start, so blocked sites show the browser's error page: {error}"
+    server.start()
+    return server, None
+
+
 def main() -> None:
     if os.name == "nt" and not is_admin():
         relaunch_as_admin()
@@ -32,14 +42,16 @@ def main() -> None:
     checker = Checker(config_path)
     threading.Thread(target=checker.run, args=(stop,), daemon=True).start()
 
-    server = Server(lambda: rules.snapshot(config_module.load(config_path), datetime.now()))
-    server.start()
+    server, server_warning = start_block_page(
+        lambda: rules.snapshot(config_module.load(config_path), datetime.now())
+    )
 
     try:
-        App(config_path).mainloop()
+        App(config_path, warning=lambda: warning_text(checker.last_error, server_warning)).mainloop()
     finally:
         stop.set()
-        server.stop()
+        if server is not None:
+            server.stop()
 
 
 if __name__ == "__main__":
