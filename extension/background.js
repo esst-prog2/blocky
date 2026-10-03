@@ -9,8 +9,7 @@ async function fetchState() {
   }
 }
 
-chrome.webNavigation.onErrorOccurred.addListener(async (details) => {
-  console.log("onErrorOccurred", details.url, details.frameId, details.error);
+chrome.webNavigation.onBeforeNavigate.addListener(async (details) => {
   if (details.frameId !== 0 || !details.url.startsWith("http")) {
     return;
   }

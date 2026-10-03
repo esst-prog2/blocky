@@ -59,3 +59,11 @@ in between   a background checker compares the current time against each
 ## Tech
  
 Python, with a `customtkinter` UI for a modern look with minimal setup overhead. A local HTTP server in the app serves the shortlist and block page; a Brave extension (Chromium, Manifest V3) redirects blocked requests and replaces the new-tab page. Config (block list + schedule) is stored as YAML under the hood but never hand-edited — all changes go through the app.
+
+## Running it
+
+1. Install Python 3.11 or newer, then install the dependencies from the repo folder: `pip install -r requirements.txt`.
+2. Start the app with `pythonw -m blocky`. Windows asks for administrator rights, because the app edits the hosts file. Accept the prompt.
+3. Load the browser extension: open `brave://extensions`, turn on Developer mode, click "Load unpacked", and select the `extension` folder.
+
+Use `python -m blocky` instead of `pythonw` to see error messages in a console window.

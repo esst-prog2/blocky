@@ -1,7 +1,7 @@
 ## 1. Code
 
-- [ ] 1.1 Change the listener in `extension/background.js` from `onErrorOccurred` to `onBeforeNavigate`, keeping the main-frame filter, and verify with `node --test extension/logic.test.js` that the logic tests still pass
-- [ ] 1.2 Remove the temporary `console.log` line from the listener, and verify it no longer appears in the service worker console
+- [x] 1.1 Change the listener in `extension/background.js` from `onErrorOccurred` to `onBeforeNavigate`, keeping the main-frame filter, and verify with `node --test extension/logic.test.js` that the logic tests still pass
+- [x] 1.2 Remove the temporary `console.log` line from the listener, and verify it no longer appears in the service worker console
 
 ## 2. Brave verification
 
