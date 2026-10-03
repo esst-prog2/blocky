@@ -26,7 +26,7 @@ def add(app, domain):
 def test_adding_a_domain_shows_it_blocked_on_the_status_tab(app):
     add(app, "reddit.com")
     assert app.status_label.cget("text") == "Blocking active — 3h 00m remaining"
-    assert app.blocked_label.cget("text") == "Blocked: reddit.com, www.reddit.com"
+    assert app.blocked_chip_texts() == ["reddit.com"]
     assert app.override_menu.get() == "reddit.com"
 
 
@@ -86,10 +86,11 @@ def test_typing_a_reason_enables_override(app):
     assert app.override_hint.cget("text") == ""
 
 
-def test_override_and_undo_buttons_are_off_when_there_is_nothing_to_do(app):
+def test_override_is_off_and_nothing_to_undo_when_nothing_is_blocked(app):
     assert app.override_button.cget("state") == "disabled"
     assert app.override_hint.cget("text") == ""
-    assert app.undo_button.cget("state") == "disabled"
+    assert app.released_texts() == []
+    assert app.blocked_chip_texts() == ["No sites are blocked."]
 
 
 def edit_row(app, index):
@@ -125,13 +126,14 @@ def test_override_and_undo_update_status_and_history(app):
     app._override()
     app.update()
     assert app.status_label.cget("text") == "Window active, nothing blocked — 3h 00m remaining"
-    assert app.released_label.cget("text") == "reddit.com unblocked until 17:00 (3h 00m left)"
-    assert app.undo_menu.get() == "reddit.com"
+    assert app.released_texts() == ["reddit.com unblocked until 17:00 (3h 00m left)"]
+    assert app.blocked_chip_texts() == ["No sites are blocked."]
     assert "work thread" in app.history_box.get("1.0", "end")
 
-    app._undo()
+    app._undo("reddit.com")
     app.update()
-    assert app.blocked_label.cget("text") == "Blocked: reddit.com, www.reddit.com"
+    assert app.blocked_chip_texts() == ["reddit.com"]
+    assert app.released_texts() == []
     assert "override undone" in app.history_box.get("1.0", "end")
 
 
@@ -151,7 +153,8 @@ def test_warning_is_shown_on_the_status_tab(tmp_path, open_app):
     window = open_app(tmp_path / "config.yaml", hosts_path=tmp_path / "hosts", warning=lambda: "Warning: test")
     window.update()
     try:
-        assert window.warning_label.cget("text") == "Warning: test"
+        assert window.warning_label.cget("text") == "⚠  test"
+        assert window.banner.winfo_manager() == "pack"
     finally:
         window.destroy()
 
@@ -193,3 +196,8 @@ def test_saved_times_are_shown_in_the_fields(tmp_path, open_app):
         assert window.end_time.get() == "17:58"
     finally:
         window.destroy()
+
+
+def test_warning_banner_is_hidden_without_a_warning(app):
+    assert app.warning_label.cget("text") == ""
+    assert app.banner.winfo_manager() == ""

@@ -90,9 +90,10 @@ class Controller:
         }
 
     def history_lines(self) -> list[str]:
-        return [
-            f"{entry['timestamp']}  {entry['domain']}  — override undone"
-            if entry.get("type") == "undo"
-            else f"{entry['timestamp']}  {entry['domain']}  — {entry['reason']}"
-            for entry in self.config.overrides
-        ]
+        lines = []
+        for entry in self.config.overrides:
+            moment = datetime.fromisoformat(entry["timestamp"])
+            when = f"{moment:%a} {moment.day} {moment:%b %Y, %H:%M}"
+            what = "override undone" if entry.get("type") == "undo" else entry["reason"]
+            lines.append(f"{when}   ·   {entry['domain']}   ·   {what}")
+        return lines

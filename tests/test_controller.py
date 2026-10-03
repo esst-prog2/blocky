@@ -105,7 +105,7 @@ def test_override_appears_in_history_and_status(make):
     controller.add_domain("reddit.com")
     controller.override("reddit.com", "checking a work thread")
     assert controller.history_lines() == [
-        "2026-10-05T14:00:00  reddit.com  — checking a work thread"
+        "Mon 5 Oct 2026, 14:00   ·   reddit.com   ·   checking a work thread"
     ]
     status = controller.status()
     assert list(status["released"]) == ["reddit.com"]
@@ -120,8 +120,8 @@ def test_undo_reblocks_and_keeps_both_history_lines(make):
     assert controller.status()["blocked"] == ["reddit.com", "www.reddit.com"]
     assert controller.status()["released"] == {}
     assert controller.history_lines() == [
-        "2026-10-05T14:00:00  reddit.com  — checking a work thread",
-        "2026-10-05T14:00:00  reddit.com  — override undone",
+        "Mon 5 Oct 2026, 14:00   ·   reddit.com   ·   checking a work thread",
+        "Mon 5 Oct 2026, 14:00   ·   reddit.com   ·   override undone",
     ]
 
 
