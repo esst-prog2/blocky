@@ -11,8 +11,8 @@ from blocky.domains import validate
 from blocky.schedule import Schedule
 
 
-def warning_text(background_error: str | None, startup_warning: str | None) -> str:
-    problems = [message for message in (startup_warning, background_error) if message]
+def warning_text(background_error: str | None, *startup_warnings: str | None) -> str:
+    problems = [message for message in (*startup_warnings, background_error) if message]
     if not problems:
         return ""
     return "Warning: " + " ".join(problems)
@@ -28,7 +28,8 @@ class Controller:
     ) -> None:
         self.config_path = config_path
         self.clock = clock
-        self.config: Config = config_module.load(config_path)
+        self.config: Config
+        self.config, self.load_warning = config_module.load_or_recover(config_path, clock())
         self.checker = Checker(config_path, hosts_path, clock)
         # In the app, the background check is the only hosts writer and `sync` asks it to run now.
         self.sync = sync or self.checker.sync

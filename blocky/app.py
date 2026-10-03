@@ -94,7 +94,8 @@ class App(ctk.CTk):
         now = self.controller.clock()
         view = self.controller.status()
         self.status_label.configure(text=view["text"])
-        self.warning_label.configure(text=self.warning())
+        warning = " ".join(text for text in (self.controller.load_warning, self.warning()) if text)
+        self.warning_label.configure(text=warning)
         self.blocked_label.configure(text="Blocked: " + (", ".join(view["blocked"]) or "none"))
         released = view["released"]
         self.released_label.configure(

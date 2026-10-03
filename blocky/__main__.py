@@ -58,6 +58,10 @@ def main() -> None:
 
     config_path = config_module.default_path()
     error_log = config_path.parent / "errors.log"
+    # Recover a damaged config before the background check reads it.
+    _, config_warning = config_module.load_or_recover(config_path, datetime.now())
+    if config_warning:
+        log_error(error_log, config_warning)
     stop = threading.Event()
     checker = Checker(config_path, error_log=error_log)
     worker = threading.Thread(target=checker.run, args=(stop,), daemon=True)
@@ -70,7 +74,7 @@ def main() -> None:
     try:
         App(
             config_path,
-            warning=lambda: warning_text(checker.last_error, server_warning),
+            warning=lambda: warning_text(checker.last_error, server_warning, config_warning),
             sync=checker.request_sync,
         ).mainloop()
     finally:
