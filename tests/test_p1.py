@@ -70,3 +70,52 @@ def test_background_hosts_failure_is_shown_to_user(tmp_path):
 
     assert controller.checker.last_error is not None
     assert warning_text(controller.checker.last_error, None) != ""
+
+
+def test_closing_blocky_removes_its_entries(tmp_path):
+    config_path = tmp_path / "config.yaml"
+    hosts_path = tmp_path / "hosts"
+    hosts_path.write_text("127.0.0.1 localhost\n", encoding="utf-8")
+    config_module.save(config_path, Config(domains=["reddit.com"]))
+    checker = Checker(config_path, hosts_path, clock=lambda: datetime(2026, 10, 5, 14, 0))
+
+    stop = threading.Event()
+    worker = threading.Thread(target=checker.run, args=(stop, 0.05))
+    worker.start()
+    time.sleep(0.2)
+    assert "reddit.com" in hosts_path.read_text(encoding="utf-8")
+
+    startup.stop_blocking(stop, worker, checker)
+    time.sleep(0.2)
+
+    text = hosts_path.read_text(encoding="utf-8")
+    assert "reddit.com" not in text
+    assert "127.0.0.1 localhost" in text
+
+
+def test_closing_blocky_survives_a_hosts_failure(tmp_path):
+    config_path = tmp_path / "config.yaml"
+    config_module.save(config_path, Config(domains=["reddit.com"]))
+    hosts_as_folder = tmp_path / "hosts"
+    hosts_as_folder.mkdir()
+    checker = Checker(config_path, hosts_as_folder)
+
+    stop = threading.Event()
+    worker = threading.Thread(target=checker.run, args=(stop, 0))
+    worker.start()
+    startup.stop_blocking(stop, worker, checker)
+
+    assert not worker.is_alive()
+
+
+@pytest.mark.parametrize("accepted, shown", [(False, 1), (True, 0)])
+def test_declined_uac_prompt_shows_a_message(monkeypatch, accepted, shown):
+    messages = []
+    monkeypatch.setattr(startup.os, "name", "nt")
+    monkeypatch.setattr(startup, "is_admin", lambda: False)
+    monkeypatch.setattr(startup, "relaunch_as_admin", lambda: accepted)
+    monkeypatch.setattr(startup, "show_admin_needed", lambda: messages.append(startup.ADMIN_NEEDED))
+
+    startup.main()
+
+    assert len(messages) == shown

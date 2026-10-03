@@ -24,6 +24,9 @@ class Checker:
         config = config_module.load(self.config_path)
         hosts.apply(blocked_domains(config, self.clock()), self.hosts_path)
 
+    def clear(self) -> None:
+        hosts.apply([], self.hosts_path)
+
     def run(self, stop: threading.Event, interval: float = 60) -> None:
         while not stop.is_set():
             try:
