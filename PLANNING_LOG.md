@@ -108,3 +108,5 @@
 2026-10-04 | p1-config fix manual check PASSED: Blocky starts with the owner's real config, the usual list and no warning | observed by you
 2026-10-04 | Friendlier input: a pasted web address is reduced to its domain; schedule times accept H:MM and HH:MM with the message 'Use a time like 09:00'; saving with no weekdays is refused with 'Pick at least one day' (refused, not warned; only when saving from the window, so an existing config with no weekdays still loads). Through the friendlier-input OpenSpec change | agent proposed, you decided
 2026-10-04 | Schedule times are picked with an hour menu (00-23) and a minute menu (00-59) instead of typed text, so an invalid time cannot be entered; every minute stays possible for short test windows. Through the time-menus OpenSpec change | agent proposed, you decided
+2026-10-04 | Time menus manual check PASSED for function: the Schedule tab shows the saved times and saves from the menus | observed by you
+2026-10-04 | The time menus look unpolished; forcing correct input comes first and the look of the app is left for a later design pass | you decided
