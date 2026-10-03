@@ -5,8 +5,8 @@
 
 ## 2. Brave verification
 
-- [ ] 2.1 Reload the extension in `brave://extensions`, start Blocky, and verify `reddit.com`, `x.com`, `nos.nl`, and `chess.com` show the block page
-- [ ] 2.2 Verify `youtube.com` shows the block page, not YouTube's offline page
+- [x] 2.1 Reload the extension in `brave://extensions`, start Blocky, and verify `reddit.com`, `x.com`, `nos.nl`, and `chess.com` show the block page
+- [x] 2.2 Verify `youtube.com` shows the block page, not YouTube's offline page
 - [ ] 2.3 Verify an ordinary site loads normally during an active window
 - [ ] 2.4 Verify with Blocky closed that a blocked site shows the browser's normal error page
 
