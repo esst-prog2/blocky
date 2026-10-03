@@ -51,3 +51,5 @@
 2026-10-03 | open-tab-block check 2.1 PASSED: clicking into a post in an open reddit.com tab immediately after a window started showed the block page straight away. This does not show whether the in-page listener or the one-minute sweep caught the move | observed by you
 2026-10-03 | open-tab-block check 2.3 PASSED: wikipedia.org loads normally while reddit.com is blocked during an active window | observed by you
 2026-10-03 | open-tab-block check 2.4 PASSED: reloading reddit.com during an active window still shows the block page | observed by you
+2026-10-03 | Spike private-window question: does blocking hold in a Brave private window, and does Blocky's block page appear there? | you decided
+2026-10-03 | Spike private-window answer criteria: five blocked sites (reddit.com, x.com, nos.nl, chess.com, youtube.com) visited with blocking active in a Brave private window, with the extension not allowed in private windows (the default); the answer is the count of sites where the real site loads, and the count where Blocky's page appears, each out of five | you decided
