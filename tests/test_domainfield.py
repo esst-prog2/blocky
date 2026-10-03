@@ -1,6 +1,6 @@
 import pytest
 
-from blocky.domainfield import allowed, cleaned_paste, hint
+from blocky.domainfield import allowed, can_save_edit, cleaned_paste, hint
 
 
 @pytest.mark.parametrize("text", ["", "reddit", "reddit.", "Reddit.com", "my-site.co.uk", "123.com"])
@@ -45,3 +45,14 @@ def test_hint_for_a_www_domain():
 
 def test_hint_for_a_domain_already_listed():
     assert hint("Reddit.com", ["reddit.com"]) == (False, "reddit.com is already in the list")
+
+
+@pytest.mark.parametrize("text, expected", [
+    ("chess.com", False),
+    ("chess", False),
+    ("reddit.com", False),
+    ("lichess.org", True),
+    ("Chess.org", True),
+])
+def test_edit_can_only_be_saved_when_valid_changed_and_not_a_duplicate(text, expected):
+    assert can_save_edit(text, "chess.com", ["reddit.com", "chess.com"]) is expected

@@ -68,16 +68,60 @@ def test_pasted_address_becomes_its_domain(app):
     assert app.add_button.cget("state") == "normal"
 
 
-def test_override_without_reason_shows_an_error(app):
+def test_override_without_reason_is_not_possible(app):
     add(app, "reddit.com")
+    assert app.override_button.cget("state") == "disabled"
+    assert app.override_hint.cget("text") == "Type a reason to override"
+    app.reason_entry.insert(0, "   ")
+    app._update_override_state()
     app._override()
-    assert "reason is required" in app.status_message.cget("text")
     assert app.controller.status()["blocked"] == ["reddit.com", "www.reddit.com"]
+
+
+def test_typing_a_reason_enables_override(app):
+    add(app, "reddit.com")
+    app.reason_entry.insert(0, "work thread")
+    app._update_override_state()
+    assert app.override_button.cget("state") == "normal"
+    assert app.override_hint.cget("text") == ""
+
+
+def test_override_and_undo_buttons_are_off_when_there_is_nothing_to_do(app):
+    assert app.override_button.cget("state") == "disabled"
+    assert app.override_hint.cget("text") == ""
+    assert app.undo_button.cget("state") == "disabled"
+
+
+def edit_row(app, index):
+    row = app.domain_list.winfo_children()[index]
+    entry, save = row.winfo_children()[0], row.winfo_children()[1]
+    return entry, save
+
+
+def retype(entry, text):
+    entry.delete(0, "end")
+    for character in text:
+        entry.insert("end", character)
+    entry.on_change()
+
+
+def test_edit_save_is_only_possible_for_a_valid_change(app):
+    add(app, "reddit.com")
+    add(app, "chess.com")
+    entry, save = edit_row(app, 1)
+    assert save.cget("state") == "disabled"
+    retype(entry, "chess")
+    assert save.cget("state") == "disabled"
+    retype(entry, "reddit.com")
+    assert save.cget("state") == "disabled"
+    retype(entry, "lichess.org")
+    assert save.cget("state") == "normal"
 
 
 def test_override_and_undo_update_status_and_history(app):
     add(app, "reddit.com")
     app.reason_entry.insert(0, "work thread")
+    app._update_override_state()
     app._override()
     app.update()
     assert app.status_label.cget("text") == "Window active, nothing blocked — 3h 00m remaining"

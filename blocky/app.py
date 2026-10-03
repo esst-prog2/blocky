@@ -6,7 +6,7 @@ import customtkinter as ctk
 
 from blocky import hosts
 from blocky.controller import Controller
-from blocky.domainfield import DomainField, hint
+from blocky.domainfield import DomainField, can_save_edit, hint
 from blocky.timefield import TimeField
 
 DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
@@ -74,13 +74,19 @@ class App(ctk.CTk):
         self.override_menu.pack(side="left", padx=(0, 8))
         self.reason_entry = ctk.CTkEntry(row, placeholder_text="Reason", width=260)
         self.reason_entry.pack(side="left", padx=(0, 8))
-        ctk.CTkButton(row, text="Override", command=self._override).pack(side="left")
+        self.reason_entry.bind("<KeyRelease>", lambda _event: self._update_override_state())
+        self.reason_entry.bind("<Return>", lambda _event: self._override())
+        self.override_button = ctk.CTkButton(row, text="Override", command=self._override, state="disabled")
+        self.override_button.pack(side="left")
+        self.override_hint = ctk.CTkLabel(frame, text="", text_color="gray50")
+        self.override_hint.pack(anchor="w", padx=12)
 
         undo_row = ctk.CTkFrame(frame, fg_color="transparent")
         undo_row.pack(fill="x", padx=12, pady=4)
         self.undo_menu = ctk.CTkOptionMenu(undo_row, values=["No domain unblocked"])
         self.undo_menu.pack(side="left", padx=(0, 8))
-        ctk.CTkButton(undo_row, text="Undo override", command=self._undo).pack(side="left")
+        self.undo_button = ctk.CTkButton(undo_row, text="Undo override", command=self._undo, state="disabled")
+        self.undo_button.pack(side="left")
 
         self.status_message = ctk.CTkLabel(frame, text="", text_color="red")
         self.status_message.pack(anchor="w", padx=12, pady=4)
@@ -108,6 +114,20 @@ class App(ctk.CTk):
         )
         self._set_menu(self.override_menu, view["overridable"], "No domain blocked")
         self._set_menu(self.undo_menu, sorted(released), "No domain unblocked")
+        self._overridable = view["overridable"]
+        self._undoable = sorted(released)
+        self._update_override_state()
+
+    def _can_override(self) -> bool:
+        return self.override_menu.get() in self._overridable and bool(self.reason_entry.get().strip())
+
+    def _update_override_state(self) -> None:
+        domain_available = self.override_menu.get() in self._overridable
+        self.override_button.configure(state="normal" if self._can_override() else "disabled")
+        missing_reason = domain_available and not self.reason_entry.get().strip()
+        self.override_hint.configure(text="Type a reason to override" if missing_reason else "")
+        undoable = self.undo_menu.get() in self._undoable
+        self.undo_button.configure(state="normal" if undoable else "disabled")
 
     @staticmethod
     def _set_menu(menu: ctk.CTkOptionMenu, options: list[str], empty: str) -> None:
@@ -117,6 +137,8 @@ class App(ctk.CTk):
             menu.set(options[0])
 
     def _override(self) -> None:
+        if not self._can_override():
+            return
         domain = self.override_menu.get()
         if self._attempt(
             lambda: self.controller.override(domain, self.reason_entry.get()),
@@ -159,10 +181,14 @@ class App(ctk.CTk):
             entry = DomainField(row, width=320)
             entry.insert(0, domain)
             entry.pack(side="left", padx=(0, 8))
-            ctk.CTkButton(
-                row, text="Save", width=60,
+            save = ctk.CTkButton(
+                row, text="Save", width=60, state="disabled",
                 command=lambda i=index, e=entry: self._edit_domain(i, e.get()),
-            ).pack(side="left", padx=(0, 8))
+            )
+            save.pack(side="left", padx=(0, 8))
+            entry.on_change = lambda e=entry, b=save, original=domain: b.configure(
+                state="normal" if can_save_edit(e.get(), original, self.controller.config.domains) else "disabled"
+            )
             ctk.CTkButton(
                 row, text="Remove", width=70, fg_color="gray40",
                 command=lambda i=index: self._remove_domain(i),
@@ -182,6 +208,9 @@ class App(ctk.CTk):
             self._after_domain_change()
 
     def _edit_domain(self, index: int, entry: str) -> None:
+        original = self.controller.config.domains[index]
+        if not can_save_edit(entry, original, self.controller.config.domains):
+            return
         if self._attempt(lambda: self.controller.edit_domain(index, entry), self.block_message):
             self._after_domain_change()
 

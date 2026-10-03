@@ -33,6 +33,13 @@ def hint(text: str, existing: list[str]) -> tuple[bool, str]:
     return True, "Adds " + " and ".join(covered_hostnames(domain))
 
 
+def can_save_edit(text: str, original: str, existing: list[str]) -> bool:
+    """Whether an edited domain may be saved: valid, changed, and not another entry on the list."""
+    others = [domain for domain in existing if domain != original]
+    addable, _ = hint(text, others)
+    return addable and validate(text) != original
+
+
 class DomainField(ctk.CTkEntry):
     """A text box that only accepts characters that can appear in a domain."""
 
