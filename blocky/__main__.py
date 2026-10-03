@@ -33,6 +33,7 @@ def show_admin_needed() -> None:
 
 def stop_blocking(stop: threading.Event, worker: threading.Thread, checker: Checker, error_log: Path) -> None:
     stop.set()
+    checker.request_sync()
     worker.join()
     try:
         checker.clear()
@@ -72,7 +73,11 @@ def main() -> None:
     )
 
     try:
-        App(config_path, warning=lambda: warning_text(checker.last_error, server_warning)).mainloop()
+        App(
+            config_path,
+            warning=lambda: warning_text(checker.last_error, server_warning),
+            sync=checker.request_sync,
+        ).mainloop()
     finally:
         stop_blocking(stop, worker, checker, config_path.parent / "errors.log")
         if server is not None:

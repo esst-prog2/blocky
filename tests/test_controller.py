@@ -146,3 +146,16 @@ def test_countdown_advances_with_clock(make):
     controller.override("reddit.com", "reason")
     make.clock["now"] = datetime(2026, 10, 5, 15, 30)
     assert controller.status()["text"] == "Window active, nothing blocked — 1h 30m remaining"
+
+
+def test_window_asks_the_background_check_instead_of_writing_hosts(tmp_path):
+    requests = []
+    controller = Controller(
+        tmp_path / "config.yaml",
+        tmp_path / "hosts",
+        clock=lambda: MONDAY_2PM,
+        sync=lambda: requests.append("sync"),
+    )
+    controller.add_domain("reddit.com")
+    assert requests == ["sync"]
+    assert not (tmp_path / "hosts").exists()

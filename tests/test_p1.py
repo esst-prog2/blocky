@@ -120,3 +120,19 @@ def test_declined_uac_prompt_shows_a_message(monkeypatch, accepted, shown):
     startup.main()
 
     assert len(messages) == shown
+
+
+def test_closing_does_not_wait_for_the_next_minute(tmp_path):
+    config_path = tmp_path / "config.yaml"
+    config_module.save(config_path, Config(domains=["reddit.com"]))
+    checker = Checker(config_path, tmp_path / "hosts", clock=lambda: datetime(2026, 10, 5, 14, 0))
+
+    stop = threading.Event()
+    worker = threading.Thread(target=checker.run, args=(stop, 60))
+    worker.start()
+    time.sleep(0.2)
+    started = time.monotonic()
+    startup.stop_blocking(stop, worker, checker, tmp_path / "errors.log")
+
+    assert time.monotonic() - started < 2
+    assert not worker.is_alive()

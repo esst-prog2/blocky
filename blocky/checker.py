@@ -19,10 +19,14 @@ class Checker:
         self.hosts_path = hosts_path
         self.clock = clock
         self.last_error: str | None = None
+        self._wake = threading.Event()
 
     def sync(self) -> None:
         config = config_module.load(self.config_path)
         hosts.apply(blocked_domains(config, self.clock()), self.hosts_path)
+
+    def request_sync(self) -> None:
+        self._wake.set()
 
     def clear(self) -> None:
         hosts.apply([], self.hosts_path)
@@ -34,4 +38,5 @@ class Checker:
                 self.last_error = None
             except Exception as error:
                 self.last_error = str(error)
-            stop.wait(interval)
+            self._wake.wait(interval)
+            self._wake.clear()

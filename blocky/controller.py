@@ -24,15 +24,18 @@ class Controller:
         config_path: Path,
         hosts_path: Path,
         clock: Callable[[], datetime] = datetime.now,
+        sync: Callable[[], None] | None = None,
     ) -> None:
         self.config_path = config_path
         self.clock = clock
         self.config: Config = config_module.load(config_path)
         self.checker = Checker(config_path, hosts_path, clock)
+        # In the app, the background check is the only hosts writer and `sync` asks it to run now.
+        self.sync = sync or self.checker.sync
 
     def save(self) -> None:
         config_module.save(self.config_path, self.config)
-        self.checker.sync()
+        self.sync()
 
     def add_domain(self, entry: str) -> None:
         domain = validate(entry)
