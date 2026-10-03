@@ -47,7 +47,9 @@ def test_sync_request_wakes_the_checker_before_the_interval(tmp_path):
     time.sleep(0.2)
     config_module.save(config_path, Config(domains=["reddit.com"]))
     checker.request_sync()
-    time.sleep(0.5)
+    deadline = time.monotonic() + 5
+    while "reddit.com" not in hosts_path.read_text(encoding="utf-8") and time.monotonic() < deadline:
+        time.sleep(0.05)
     text = hosts_path.read_text(encoding="utf-8")
 
     stop.set()

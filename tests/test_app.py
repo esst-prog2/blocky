@@ -1,26 +1,12 @@
-import tkinter
 from datetime import datetime
 
 import pytest
 
-from blocky.app import App
-
 MONDAY_2PM = datetime(2026, 10, 5, 14, 0)
 
 
-def open_app(*args, **kwargs):
-    # On this machine Tk sometimes cannot read its own library files while a window opens
-    # (most likely antivirus scanning them), so opening is retried a few times.
-    for attempt in range(3):
-        try:
-            return App(*args, **kwargs)
-        except tkinter.TclError:
-            if attempt == 2:
-                raise
-
-
 @pytest.fixture
-def app(tmp_path):
+def app(tmp_path, open_app):
     window = open_app(tmp_path / "config.yaml", hosts_path=tmp_path / "hosts", clock=lambda: MONDAY_2PM)
     window.update()
     yield window
@@ -82,7 +68,7 @@ def test_shortlist_is_saved_without_blank_lines(app):
     assert app.controller.config.shortlist == ["10-minute walk", "read notes"]
 
 
-def test_warning_is_shown_on_the_status_tab(tmp_path):
+def test_warning_is_shown_on_the_status_tab(tmp_path, open_app):
     window = open_app(tmp_path / "config.yaml", hosts_path=tmp_path / "hosts", warning=lambda: "Warning: test")
     window.update()
     try:

@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+from blocky import server
+
 EXTENSION = Path(__file__).resolve().parent.parent / "extension"
 
 
@@ -24,3 +26,8 @@ def test_extension_keeps_no_editable_copy_of_data():
         assert "chrome.storage" not in source, path.name
         assert "localStorage" not in source, path.name
         assert "sessionStorage" not in source, path.name
+
+
+def test_extension_and_app_use_the_same_address():
+    source = (EXTENSION / "logic.js").read_text(encoding="utf-8")
+    assert f'APP_ORIGIN = "http://{server.HOST}:{server.PORT}"' in source

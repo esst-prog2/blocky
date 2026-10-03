@@ -100,3 +100,23 @@ def test_removed_domain_leaves_hosts_file_mid_window(tmp_path):
 
     controller.remove_domain(0)
     assert "reddit.com" not in hosts_path.read_text(encoding="utf-8")
+
+
+def test_background_error_is_logged_once_while_it_repeats(tmp_path):
+    error_log = tmp_path / "errors.log"
+    checker = Checker(tmp_path / "config.yaml", tmp_path / "hosts", clock=lambda: NOON, error_log=error_log)
+    stop = threading.Event()
+    attempts = {"count": 0}
+
+    def sync_that_keeps_failing():
+        attempts["count"] += 1
+        if attempts["count"] == 3:
+            stop.set()
+        raise OSError("hosts file is locked")
+
+    checker.sync = sync_that_keeps_failing
+    checker.run(stop, interval=0)
+
+    lines = error_log.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 1
+    assert "hosts file is locked" in lines[0]
