@@ -82,3 +82,7 @@
 2026-10-03 | Spike subdomains answer: FAIL (gap). During an active window no subdomain is blocked (all resolve to real addresses); old.reddit.com and music.youtube.com load; new.reddit.com, m.youtube.com and mobile.x.com end on Blocky's page only because the site redirects to the main domain | observed by you
 2026-10-03 | Subdomain fix: option A, the extension redirects any subdomain of a blocked domain (Brave only); the 'Extension does not block on its own' rule is changed to allow this, through an OpenSpec change | agent proposed, you decided
 2026-10-03 | subdomain-redirect change proposed: a subdomain is a hostname ending in a dot plus a blocked domain (so netflix.com never matches x.com); subdomains of an overridden domain are not redirected; no design.md, as the change is one function in extension/logic.js | agent proposed
+2026-10-03 | subdomain-redirect check 3.1 PASSED: after reloading the extension, old.reddit.com and music.youtube.com show Blocky's page during an active window | observed by you
+2026-10-03 | subdomain-redirect check 3.2 PASSED: an open music.youtube.com tab switched to Blocky's page within a minute of the window starting | observed by you
+2026-10-03 | subdomain-redirect check 3.3 PASSED: wikipedia.org loads during the window | observed by you
+2026-10-03 | subdomain-redirect archived; browser-extension spec updated (subdomains redirected by the extension only) | agent proposed, you decided

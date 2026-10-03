@@ -10,11 +10,11 @@
 
 ## 3. Brave verification
 
-- [ ] 3.1 Reload the extension, start Blocky in an active window, and verify `old.reddit.com` and `music.youtube.com` show the block page in a new tab
-- [ ] 3.2 Verify an open `music.youtube.com` tab is redirected within about a minute of a window starting
-- [ ] 3.3 Verify `wikipedia.org` still loads during the window
+- [x] 3.1 Reload the extension, start Blocky in an active window, and verify `old.reddit.com` and `music.youtube.com` show the block page in a new tab
+- [x] 3.2 Verify an open `music.youtube.com` tab is redirected within about a minute of a window starting
+- [x] 3.3 Verify `wikipedia.org` still loads during the window
 
 ## 4. Record
 
-- [ ] 4.1 Log the Brave results in `PLANNING_LOG.md`
-- [ ] 4.2 Archive this change once the verification passes
+- [x] 4.1 Log the Brave results in `PLANNING_LOG.md`
+- [x] 4.2 Archive this change once the verification passes
