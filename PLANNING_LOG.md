@@ -94,3 +94,4 @@
 2026-10-03 | pytest pinned to 9.1.1 in requirements.txt, the installed version | agent proposed, you decided
 2026-10-03 | Linter: ruff 0.16.10 installed for the user (not added to requirements.txt); first run found 31 findings, only 1 in the bug-finding rule groups (an unused import) | you decided
 2026-10-03 | Ruff fixes applied (unused import, Callable from collections.abc, sorted imports, dict instead of lambda: {}); the 22 remaining findings (naive local datetimes, catch-all excepts in the checker and close cleanup) are kept as deliberate. 88 tests pass | agent proposed, you decided
+2026-10-03 | From the project review, fix three items: one hosts writer (the background check), UI tests plus more testable extension logic, and one port with errors logged during normal running; the admin-only helper is not done now | agent proposed, you decided
