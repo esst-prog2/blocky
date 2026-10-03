@@ -32,3 +32,4 @@
 2026-10-03 | Logic moved into a controller class so tests run without creating a window per test; the window is created once in a smoke test | agent proposed, you decided
 2026-10-03 | Undo button verified in the app: re-blocks at once, history shows both the override and the undo line | observed by you
 2026-10-03 | The "Your spike" issue is not in the repository; the owner has asked the teacher for it, and the spike has not started | observed by you
+2026-10-03 | Blocky keeps the UAC prompt on each launch; no scheduled task with highest privileges | you decided
