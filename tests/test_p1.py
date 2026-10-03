@@ -4,11 +4,11 @@ from datetime import datetime
 
 import pytest
 
+import blocky.__main__ as startup
 from blocky import config as config_module
+from blocky.__main__ import start_block_page
 from blocky.checker import Checker
 from blocky.config import Config
-import blocky.__main__ as startup
-from blocky.__main__ import start_block_page
 from blocky.controller import Controller, warning_text
 
 
@@ -49,7 +49,7 @@ def test_port_in_use_still_lets_blocking_run(monkeypatch):
         raise OSError("port 8765 is in use")
 
     monkeypatch.setattr(startup, "Server", server_that_cannot_bind)
-    server, warning = start_block_page(lambda: {})
+    server, warning = start_block_page(dict)
     assert server is None
     assert warning is not None
 

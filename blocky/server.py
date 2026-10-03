@@ -1,8 +1,8 @@
 import html
 import json
 import threading
+from collections.abc import Callable
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from typing import Callable
 from urllib.parse import parse_qs, urlparse
 
 HOST = "127.0.0.1"

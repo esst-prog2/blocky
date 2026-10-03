@@ -93,3 +93,4 @@
 2026-10-03 | Status text: during an active window with nothing blocked (empty list or every domain overridden) the panel reads "Window active, nothing blocked — <time> remaining"; added to the status-panel spec through the status-nothing-blocked change; test_countdown_advances_with_clock updated, as it overrides its only domain | agent proposed, you decided
 2026-10-03 | pytest pinned to 9.1.1 in requirements.txt, the installed version | agent proposed, you decided
 2026-10-03 | Linter: ruff 0.16.10 installed for the user (not added to requirements.txt); first run found 31 findings, only 1 in the bug-finding rule groups (an unused import) | you decided
+2026-10-03 | Ruff fixes applied (unused import, Callable from collections.abc, sorted imports, dict instead of lambda: {}); the 22 remaining findings (naive local datetimes, catch-all excepts in the checker and close cleanup) are kept as deliberate. 88 tests pass | agent proposed, you decided

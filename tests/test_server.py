@@ -1,5 +1,4 @@
 import json
-import threading
 import urllib.request
 
 import pytest

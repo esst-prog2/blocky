@@ -3,9 +3,9 @@ from datetime import datetime
 import pytest
 
 from blocky import config as config_module
+from blocky import rules
 from blocky.controller import Controller
 from blocky.server import render_home
-from blocky import rules
 
 MONDAY_2PM = datetime(2026, 10, 5, 14, 0)
 
