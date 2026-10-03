@@ -41,6 +41,16 @@ def test_unblocked_domain_is_reported_as_not_blocked(server):
     assert "example.com is not blocked right now" in body
 
 
+def test_blocked_page_names_a_subdomain_as_blocked(server):
+    _, _, body = fetch(server, "/blocked?domain=old.reddit.com")
+    assert "old.reddit.com is blocked until 17:00" in body
+
+
+def test_lookalike_domain_is_reported_as_not_blocked(server):
+    _, _, body = fetch(server, "/blocked?domain=notreddit.com")
+    assert "notreddit.com is not blocked right now" in body
+
+
 def test_state_endpoint_returns_json(server):
     _, content_type, body = fetch(server, "/api/state")
     assert content_type == "application/json"
