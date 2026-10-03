@@ -80,3 +80,4 @@
 2026-10-03 | Manual check of the UAC fix PASSED: clicking No on the UAC prompt shows the 'Blocky needs administrator rights' message box | observed by you
 2026-10-03 | P2: only the subdomain check is done now (old.reddit.com, new.reddit.com, m.youtube.com, music.youtube.com, mobile.x.com during an active window; pass = none load; checklist in spike/subdomains/checklist.md) | you decided
 2026-10-03 | Spike subdomains answer: FAIL (gap). During an active window no subdomain is blocked (all resolve to real addresses); old.reddit.com and music.youtube.com load; new.reddit.com, m.youtube.com and mobile.x.com end on Blocky's page only because the site redirects to the main domain | observed by you
+2026-10-03 | Subdomain fix: option A, the extension redirects any subdomain of a blocked domain (Brave only); the 'Extension does not block on its own' rule is changed to allow this, through an OpenSpec change | agent proposed, you decided
