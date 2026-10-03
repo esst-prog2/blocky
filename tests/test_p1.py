@@ -136,3 +136,120 @@ def test_closing_does_not_wait_for_the_next_minute(tmp_path):
 
     assert time.monotonic() - started < 2
     assert not worker.is_alive()
+
+
+MONDAY_2PM = datetime(2026, 10, 5, 14, 0)
+
+
+class FakeWindows:
+    def __init__(self, relaunch_result=42):
+        self.calls = []
+        self.relaunch_result = relaunch_result
+        self.windll = self
+        self.shell32 = self
+
+    def ShellExecuteW(self, *arguments):
+        self.calls.append(arguments)
+        return self.relaunch_result
+
+    def SetCurrentProcessExplicitAppUserModelID(self, name):
+        self.calls.append(name)
+
+
+@pytest.mark.parametrize("result, accepted", [(42, True), (5, False)])
+def test_relaunch_asks_for_admin_and_passes_the_arguments_on(monkeypatch, result, accepted):
+    windows = FakeWindows(result)
+    monkeypatch.setattr(startup, "ctypes", windows)
+    monkeypatch.setattr(startup.sys, "argv", ["blocky", "--flag", "a b"])
+
+    assert startup.relaunch_as_admin() is accepted
+    _, verb, _, parameters, _, _ = windows.calls[0]
+    assert verb == "runas"
+    assert parameters == '-m blocky "--flag" "a b"'
+
+
+class FakeServer:
+    def __init__(self, load_state):
+        self.load_state = load_state
+        self.running = False
+
+    def start(self):
+        self.running = True
+
+    def stop(self):
+        self.running = False
+
+
+@pytest.fixture
+def started(tmp_path, monkeypatch):
+    """Runs main() as admin with a fake window, a fake block page and a hosts file in tmp_path."""
+    config_path = tmp_path / "Blocky" / "config.yaml"
+    hosts_path = tmp_path / "hosts"
+    hosts_path.write_text("127.0.0.1 localhost\n", encoding="utf-8")
+    seen = {"servers": []}
+
+    def server(load_state):
+        seen["servers"].append(FakeServer(load_state))
+        return seen["servers"][-1]
+
+    class Window:
+        def __init__(self, path, warning, sync):
+            seen["warning"] = warning
+
+        def mainloop(self):
+            deadline = time.monotonic() + 5
+            while "reddit.com" not in hosts_path.read_text(encoding="utf-8") and time.monotonic() < deadline:
+                time.sleep(0.05)
+            seen["hosts while open"] = hosts_path.read_text(encoding="utf-8")
+            seen["server running"] = seen["servers"][0].running
+            if seen.get("crash"):
+                raise RuntimeError("window crashed")
+
+    monkeypatch.setattr(startup, "ctypes", FakeWindows())
+    monkeypatch.setattr(startup.os, "name", "nt")
+    monkeypatch.setattr(startup, "is_admin", lambda: True)
+    monkeypatch.setattr(startup.config_module, "default_path", lambda: config_path)
+    monkeypatch.setattr(
+        startup,
+        "Checker",
+        lambda path, error_log: Checker(path, hosts_path, clock=lambda: MONDAY_2PM, error_log=error_log),
+    )
+    monkeypatch.setattr(startup, "Server", server)
+    monkeypatch.setattr(startup, "App", Window)
+    return config_path, hosts_path, seen
+
+
+def test_startup_blocks_while_open_and_cleans_up_on_close(started):
+    config_path, hosts_path, seen = started
+    config_module.save(config_path, Config(domains=["reddit.com"]))
+
+    startup.main()
+
+    assert "127.0.0.1 reddit.com" in seen["hosts while open"]
+    assert seen["server running"]
+    assert seen["warning"]() == ""
+    assert hosts_path.read_text(encoding="utf-8") == "127.0.0.1 localhost\n"
+    assert not seen["servers"][0].running
+
+
+def test_startup_cleans_up_when_the_window_crashes(started):
+    config_path, hosts_path, seen = started
+    config_module.save(config_path, Config(domains=["reddit.com"]))
+    seen["crash"] = True
+
+    with pytest.raises(RuntimeError):
+        startup.main()
+
+    assert hosts_path.read_text(encoding="utf-8") == "127.0.0.1 localhost\n"
+    assert not seen["servers"][0].running
+
+
+def test_startup_logs_and_shows_a_damaged_config(started):
+    config_path, _, seen = started
+    config_path.parent.mkdir(parents=True)
+    config_path.write_text("domains: [reddit.com\n", encoding="utf-8")
+
+    startup.main()
+
+    assert "config.yaml" in seen["warning"]()
+    assert "config.yaml" in (config_path.parent / "errors.log").read_text(encoding="utf-8")
