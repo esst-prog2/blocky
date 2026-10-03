@@ -1,0 +1,10 @@
+Real IPv4 addresses, from: nslookup <domain> 1.1.1.1 (Cloudflare DNS, bypasses the hosts file).
+Transcribed from the screenshots in this folder. IPv6 addresses are not used.
+
+reddit.com: 151.101.65.140, 151.101.1.140, 151.101.193.140, 151.101.129.140
+x.com: 162.159.140.229
+youtube.com: 142.250.109.91, 142.250.109.190, 142.250.109.93, 142.250.109.136
+nos.nl: 13.32.12.24, 13.32.12.78, 13.32.12.112, 13.32.12.123
+chess.com: 104.18.137.67, 104.18.138.67, 104.18.140.67, 104.18.139.67, 104.18.141.67
+
+Address tested for each site (the first listed): reddit.com 151.101.65.140, x.com 162.159.140.229, youtube.com 142.250.109.91, nos.nl 13.32.12.24, chess.com 104.18.137.67
