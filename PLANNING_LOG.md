@@ -35,4 +35,5 @@
 2026-10-03 | Blocky keeps the UAC prompt on each launch; no scheduled task with highest privileges | you decided
 2026-10-03 | Blocky stays a desktop app with hosts-file blocking; a Chrome-only extension replacement is rejected because other browsers would be unblocked | you decided
 2026-10-03 | HW4 spike question: of ten sites I would really block, how many fail to reach Blocky's page in my normal Brave profile but reach it in a fresh profile? | set by course spike issue
+2026-10-03 | HW4 spike domains, fixed before testing: nos.nl, nu.nl, reddit.com, x.com, youtube.com, chess.com, manners.nl, temu.com, hardverapro.hu, linkedin.com | you decided
 2026-10-03 | HW4 spike answer: a table per domain and profile (event fired, error string, service worker registered, page seen), then one number: how many of ten fail in the normal profile and reach the page in the fresh one. If zero, the limitation stands; if one or more, the listener changes | set by course spike issue
