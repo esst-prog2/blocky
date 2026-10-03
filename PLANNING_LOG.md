@@ -45,3 +45,5 @@
 2026-10-03 | early-block-redirect check 2.2 PASSED: youtube.com shows Blocky's block page on three visits after reloading the extension; debug logging removed | observed by you
 2026-10-03 | early-block-redirect check 2.3 PASSED: an ordinary site (wikipedia.org) loads normally | observed by you
 2026-10-03 | early-block-redirect check 2.4 PASSED: with Blocky closed, reddit.com shows the browser's normal error page | observed by you
+2026-10-03 | Spike secure-dns question: with Brave's secure DNS on, do blocked domains still reach Blocky's page? | you decided
+2026-10-03 | Spike secure-dns answer criteria: test the same ten domains as the HW4 spike, once with secure DNS on and once with it off; the answer is the count of domains that reach Blocky's page in each setting, out of ten; record the secure DNS provider used | you decided
