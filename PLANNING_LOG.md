@@ -79,3 +79,4 @@
 2026-10-03 | Manual check of the close fix PASSED: Blocky closed during an active window at 20:10:37; at 20:10:47 the hosts file had no Blocky entries, no hosts.tmp was left and errors.log had no new line | observed by you
 2026-10-03 | Manual check of the UAC fix PASSED: clicking No on the UAC prompt shows the 'Blocky needs administrator rights' message box | observed by you
 2026-10-03 | P2: only the subdomain check is done now (old.reddit.com, new.reddit.com, m.youtube.com, music.youtube.com, mobile.x.com during an active window; pass = none load; checklist in spike/subdomains/checklist.md) | you decided
+2026-10-03 | Spike subdomains answer: FAIL (gap). During an active window no subdomain is blocked (all resolve to real addresses); old.reddit.com and music.youtube.com load; new.reddit.com, m.youtube.com and mobile.x.com end on Blocky's page only because the site redirects to the main domain | observed by you
