@@ -45,3 +45,5 @@
 2026-10-03 | early-block-redirect check 2.2 PASSED: youtube.com shows Blocky's block page on three visits after reloading the extension; debug logging removed | observed by you
 2026-10-03 | early-block-redirect check 2.3 PASSED: an ordinary site (wikipedia.org) loads normally | observed by you
 2026-10-03 | early-block-redirect check 2.4 PASSED: with Blocky closed, reddit.com shows the browser's normal error page | observed by you
+2026-10-03 | Spike ip-address question: can a blocked site be reached by typing its IP address? | you decided
+2026-10-03 | Spike ip-address answer criteria: for five blocked sites (reddit.com, x.com, nos.nl, chess.com, youtube.com), find each real IP address with DNS queried directly (not through the hosts file), then try http://IP and https://IP with blocking active; the answer is the count of sites where the real site loads, out of five | you decided
