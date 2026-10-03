@@ -53,3 +53,4 @@
 2026-10-03 | open-tab-block check 2.4 PASSED: reloading reddit.com during an active window still shows the block page | observed by you
 2026-10-03 | Spike private-window question: does blocking hold in a Brave private window, and does Blocky's block page appear there? | you decided
 2026-10-03 | Spike private-window answer criteria: five blocked sites (reddit.com, x.com, nos.nl, chess.com, youtube.com) visited with blocking active in a Brave private window, with the extension not allowed in private windows (the default); the answer is the count of sites where the real site loads, and the count where Blocky's page appears, each out of five | you decided
+2026-10-03 | Spike private-window answer: 0 of 5 blocked sites load in a Brave private window, and 0 of 5 show Blocky's page (the browser's error page appears instead). wikipedia.org, not blocked, loads as a control. Blocking holds, but the block page is not shown in private windows | observed by you
