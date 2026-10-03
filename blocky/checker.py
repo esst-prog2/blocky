@@ -1,7 +1,7 @@
 import threading
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
-from typing import Callable
 
 from blocky import config as config_module
 from blocky import hosts

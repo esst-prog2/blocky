@@ -3,7 +3,14 @@ from datetime import datetime
 import pytest
 
 from blocky.config import Config
-from blocky.rules import blocked_domains, override, released_until, snapshot, status_text, undo_override
+from blocky.rules import (
+    blocked_domains,
+    override,
+    released_until,
+    snapshot,
+    status_text,
+    undo_override,
+)
 
 
 def at(day, hour, minute=0):
