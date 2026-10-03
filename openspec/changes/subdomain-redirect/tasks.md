@@ -1,12 +1,12 @@
 ## 1. Code
 
-- [ ] 1.1 Change `shouldRedirect` in `extension/logic.js` so a hostname matches a blocked domain or ends with a dot followed by a blocked domain, and verify with `node --test extension/logic.test.js`
-- [ ] 1.2 Add tests to `extension/logic.test.js` for: a subdomain (`old.reddit.com`), a deeper subdomain (`a.b.reddit.com`), a lookalike (`netflix.com` with `x.com` blocked), a subdomain of an overridden domain (not in the blocked list), and an inactive window; verify they all pass
-- [ ] 1.3 Run the Python suite (`python -m pytest -q`) and verify it still passes, including the extension file checks
+- [x] 1.1 Change `shouldRedirect` in `extension/logic.js` so a hostname matches a blocked domain or ends with a dot followed by a blocked domain, and verify with `node --test extension/logic.test.js`
+- [x] 1.2 Add tests to `extension/logic.test.js` for: a subdomain (`old.reddit.com`), a deeper subdomain (`a.b.reddit.com`), a lookalike (`netflix.com` with `x.com` blocked), a subdomain of an overridden domain (not in the blocked list), and an inactive window; verify they all pass
+- [x] 1.3 Run the Python suite (`python -m pytest -q`) and verify it still passes, including the extension file checks
 
 ## 2. Docs
 
-- [ ] 2.1 Add to the README risks section that subdomains of blocked sites are blocked only in Brave with the extension, and verify the wording against the spike results
+- [x] 2.1 Add to the README risks section that subdomains of blocked sites are blocked only in Brave with the extension, and verify the wording against the spike results
 
 ## 3. Brave verification
 
