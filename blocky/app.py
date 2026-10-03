@@ -1,15 +1,15 @@
 from collections.abc import Callable
-from datetime import datetime, time
+from datetime import datetime
 from pathlib import Path
 
 import customtkinter as ctk
 
 from blocky import hosts
 from blocky.controller import Controller
+from blocky.domainfield import DomainField, can_save_edit, hint
+from blocky.timefield import TimeField
 
 DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-HOURS = [f"{hour:02d}" for hour in range(24)]
-MINUTES = [f"{minute:02d}" for minute in range(60)]
 
 
 class App(ctk.CTk):
@@ -74,13 +74,19 @@ class App(ctk.CTk):
         self.override_menu.pack(side="left", padx=(0, 8))
         self.reason_entry = ctk.CTkEntry(row, placeholder_text="Reason", width=260)
         self.reason_entry.pack(side="left", padx=(0, 8))
-        ctk.CTkButton(row, text="Override", command=self._override).pack(side="left")
+        self.reason_entry.bind("<KeyRelease>", lambda _event: self._update_override_state())
+        self.reason_entry.bind("<Return>", lambda _event: self._override())
+        self.override_button = ctk.CTkButton(row, text="Override", command=self._override, state="disabled")
+        self.override_button.pack(side="left")
+        self.override_hint = ctk.CTkLabel(frame, text="", text_color="gray50")
+        self.override_hint.pack(anchor="w", padx=12)
 
         undo_row = ctk.CTkFrame(frame, fg_color="transparent")
         undo_row.pack(fill="x", padx=12, pady=4)
         self.undo_menu = ctk.CTkOptionMenu(undo_row, values=["No domain unblocked"])
         self.undo_menu.pack(side="left", padx=(0, 8))
-        ctk.CTkButton(undo_row, text="Undo override", command=self._undo).pack(side="left")
+        self.undo_button = ctk.CTkButton(undo_row, text="Undo override", command=self._undo, state="disabled")
+        self.undo_button.pack(side="left")
 
         self.status_message = ctk.CTkLabel(frame, text="", text_color="red")
         self.status_message.pack(anchor="w", padx=12, pady=4)
@@ -108,6 +114,20 @@ class App(ctk.CTk):
         )
         self._set_menu(self.override_menu, view["overridable"], "No domain blocked")
         self._set_menu(self.undo_menu, sorted(released), "No domain unblocked")
+        self._overridable = view["overridable"]
+        self._undoable = sorted(released)
+        self._update_override_state()
+
+    def _can_override(self) -> bool:
+        return self.override_menu.get() in self._overridable and bool(self.reason_entry.get().strip())
+
+    def _update_override_state(self) -> None:
+        domain_available = self.override_menu.get() in self._overridable
+        self.override_button.configure(state="normal" if self._can_override() else "disabled")
+        missing_reason = domain_available and not self.reason_entry.get().strip()
+        self.override_hint.configure(text="Type a reason to override" if missing_reason else "")
+        undoable = self.undo_menu.get() in self._undoable
+        self.undo_button.configure(state="normal" if undoable else "disabled")
 
     @staticmethod
     def _set_menu(menu: ctk.CTkOptionMenu, options: list[str], empty: str) -> None:
@@ -117,6 +137,8 @@ class App(ctk.CTk):
             menu.set(options[0])
 
     def _override(self) -> None:
+        if not self._can_override():
+            return
         domain = self.override_menu.get()
         if self._attempt(
             lambda: self.controller.override(domain, self.reason_entry.get()),
@@ -135,9 +157,15 @@ class App(ctk.CTk):
     def _build_block_list(self, frame: ctk.CTkFrame) -> None:
         row = ctk.CTkFrame(frame, fg_color="transparent")
         row.pack(fill="x", padx=12, pady=12)
-        self.new_domain_entry = ctk.CTkEntry(row, placeholder_text="example.com", width=320)
+        self.new_domain_entry = DomainField(
+            row, on_change=self._update_domain_hint, placeholder_text="example.com", width=320
+        )
         self.new_domain_entry.pack(side="left", padx=(0, 8))
-        ctk.CTkButton(row, text="Add", command=self._add_domain).pack(side="left")
+        self.new_domain_entry.bind("<Return>", lambda _event: self._add_domain())
+        self.add_button = ctk.CTkButton(row, text="Add", command=self._add_domain, state="disabled")
+        self.add_button.pack(side="left")
+        self.domain_hint = ctk.CTkLabel(frame, text="", text_color="gray50")
+        self.domain_hint.pack(anchor="w", padx=12)
         self.block_message = ctk.CTkLabel(frame, text="", text_color="red")
         self.block_message.pack(anchor="w", padx=12)
         self.domain_list = ctk.CTkScrollableFrame(frame)
@@ -150,24 +178,39 @@ class App(ctk.CTk):
         for index, domain in enumerate(self.controller.config.domains):
             row = ctk.CTkFrame(self.domain_list, fg_color="transparent")
             row.pack(fill="x", pady=2)
-            entry = ctk.CTkEntry(row, width=320)
+            entry = DomainField(row, width=320)
             entry.insert(0, domain)
             entry.pack(side="left", padx=(0, 8))
-            ctk.CTkButton(
-                row, text="Save", width=60,
+            save = ctk.CTkButton(
+                row, text="Save", width=60, state="disabled",
                 command=lambda i=index, e=entry: self._edit_domain(i, e.get()),
-            ).pack(side="left", padx=(0, 8))
+            )
+            save.pack(side="left", padx=(0, 8))
+            entry.on_change = lambda e=entry, b=save, original=domain: b.configure(
+                state="normal" if can_save_edit(e.get(), original, self.controller.config.domains) else "disabled"
+            )
             ctk.CTkButton(
                 row, text="Remove", width=70, fg_color="gray40",
                 command=lambda i=index: self._remove_domain(i),
             ).pack(side="left")
 
+    def _update_domain_hint(self) -> None:
+        addable, text = hint(self.new_domain_entry.get(), self.controller.config.domains)
+        self.domain_hint.configure(text=text, text_color="gray50" if addable else "orange")
+        self.add_button.configure(state="normal" if addable else "disabled")
+
     def _add_domain(self) -> None:
+        if not hint(self.new_domain_entry.get(), self.controller.config.domains)[0]:
+            return
         if self._attempt(lambda: self.controller.add_domain(self.new_domain_entry.get()), self.block_message):
             self.new_domain_entry.delete(0, "end")
+            self._update_domain_hint()
             self._after_domain_change()
 
     def _edit_domain(self, index: int, entry: str) -> None:
+        original = self.controller.config.domains[index]
+        if not can_save_edit(entry, original, self.controller.config.domains):
+            return
         if self._attempt(lambda: self.controller.edit_domain(index, entry), self.block_message):
             self._after_domain_change()
 
@@ -194,30 +237,20 @@ class App(ctk.CTk):
         times = ctk.CTkFrame(frame, fg_color="transparent")
         times.pack(anchor="w", padx=12, pady=8)
         ctk.CTkLabel(times, text="From").pack(side="left", padx=(0, 6))
-        self.start_hour, self.start_minute = self._time_menus(times, schedule.start)
+        self.start_time = TimeField(times, schedule.start)
+        self.start_time.pack(side="left")
         ctk.CTkLabel(times, text="To").pack(side="left", padx=(10, 6))
-        self.end_hour, self.end_minute = self._time_menus(times, schedule.end)
+        self.end_time = TimeField(times, schedule.end)
+        self.end_time.pack(side="left")
         ctk.CTkButton(times, text="Save", command=self._save_schedule).pack(side="left", padx=(10, 0))
 
         self.schedule_message = ctk.CTkLabel(frame, text="", text_color="red")
         self.schedule_message.pack(anchor="w", padx=12)
 
-    @staticmethod
-    def _time_menus(parent: ctk.CTkFrame, value: str) -> tuple[ctk.CTkOptionMenu, ctk.CTkOptionMenu]:
-        saved = time.fromisoformat(value)
-        hour = ctk.CTkOptionMenu(parent, values=HOURS, width=64)
-        hour.set(f"{saved.hour:02d}")
-        hour.pack(side="left")
-        ctk.CTkLabel(parent, text=":").pack(side="left", padx=2)
-        minute = ctk.CTkOptionMenu(parent, values=MINUTES, width=64)
-        minute.set(f"{saved.minute:02d}")
-        minute.pack(side="left")
-        return hour, minute
-
     def _save_schedule(self) -> None:
         weekdays = [index for index, box in enumerate(self.day_boxes) if box.get()]
-        start = f"{self.start_hour.get()}:{self.start_minute.get()}"
-        end = f"{self.end_hour.get()}:{self.end_minute.get()}"
+        start = self.start_time.get()
+        end = self.end_time.get()
         if self._attempt(lambda: self.controller.set_schedule(weekdays, start, end), self.schedule_message):
             self._refresh_status()
 
