@@ -1,6 +1,7 @@
 # Secure DNS on
 
-Provider: not yet recorded.
+Provider: Cloudflare (1.1.1.1). Settings screenshot: settings-cloudflare.png.
+Earlier run with "OS-standard" was not a secure DNS test and is not counted.
 
 | Domain | Result |
 |---|---|

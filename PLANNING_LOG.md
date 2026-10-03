@@ -48,3 +48,4 @@
 2026-10-03 | Spike secure-dns question: with Brave's secure DNS on, do blocked domains still reach Blocky's page? | you decided
 2026-10-03 | Spike secure-dns answer criteria: test the same ten domains as the HW4 spike, once with secure DNS on and once with it off; the answer is the count of domains that reach Blocky's page in each setting, out of ten; record the secure DNS provider used | you decided
 2026-10-03 | Spike secure-dns domain set changed before testing: hardverapro.hu is replaced by imdb.com, so the ten are the HW4 spike domains with imdb.com in place of hardverapro.hu | you decided
+2026-10-03 | Spike secure-dns answer: 0 of 10 domains bypass the block with secure DNS on (Cloudflare 1.1.1.1); all ten show Blocky's page, the same as with secure DNS off (10 of 10). Evidence in spike/secure-dns/ | observed by you
