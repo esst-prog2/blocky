@@ -53,12 +53,12 @@ in between   a background checker compares the current time against each
  
 - **Admin privileges.** Editing `C:\Windows\System32\drivers\etc\hosts` requires elevated rights. The app needs to either run elevated from the start or trigger a UAC prompt — The app runs elevated from the start; whether that is smoother than a UAC prompt in customtkinter is still to be tested in a spike.
 - **Domain-level blunt blocking.** This blocks whole domains, not specific pages, and doesn't reliably handle sites served across many IPs/CDNs without extra care.
-- **HSTS-preloaded sites.** Reddit and YouTube are HSTS-preloaded, so browsers never send them as plain HTTP. The block page therefore relies on the Brave extension reacting to the failed connection, not on HTTP. This is unverified until tested in Brave.
+- **HSTS-preloaded sites.** Reddit and YouTube are HSTS-preloaded, so browsers never send them as plain HTTP. The block page therefore relies on the Brave extension reacting to the failed connection, not on HTTP. Tested in Brave, the redirect works for both sites.
 - **Not tamper-proof by design.** Since I'm the same user with admin rights, I could edit the hosts file directly and bypass the tool entirely. That's acceptable here — the point is friction and logging, not enforcement — but worth stating plainly.
-- **Other browsers.** Blocking is at the system level, so Firefox and Edge are blocked too, but they show their own "can't connect" page rather than Blocky's. Only Brave with the extension shows the block page. Tested with default settings and no extension.
+- **Other browsers.** Blocking is at the system level, so Firefox and Edge are blocked too, but they show their own "can't connect" page rather than Blocky's. Only Brave with the extension shows the block page. Tested with default settings and no extension. Private windows are blocked too, but do not show the block page, since the extension does not run in them by default.
 - **Timing.** The app checks once a minute, so blocking starts between 0 and 60 seconds after a window opens. In five tests it took 46 seconds, and in a later test 5 seconds.
 - **Sleep.** When the PC wakes during an active window with Blocky open, its entries are back in the hosts file within 38 seconds, averaging 12 seconds across five cycles.
-- **IP addresses and secure DNS.** Typing a blocked site's IP address didn't load the real site in five tests. With Brave's secure DNS on (Cloudflare), none of ten blocked sites got past the block.
+- **IP addresses, secure DNS and VPNs.** Typing a blocked site's IP address didn't load the real site in five tests. With Brave's secure DNS on (Cloudflare), none of ten blocked sites got past the block. With Surfshark on, in a normal and a private window, none of five got past the block. These VPN results cover one Surfshark connection, so other VPNs may behave differently.
 - **Data/privacy.** All data is local config (my own block list and schedule) with no personal or sensitive third-party data involved, so the full real setup can be shown in class.
 ## Tech
  
