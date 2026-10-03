@@ -43,3 +43,5 @@
 2026-10-03 | early-block-redirect check 2.1: reddit.com, x.com, nos.nl and chess.com (https://) show Blocky's block page with the early redirect | observed by you
 2026-10-03 | early-block-redirect check 2.2 FAILED: youtube.com (https://) still shows YouTube's own offline page with the onBeforeNavigate listener | observed by you
 2026-10-03 | early-block-redirect check 2.2 PASSED: youtube.com shows Blocky's block page on three visits after reloading the extension; debug logging removed | observed by you
+2026-10-03 | early-block-redirect check 2.3 PASSED: an ordinary site (wikipedia.org) loads normally | observed by you
+2026-10-03 | early-block-redirect check 2.4 PASSED: with Blocky closed, reddit.com shows the browser's normal error page | observed by you
