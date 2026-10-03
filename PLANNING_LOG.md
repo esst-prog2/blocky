@@ -46,3 +46,4 @@
 2026-10-03 | early-block-redirect check 2.3 PASSED: an ordinary site (wikipedia.org) loads normally | observed by you
 2026-10-03 | early-block-redirect check 2.4 PASSED: with Blocky closed, reddit.com shows the browser's normal error page | observed by you
 2026-10-03 | Correction to the window-start-delay answer: the 46-second figure came from five runs that lined up with the same check time; a later run (override-end spike) took 5 seconds, so blocking starts between 0 and 60 seconds after a window opens. README updated to say so | agent proposed, you decided
+2026-10-03 | Gap found: a reddit.com tab already open when a window starts keeps working for moving between pages, but a reload (F5) is blocked; the extension only redirects new navigations, so in-page navigation is not caught | observed by you
