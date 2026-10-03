@@ -3,7 +3,7 @@ import threading
 
 import pytest
 
-from blocky import hosts
+from blocky import files, hosts
 
 ORIGINAL = "127.0.0.1 localhost\n10.0.0.5 printer.local\n"
 
@@ -67,8 +67,8 @@ def test_apply_retries_when_the_swap_is_briefly_locked(tmp_path, monkeypatch):
             raise PermissionError(13, "Access is denied")
         real_replace(source, target)
 
-    monkeypatch.setattr(hosts.os, "replace", locked_replace)
-    monkeypatch.setattr(hosts, "REPLACE_DELAY", 0)
+    monkeypatch.setattr(files.os, "replace", locked_replace)
+    monkeypatch.setattr(files, "REPLACE_DELAY", 0)
 
     assert hosts.apply(["reddit.com"], path)
     assert "127.0.0.1 reddit.com" in path.read_text(encoding="utf-8")
@@ -82,8 +82,8 @@ def test_apply_writes_in_place_when_the_swap_stays_locked(tmp_path, monkeypatch)
     def always_locked(source, target):
         raise PermissionError(13, "Access is denied")
 
-    monkeypatch.setattr(hosts.os, "replace", always_locked)
-    monkeypatch.setattr(hosts, "REPLACE_DELAY", 0)
+    monkeypatch.setattr(files.os, "replace", always_locked)
+    monkeypatch.setattr(files, "REPLACE_DELAY", 0)
 
     assert hosts.apply([], path)
     assert path.read_text(encoding="utf-8") == "127.0.0.1 localhost\n"
