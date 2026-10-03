@@ -29,6 +29,6 @@ class Checker:
             try:
                 self.sync()
                 self.last_error = None
-            except (OSError, ValueError) as error:
+            except Exception as error:
                 self.last_error = str(error)
             stop.wait(interval)
