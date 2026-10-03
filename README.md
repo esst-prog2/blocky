@@ -67,11 +67,13 @@ Python, with a `customtkinter` UI for a modern look with minimal setup overhead.
 
 ## Running it
 
-1. Install Python 3.11 or newer, then install the dependencies from the repo folder: `pip install -r requirements.txt`.
-2. Start the app with `pythonw -m blocky`. Windows asks for administrator rights, because the app edits the hosts file. Accept the prompt.
-3. Load the browser extension: open `brave://extensions`, turn on Developer mode, click "Load unpacked", and select the `extension` folder.
+1. Install Python 3.11 or newer. Keep the project outside OneDrive or other synced folders: syncing interferes with git and with Blocky's own file writes.
+2. From the repo folder, create a virtual environment and install the dependencies:
+   `python -m venv .venv` and then `.venv\Scripts\python -m pip install -r requirements.txt`.
+3. Start the app with `.venv\Scripts\pythonw -m blocky`. Windows asks for administrator rights, because the app edits the hosts file. Accept the prompt.
+4. Load the browser extension: open `brave://extensions`, turn on Developer mode, click "Load unpacked", and select the `extension` folder.
 
-Use `python -m blocky` instead of `pythonw` to see error messages in a console window.
+Use `.venv\Scripts\python -m blocky` instead of `pythonw` to see error messages in a console window. Run the tests with `.venv\Scripts\python -m pytest`.
 
 To start Blocky from the Start menu or the taskbar, run `powershell -ExecutionPolicy Bypass -File tools\create_shortcut.ps1` once. It adds a Blocky shortcut with Blocky's icon to the Start menu; right-click it there and choose **Pin to taskbar**.
 

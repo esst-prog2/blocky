@@ -129,3 +129,5 @@
 2026-10-04 | Redesign, suggestions, history table, window frame and icons manual check PASSED: the owner tried them in the real app and Brave and approved merging | observed by you
 2026-10-04 | history-and-suggestions archived; override-history and block-page specs updated | agent proposed, you decided
 2026-10-04 | Correction: the first archive of history-and-suggestions was aborted (file changed while reading, OneDrive); it was archived on main afterwards and the specs now hold the new requirements | observed by agent
+2026-10-04 | Project moved out of OneDrive to C:\Users\raymo\projects\blocky as a fresh clone from GitHub (all 34 branches checked identical first), because OneDrive syncing interfered with git and openspec and the old path had spaces | you decided
+2026-10-04 | Python packages live in a virtual environment at .venv in the project (requirements plus ruff); the Start-menu shortcut runs Blocky with the venv's pythonw; README updated. In the new folder the test suite runs in 41 s instead of 82 s | agent proposed, you decided

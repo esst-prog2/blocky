@@ -7,7 +7,9 @@
 
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
-$pythonw = (Get-Command pythonw -ErrorAction Stop).Source
+# Prefer the project's virtual environment, so Blocky runs with the packages from requirements.txt.
+$venvPythonw = Join-Path $repo ".venv\Scripts\pythonw.exe"
+$pythonw = if (Test-Path $venvPythonw) { $venvPythonw } else { (Get-Command pythonw -ErrorAction Stop).Source }
 $icon = Join-Path $repo "blocky\assets\blocky.ico"
 $shortcut = Join-Path ([Environment]::GetFolderPath("Programs")) "Blocky.lnk"
 
