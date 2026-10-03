@@ -30,10 +30,42 @@ def test_adding_a_domain_shows_it_blocked_on_the_status_tab(app):
     assert app.override_menu.get() == "reddit.com"
 
 
-def test_invalid_domain_shows_an_error_and_is_not_added(app):
-    add(app, "not a domain")
-    assert "not a valid domain" in app.block_message.cget("text")
+def type_domain(app, text):
+    for character in text:
+        app.new_domain_entry.insert("end", character)
+    app._update_domain_hint()
+
+
+def test_characters_that_cannot_be_in_a_domain_are_ignored(app):
+    type_domain(app, "red dit!.com")
+    assert app.new_domain_entry.get() == "reddit.com"
+
+
+def test_incomplete_domain_cannot_be_added(app):
+    type_domain(app, "reddit")
+    assert app.add_button.cget("state") == "disabled"
+    assert app.domain_hint.cget("text") == "Not a full domain yet, e.g. reddit.com"
+    app._add_domain()
     assert app.controller.config.domains == []
+
+
+def test_valid_domain_shows_what_will_be_added(app):
+    type_domain(app, "reddit.com")
+    assert app.add_button.cget("state") == "normal"
+    assert app.domain_hint.cget("text") == "Adds reddit.com and www.reddit.com"
+
+
+def test_duplicate_domain_cannot_be_added(app):
+    add(app, "reddit.com")
+    type_domain(app, "reddit.com")
+    assert app.add_button.cget("state") == "disabled"
+    assert app.domain_hint.cget("text") == "reddit.com is already in the list"
+
+
+def test_pasted_address_becomes_its_domain(app):
+    app.new_domain_entry.paste_text("https://www.reddit.com/r/all?sort=new")
+    assert app.new_domain_entry.get() == "www.reddit.com"
+    assert app.add_button.cget("state") == "normal"
 
 
 def test_override_without_reason_shows_an_error(app):

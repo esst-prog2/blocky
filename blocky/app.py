@@ -6,6 +6,7 @@ import customtkinter as ctk
 
 from blocky import hosts
 from blocky.controller import Controller
+from blocky.domainfield import DomainField, hint
 from blocky.timefield import TimeField
 
 DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
@@ -134,9 +135,15 @@ class App(ctk.CTk):
     def _build_block_list(self, frame: ctk.CTkFrame) -> None:
         row = ctk.CTkFrame(frame, fg_color="transparent")
         row.pack(fill="x", padx=12, pady=12)
-        self.new_domain_entry = ctk.CTkEntry(row, placeholder_text="example.com", width=320)
+        self.new_domain_entry = DomainField(
+            row, on_change=self._update_domain_hint, placeholder_text="example.com", width=320
+        )
         self.new_domain_entry.pack(side="left", padx=(0, 8))
-        ctk.CTkButton(row, text="Add", command=self._add_domain).pack(side="left")
+        self.new_domain_entry.bind("<Return>", lambda _event: self._add_domain())
+        self.add_button = ctk.CTkButton(row, text="Add", command=self._add_domain, state="disabled")
+        self.add_button.pack(side="left")
+        self.domain_hint = ctk.CTkLabel(frame, text="", text_color="gray50")
+        self.domain_hint.pack(anchor="w", padx=12)
         self.block_message = ctk.CTkLabel(frame, text="", text_color="red")
         self.block_message.pack(anchor="w", padx=12)
         self.domain_list = ctk.CTkScrollableFrame(frame)
@@ -149,7 +156,7 @@ class App(ctk.CTk):
         for index, domain in enumerate(self.controller.config.domains):
             row = ctk.CTkFrame(self.domain_list, fg_color="transparent")
             row.pack(fill="x", pady=2)
-            entry = ctk.CTkEntry(row, width=320)
+            entry = DomainField(row, width=320)
             entry.insert(0, domain)
             entry.pack(side="left", padx=(0, 8))
             ctk.CTkButton(
@@ -161,9 +168,17 @@ class App(ctk.CTk):
                 command=lambda i=index: self._remove_domain(i),
             ).pack(side="left")
 
+    def _update_domain_hint(self) -> None:
+        addable, text = hint(self.new_domain_entry.get(), self.controller.config.domains)
+        self.domain_hint.configure(text=text, text_color="gray50" if addable else "orange")
+        self.add_button.configure(state="normal" if addable else "disabled")
+
     def _add_domain(self) -> None:
+        if not hint(self.new_domain_entry.get(), self.controller.config.domains)[0]:
+            return
         if self._attempt(lambda: self.controller.add_domain(self.new_domain_entry.get()), self.block_message):
             self.new_domain_entry.delete(0, "end")
+            self._update_domain_hint()
             self._after_domain_change()
 
     def _edit_domain(self, index: int, entry: str) -> None:
