@@ -10,4 +10,4 @@ Five cycles. Each set the schedule start 4 minutes ahead, slept the PC before it
 | 4 | 15:36 | 15:41:29 | already present at 15:41:29 | 0 s (within resolution) | yes |
 | 5 | 15:46 | 15:53:05 | 15:53:06 | 1 s | yes |
 
-Maximum delay: 38 seconds. Average delay (cycles 1, 2, 3 and 5, with cycle 4 counted as 0 s): 10.5 seconds.
+Maximum delay: 38 seconds. Average delay across all five cycles (cycle 4 counted as 0 s): 12.2 seconds.
