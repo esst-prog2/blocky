@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { APP_ORIGIN, blockPageUrl, shouldRedirect } from "./logic.js";
+import { APP_ORIGIN, blockedHostname, blockPageUrl, shouldRedirect } from "./logic.js";
 
 const active = { blocked: ["reddit.com", "www.reddit.com"], windowEnd: "17:00", shortlist: [] };
 const inactive = { blocked: [], windowEnd: null, shortlist: [] };
@@ -45,4 +45,19 @@ test("does not redirect a subdomain when the window is inactive", () => {
 
 test("block page URL points at the app and encodes the domain", () => {
   assert.equal(blockPageUrl("reddit.com"), `${APP_ORIGIN}/blocked?domain=reddit.com`);
+});
+
+test("blockedHostname returns the hostname of a blocked web address", () => {
+  assert.equal(blockedHostname(active, "https://old.reddit.com/r/all"), "old.reddit.com");
+});
+
+test("blockedHostname ignores addresses that are not web pages", () => {
+  assert.equal(blockedHostname(active, "brave://settings"), null);
+  assert.equal(blockedHostname(active, undefined), null);
+});
+
+test("blockedHostname ignores ordinary and unblocked addresses", () => {
+  assert.equal(blockedHostname(active, "https://wikipedia.org/"), null);
+  assert.equal(blockedHostname(inactive, "https://reddit.com/"), null);
+  assert.equal(blockedHostname(null, "https://reddit.com/"), null);
 });
