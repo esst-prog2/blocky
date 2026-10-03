@@ -1,0 +1,1 @@
+onErrorOccurred http://nonexistent-test-blocky.example/ 0 net::ERR_NAME_NOT_RESOLVED
