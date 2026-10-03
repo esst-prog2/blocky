@@ -11,6 +11,13 @@ from blocky.domains import validate
 from blocky.schedule import Schedule
 
 
+def warning_text(background_error: str | None, startup_warning: str | None) -> str:
+    problems = [message for message in (startup_warning, background_error) if message]
+    if not problems:
+        return ""
+    return "Warning: " + " ".join(problems)
+
+
 class Controller:
     def __init__(
         self,

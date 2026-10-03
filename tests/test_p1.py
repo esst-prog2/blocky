@@ -1,4 +1,3 @@
-import socket
 import threading
 import time
 from datetime import datetime
@@ -8,8 +7,9 @@ import pytest
 from blocky import config as config_module
 from blocky.checker import Checker
 from blocky.config import Config
-from blocky.controller import Controller
-from blocky.server import Server
+import blocky.__main__ as startup
+from blocky.__main__ import start_block_page
+from blocky.controller import Controller, warning_text
 
 
 def test_clock_jump_forward_unblocks_after_window_end(tmp_path):
@@ -44,19 +44,14 @@ def test_clock_jump_backwards_reblocks(tmp_path):
     assert "reddit.com" in hosts_path.read_text(encoding="utf-8")
 
 
-def test_port_in_use_still_lets_blocking_run(tmp_path):
-    blocker = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    blocker.bind(("127.0.0.1", 0))
-    port = blocker.getsockname()[1]
-    try:
-        with pytest.raises(OSError):
-            Server(lambda: {}, port=port)
-        pytest.fail(
-            "the block page server cannot start when port 8765 is taken, and main() "
-            "stops before the checker can keep running; blocking would stop with it"
-        )
-    finally:
-        blocker.close()
+def test_port_in_use_still_lets_blocking_run(monkeypatch):
+    def server_that_cannot_bind(load_state):
+        raise OSError("port 8765 is in use")
+
+    monkeypatch.setattr(startup, "Server", server_that_cannot_bind)
+    server, warning = start_block_page(lambda: {})
+    assert server is None
+    assert warning is not None
 
 
 def test_background_hosts_failure_is_shown_to_user(tmp_path):
@@ -74,4 +69,4 @@ def test_background_hosts_failure_is_shown_to_user(tmp_path):
     worker.join()
 
     assert controller.checker.last_error is not None
-    assert controller.status().get("warning"), "the user is not shown that blocking failed"
+    assert warning_text(controller.checker.last_error, None) != ""

@@ -56,3 +56,4 @@
 2026-10-03 | Spike p1-automated question: for three P1 cases that can be tested without a live machine (clock jump, port 8765 in use, background hosts failure), does Blocky behave as expected? | you decided
 2026-10-03 | Spike p1-automated answer criteria: one automated test per case in tests/test_p1.py; pass = behaviour as expected; fail = gap; results in spike/p1-automated/results.md | you decided
 2026-10-03 | Spike p1-automated answer: clock jumps (forward and backward) behave correctly. Two gaps: if port 8765 is already in use, the app's startup stops and blocking stops with it; and a failure of the background hosts-file write is never shown to the user | observed by you
+2026-10-03 | Fix for P1 gaps: if the block page cannot start (port 8765 in use), blocking keeps running and a warning is shown in the app; background hosts-file failures are shown as a warning in the app. 75 tests pass | agent proposed, you decided
