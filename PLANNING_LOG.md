@@ -50,3 +50,4 @@
 2026-10-03 | open-tab-block check 2.2 PASSED: a reddit.com tab that was open before the window started changed to Blocky's block page 46 seconds after 16:27 (16:27:46), while the owner was still on the site | observed by you
 2026-10-03 | open-tab-block check 2.1 PASSED: clicking into a post in an open reddit.com tab immediately after a window started showed the block page straight away. This does not show whether the in-page listener or the one-minute sweep caught the move | observed by you
 2026-10-03 | open-tab-block check 2.3 PASSED: wikipedia.org loads normally while reddit.com is blocked during an active window | observed by you
+2026-10-03 | open-tab-block check 2.4 PASSED: reloading reddit.com during an active window still shows the block page | observed by you
