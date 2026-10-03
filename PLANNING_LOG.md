@@ -49,3 +49,4 @@
 2026-10-03 | Gap found: a reddit.com tab already open when a window starts keeps working for moving between pages, but a reload (F5) is blocked; the extension only redirects new navigations, so in-page navigation is not caught | observed by you
 2026-10-03 | open-tab-block check 2.2 PASSED: a reddit.com tab that was open before the window started changed to Blocky's block page 46 seconds after 16:27 (16:27:46), while the owner was still on the site | observed by you
 2026-10-03 | open-tab-block check 2.1 PASSED: clicking into a post in an open reddit.com tab immediately after a window started showed the block page straight away. This does not show whether the in-page listener or the one-minute sweep caught the move | observed by you
+2026-10-03 | open-tab-block check 2.3 PASSED: wikipedia.org loads normally while reddit.com is blocked during an active window | observed by you

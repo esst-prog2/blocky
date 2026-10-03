@@ -9,7 +9,7 @@
 
 - [x] 2.1 Reload the extension, start Blocky, and verify an open `reddit.com` tab moved between posts is redirected to the block page
 - [x] 2.2 Verify a `reddit.com` tab opened before a window starts is redirected within about a minute of the start
-- [ ] 2.3 Verify a tab on an ordinary site is unaffected during an active window
+- [x] 2.3 Verify a tab on an ordinary site is unaffected during an active window
 - [ ] 2.4 Verify a reload of `reddit.com` still shows the block page
 
 ## 3. Record
