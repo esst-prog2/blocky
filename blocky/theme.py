@@ -163,3 +163,22 @@ def danger_on_hover(button: ctk.CTkButton) -> None:
     button.configure(text_color=MUTED)
     button.bind("<Enter>", lambda _event: button.configure(text_color=DANGER), add="+")
     button.bind("<Leave>", lambda _event: button.configure(text_color=MUTED), add="+")
+
+
+def _colorref(hex_color: str) -> int:
+    red, green, blue = (int(hex_color[i:i + 2], 16) for i in (1, 3, 5))
+    return red | green << 8 | blue << 16
+
+
+def paint_window_frame(window) -> None:
+    """Colour the title bar and border on Windows 11; older Windows keeps its own colours."""
+    import ctypes
+    import sys
+
+    if sys.platform != "win32":
+        return
+    window.update_idletasks()
+    hwnd = ctypes.windll.user32.GetParent(window.winfo_id())
+    for attribute, color in ((34, DEEP), (35, BACKGROUND), (36, TEXT)):  # border, caption, caption text
+        value = ctypes.c_int(_colorref(color))
+        ctypes.windll.dwmapi.DwmSetWindowAttribute(hwnd, attribute, ctypes.byref(value), ctypes.sizeof(value))

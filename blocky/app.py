@@ -27,6 +27,7 @@ class App(ctk.CTk):
         ctk.set_appearance_mode("dark")
         super().__init__(fg_color=t.BACKGROUND)
         self.title("Blocky")
+        self.iconbitmap(str(Path(__file__).with_name("assets") / "blocky.ico"))
         self.geometry("760x660")
         self.minsize(640, 560)
         self.controller = Controller(config_path, hosts_path, clock, sync)
@@ -56,6 +57,7 @@ class App(ctk.CTk):
 
         self._refresh_status()
         self._tick()
+        t.paint_window_frame(self)
 
     def destroy(self) -> None:
         if self._tick_id is not None:
