@@ -68,3 +68,4 @@
 2026-10-03 | Spike p1-manual check 1 step 6: after restarting Blocky outside the window, at 18:22:26 (checked by the agent) the hosts file had no Blocky entries and reddit.com resolved to its real addresses; a restart cleans up the leftovers | observed by you
 2026-10-03 | Spike p1-manual check 4 started: reddit.com open in a normal Brave tab, window set to start 18:58 (about 35 minutes ahead), Brave minimised and left untouched; the agent watches the hosts file for the moment the entries appear | observed by you
 2026-10-03 | Spike p1-manual check 4: Blocky entries appeared in the hosts file at 18:58:05 (watched by the agent since 18:24:26); Brave untouched since before 18:24 | observed by you
+2026-10-03 | Spike p1-manual check 4 PASSED: at 19:01, without the owner touching Brave since before 18:24, the open reddit.com tab showed Blocky's page ('www.reddit.com is blocked until 20:00'); the sweep still works after 30+ minutes idle | observed by you
