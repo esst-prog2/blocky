@@ -45,3 +45,5 @@
 2026-10-03 | early-block-redirect check 2.2 PASSED: youtube.com shows Blocky's block page on three visits after reloading the extension; debug logging removed | observed by you
 2026-10-03 | early-block-redirect check 2.3 PASSED: an ordinary site (wikipedia.org) loads normally | observed by you
 2026-10-03 | early-block-redirect check 2.4 PASSED: with Blocky closed, reddit.com shows the browser's normal error page | observed by you
+2026-10-03 | Spike other-browsers question: does blocking hold in other browsers (Firefox and Edge), or only in Brave with the extension? | you decided
+2026-10-03 | Spike other-browsers answer criteria: test five blocked domains (reddit.com, x.com, nos.nl, chess.com, youtube.com) in Firefox and in Edge, with blocking active, using each browser's default settings and no extension; the answer is the count of the ten domain-browser pairs where the real site loads, out of ten; Blocky's page and error pages are recorded, not counted | you decided
