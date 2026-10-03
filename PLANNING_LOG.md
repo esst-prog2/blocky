@@ -74,3 +74,4 @@
 2026-10-03 | Fix for checks 1 and 2: when Blocky closes, it removes its hosts entries (option A), accepting that closing Blocky during a window unblocks the sites; a reboot with Blocky still open may skip this cleanup | you decided
 2026-10-03 | Fix for check 3: if the UAC prompt is declined, Blocky shows a message that it needs administrator rights to edit the hosts file | agent proposed
 2026-10-03 | README risks section: closing Blocky removes its entries, so closing it during a window unblocks every site until it is started again | agent proposed
+2026-10-03 | Manual check of the close fix FAILED: at 20:05:34 Blocky wrote the cleaned hosts.tmp on close but did not swap it in, so the 10 entries stayed; the error was invisible under pythonw. Blocky now writes close errors to %APPDATA%\Blocky\errors.log to find the cause | agent proposed

@@ -85,7 +85,7 @@ def test_closing_blocky_removes_its_entries(tmp_path):
     time.sleep(0.2)
     assert "reddit.com" in hosts_path.read_text(encoding="utf-8")
 
-    startup.stop_blocking(stop, worker, checker)
+    startup.stop_blocking(stop, worker, checker, tmp_path / "errors.log")
     time.sleep(0.2)
 
     text = hosts_path.read_text(encoding="utf-8")
@@ -103,9 +103,10 @@ def test_closing_blocky_survives_a_hosts_failure(tmp_path):
     stop = threading.Event()
     worker = threading.Thread(target=checker.run, args=(stop, 0))
     worker.start()
-    startup.stop_blocking(stop, worker, checker)
+    startup.stop_blocking(stop, worker, checker, tmp_path / "errors.log")
 
     assert not worker.is_alive()
+    assert "Could not remove" in (tmp_path / "errors.log").read_text(encoding="utf-8")
 
 
 @pytest.mark.parametrize("accepted, shown", [(False, 1), (True, 0)])

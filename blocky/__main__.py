@@ -3,6 +3,7 @@ import os
 import sys
 import threading
 from datetime import datetime
+from pathlib import Path
 
 from blocky import config as config_module
 from blocky import rules
@@ -31,13 +32,19 @@ def show_admin_needed() -> None:
     ctypes.windll.user32.MessageBoxW(None, ADMIN_NEEDED, "Blocky", 0x30)
 
 
-def stop_blocking(stop: threading.Event, worker: threading.Thread, checker: Checker) -> None:
+def stop_blocking(stop: threading.Event, worker: threading.Thread, checker: Checker, error_log: Path) -> None:
     stop.set()
     worker.join()
     try:
         checker.clear()
-    except (OSError, ValueError) as error:
-        print(f"Could not remove Blocky's hosts entries: {error}", file=sys.stderr)
+    except Exception as error:
+        message = f"{datetime.now():%Y-%m-%d %H:%M:%S} Could not remove Blocky's hosts entries: {error!r}\n"
+        try:
+            error_log.parent.mkdir(parents=True, exist_ok=True)
+            with error_log.open("a", encoding="utf-8") as log:
+                log.write(message)
+        except OSError:
+            pass
 
 
 def start_block_page(load_state) -> tuple[Server | None, str | None]:
@@ -68,7 +75,7 @@ def main() -> None:
     try:
         App(config_path, warning=lambda: warning_text(checker.last_error, server_warning)).mainloop()
     finally:
-        stop_blocking(stop, worker, checker)
+        stop_blocking(stop, worker, checker, config_path.parent / "errors.log")
         if server is not None:
             server.stop()
 
