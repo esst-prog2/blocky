@@ -14,5 +14,5 @@
 
 ## 3. Record
 
-- [ ] 3.1 Log the Brave results in `PLANNING_LOG.md`
+- [x] 3.1 Log the Brave results in `PLANNING_LOG.md`
 - [ ] 3.2 Archive this change once the verification passes
