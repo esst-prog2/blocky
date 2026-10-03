@@ -13,4 +13,4 @@
 
 ## 3. Record
 
-- [ ] 3.1 Log the change in `PLANNING_LOG.md` and archive this change after a manual check
+- [x] 3.1 Log the change in `PLANNING_LOG.md` and archive this change after a manual check
