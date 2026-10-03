@@ -88,3 +88,4 @@
 2026-10-03 | subdomain-redirect archived; browser-extension spec updated (subdomains redirected by the extension only) | agent proposed, you decided
 2026-10-03 | Correction to subdomain-redirect check 3.1: the subdomain tabs did reach Blocky's page, but it read "music.youtube.com is not blocked right now", because the block page checked exact names only | observed by you
 2026-10-03 | Fix: the block page uses the same subdomain rule as the extension, so a subdomain reads "<subdomain> is blocked until <end>"; lookalikes still read "not blocked". 83 tests pass. No spec change: the block-page spec already requires the page to name the blocked domain and window end | agent proposed
+2026-10-03 | Block page subdomain fix PASSED: after restarting Blocky, music.youtube.com shows 'music.youtube.com is blocked until ...' | observed by you
