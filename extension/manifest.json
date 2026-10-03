@@ -3,7 +3,7 @@
   "name": "Blocky",
   "version": "0.1.0",
   "description": "Shows Blocky's suggestions in new tabs and sends blocked sites to them.",
-  "permissions": ["webNavigation"],
+  "permissions": ["webNavigation", "alarms"],
   "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js",

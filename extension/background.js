@@ -9,13 +9,40 @@ async function fetchState() {
   }
 }
 
-chrome.webNavigation.onBeforeNavigate.addListener(async (details) => {
-  if (details.frameId !== 0 || !details.url.startsWith("http")) {
+async function redirectIfBlocked(tabId, url) {
+  if (!url.startsWith("http")) {
     return;
   }
-  const hostname = new URL(details.url).hostname;
+  const hostname = new URL(url).hostname;
   const state = await fetchState();
   if (shouldRedirect(state, hostname)) {
-    chrome.tabs.update(details.tabId, { url: blockPageUrl(hostname) });
+    chrome.tabs.update(tabId, { url: blockPageUrl(hostname) });
+  }
+}
+
+chrome.webNavigation.onBeforeNavigate.addListener((details) => {
+  if (details.frameId === 0) {
+    redirectIfBlocked(details.tabId, details.url);
+  }
+});
+
+chrome.webNavigation.onHistoryStateUpdated.addListener((details) => {
+  if (details.frameId === 0) {
+    redirectIfBlocked(details.tabId, details.url);
+  }
+});
+
+chrome.alarms.create("sweep-open-tabs", { periodInMinutes: 1 });
+
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name !== "sweep-open-tabs") {
+    return;
+  }
+  const state = await fetchState();
+  const tabs = await chrome.tabs.query({});
+  for (const tab of tabs) {
+    if (tab.url && shouldRedirect(state, new URL(tab.url).hostname)) {
+      chrome.tabs.update(tab.id, { url: blockPageUrl(new URL(tab.url).hostname) });
+    }
   }
 });
