@@ -30,3 +30,5 @@
 2026-10-03 | Undo button: re-blocks at once, keeps the override line in history and adds an "override undone" line | you decided
 2026-10-03 | youtube.com shows YouTube's own connection page rather than Blocky's; accepted as a limitation, stated in README section 4 | you decided
 2026-10-03 | Logic moved into a controller class so tests run without creating a window per test; the window is created once in a smoke test | agent proposed, you decided
+2026-10-03 | Undo button verified in the app: re-blocks at once, history shows both the override and the undo line | observed by you
+2026-10-03 | The "Your spike" issue is not in the repository; the owner has asked the teacher for it, and the spike has not started | observed by you

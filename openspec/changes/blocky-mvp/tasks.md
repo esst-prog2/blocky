@@ -30,7 +30,7 @@
 - [x] 5.2 Implement the override lasting until the current window ends, and verify with a test clock that the domain re-blocks at the next window start
 - [x] 5.3 Log each override with domain, timestamp, and reason, and verify the log entry is written
 - [x] 5.4 Implement the History tab listing overrides, and verify it shows an empty list with no history
-- [ ] 5.5 Add an undo button that re-blocks an overridden domain at once and adds an "override undone" history line without removing the override line; verify in the app
+- [x] 5.5 Add an undo button that re-blocks an overridden domain at once and adds an "override undone" history line without removing the override line; verify in the app
 
 ## 6. Status panel
 
