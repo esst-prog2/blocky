@@ -75,3 +75,4 @@
 2026-10-03 | Fix for check 3: if the UAC prompt is declined, Blocky shows a message that it needs administrator rights to edit the hosts file | agent proposed
 2026-10-03 | README risks section: closing Blocky removes its entries, so closing it during a window unblocks every site until it is started again | agent proposed
 2026-10-03 | Manual check of the close fix FAILED: at 20:05:34 Blocky wrote the cleaned hosts.tmp on close but did not swap it in, so the 10 entries stayed; the error was invisible under pythonw. Blocky now writes close errors to %APPDATA%\Blocky\errors.log to find the cause | agent proposed
+2026-10-03 | errors.log showed the close-time cause: PermissionError 13 (access denied) when swapping hosts.tmp into place, likely antivirus briefly locking the new file. Fix: the swap is retried 10 times, 0.1 s apart, and if it still fails the hosts file is written in place as a last resort. 81 tests pass | agent proposed
