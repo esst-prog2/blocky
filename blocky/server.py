@@ -26,7 +26,7 @@ def render_home(state: dict) -> str:
 
 
 def render_blocked(state: dict, domain: str) -> str:
-    if domain in state["blocked"]:
+    if any(domain == blocked or domain.endswith(f".{blocked}") for blocked in state["blocked"]):
         message = f"{html.escape(domain)} is blocked until {html.escape(state['windowEnd'] or '')}"
     else:
         message = f"{html.escape(domain)} is not blocked right now"
