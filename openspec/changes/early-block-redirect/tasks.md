@@ -12,5 +12,5 @@
 
 ## 3. Record
 
-- [ ] 3.1 Record the Brave results in `spike/` or the change folder, and log the outcome in `PLANNING_LOG.md`
+- [x] 3.1 Record the Brave results in `spike/` or the change folder, and log the outcome in `PLANNING_LOG.md`
 - [ ] 3.2 Archive this change once the verification passes
