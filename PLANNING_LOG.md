@@ -52,3 +52,5 @@
 2026-10-03 | open-tab-block check 2.3 PASSED: wikipedia.org loads normally while reddit.com is blocked during an active window | observed by you
 2026-10-03 | open-tab-block check 2.4 PASSED: reloading reddit.com during an active window still shows the block page | observed by you
 2026-10-03 | README risks section updated with the private-window, VPN and early-redirect results | you decided
+2026-10-03 | Spike robustness question: do Blocky's core code paths hold under six failure and edge cases (checker error, hosts reset, half-written hosts file, daylight-saving change, override across restart, domain removed mid-window)? | you decided
+2026-10-03 | Spike robustness answer criteria: one automated test per case in tests/test_robustness.py; a passing test means the behaviour is as expected, a failing test is a gap; results recorded in spike/robustness/results.md | you decided
