@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass, field
 from datetime import datetime, time
 
@@ -7,6 +8,13 @@ class Schedule:
     weekdays: list[int] = field(default_factory=lambda: [0, 1, 2, 3, 4])
     start: str = "09:00"
     end: str = "17:00"
+
+
+def parse_time(text: str) -> str:
+    match = re.fullmatch(r"(\d{1,2}):(\d{2})", text.strip())
+    if not match or int(match[1]) > 23 or int(match[2]) > 59:
+        raise ValueError("Use a time like 09:00")
+    return f"{int(match[1]):02d}:{match[2]}"
 
 
 def validate(schedule: Schedule) -> None:

@@ -3,8 +3,16 @@ import re
 _LABEL = re.compile(r"^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$")
 
 
+def _host_of(entry: str) -> str:
+    text = entry.strip().lower()
+    if "://" in text:
+        text = text.split("://", 1)[1]
+    text = re.split(r"[/?#]", text, maxsplit=1)[0]
+    return text.split(":", 1)[0]
+
+
 def validate(entry: str) -> str:
-    domain = entry.strip().lower()
+    domain = _host_of(entry)
     labels = domain.split(".")
     if len(labels) < 2 or not all(_LABEL.match(label) for label in labels):
         raise ValueError(f"'{entry.strip()}' is not a valid domain")

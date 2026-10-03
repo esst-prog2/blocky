@@ -159,3 +159,24 @@ def test_window_asks_the_background_check_instead_of_writing_hosts(tmp_path):
     controller.add_domain("reddit.com")
     assert requests == ["sync"]
     assert not (tmp_path / "hosts").exists()
+
+
+def test_schedule_saved_from_the_window_accepts_a_single_digit_hour(make):
+    controller = make()
+    controller.set_schedule([0, 1, 2, 3, 4], "9:00", "17:00")
+    assert controller.config.schedule.start == "09:00"
+
+
+def test_schedule_without_weekdays_is_refused(make):
+    controller = make()
+    with pytest.raises(ValueError, match="Pick at least one day"):
+        controller.set_schedule([], "09:00", "17:00")
+    assert controller.config.schedule.weekdays == [0, 1, 2, 3, 4]
+
+
+def test_config_with_no_weekdays_still_loads(tmp_path):
+    path = tmp_path / "config.yaml"
+    path.write_text("domains: []\nschedule:\n  weekdays: []\n  start: '09:00'\n  end: '17:00'\n", encoding="utf-8")
+    config, warning = config_module.load_or_recover(path, MONDAY_2PM)
+    assert config.schedule.weekdays == []
+    assert warning is None
