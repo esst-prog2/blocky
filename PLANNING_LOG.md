@@ -47,3 +47,4 @@
 2026-10-03 | early-block-redirect check 2.4 PASSED: with Blocky closed, reddit.com shows the browser's normal error page | observed by you
 2026-10-03 | Spike brave-restart question: does the early redirect still work after Brave is closed and reopened? | you decided
 2026-10-03 | Spike brave-restart answer criteria: three restarts; each time, fully close Brave, reopen it with the Blocky extension loaded, keep Blocky running with the window active, and visit https://reddit.com; the answer is the count of restarts where Blocky's block page appears, out of three | you decided
+2026-10-03 | Spike brave-restart answer: the early redirect works after Brave is restarted; Blocky's block page appeared on 3 of 3 restarts (reddit.com, window active) | observed by you
