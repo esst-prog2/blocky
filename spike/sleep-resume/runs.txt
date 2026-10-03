@@ -1,3 +1,3 @@
 Cycle 1: schedule start set to 15:10. PC woken and measure.ps1 started at 15:13:00. Entries appeared at 15:13:38. Delay: 38 seconds. Blocky window still open after waking: yes.
-Cycle 2: schedule start set to 15:18. PC woken and measure.ps1 started at 15:20:16. Entries appeared at 15:20:34. Delay: 18 seconds. Blocky window still open after waking: not yet recorded.
-Cycle 3: schedule start set to 15:24. PC woken and measure.ps1 started at 15:30:54. Entries appeared at 15:30:58. Delay: 4 seconds. Blocky window still open after waking: not yet recorded.
+Cycle 2: schedule start set to 15:18. PC woken and measure.ps1 started at 15:20:16. Entries appeared at 15:20:34. Delay: 18 seconds. Blocky window still open after waking: yes.
+Cycle 3: schedule start set to 15:24. PC woken and measure.ps1 started at 15:30:54. Entries appeared at 15:30:58. Delay: 4 seconds. Blocky window still open after waking: yes.
