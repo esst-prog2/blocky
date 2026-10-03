@@ -11,3 +11,11 @@ export function shouldRedirect(state, hostname) {
 export function blockPageUrl(hostname) {
   return `${APP_ORIGIN}/blocked?domain=${encodeURIComponent(hostname)}`;
 }
+
+export function blockedHostname(state, url) {
+  if (!url || !url.startsWith("http")) {
+    return null;
+  }
+  const hostname = new URL(url).hostname;
+  return shouldRedirect(state, hostname) ? hostname : null;
+}

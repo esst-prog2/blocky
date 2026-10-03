@@ -8,7 +8,7 @@ from pathlib import Path
 from blocky import config as config_module
 from blocky import rules
 from blocky.app import App
-from blocky.checker import Checker
+from blocky.checker import Checker, log_error
 from blocky.controller import warning_text
 from blocky.server import Server
 
@@ -33,17 +33,12 @@ def show_admin_needed() -> None:
 
 def stop_blocking(stop: threading.Event, worker: threading.Thread, checker: Checker, error_log: Path) -> None:
     stop.set()
+    checker.request_sync()
     worker.join()
     try:
         checker.clear()
     except Exception as error:
-        message = f"{datetime.now():%Y-%m-%d %H:%M:%S} Could not remove Blocky's hosts entries: {error!r}\n"
-        try:
-            error_log.parent.mkdir(parents=True, exist_ok=True)
-            with error_log.open("a", encoding="utf-8") as log:
-                log.write(message)
-        except OSError:
-            pass
+        log_error(error_log, f"Could not remove Blocky's hosts entries: {error!r}")
 
 
 def start_block_page(load_state) -> tuple[Server | None, str | None]:
@@ -62,8 +57,9 @@ def main() -> None:
         return
 
     config_path = config_module.default_path()
+    error_log = config_path.parent / "errors.log"
     stop = threading.Event()
-    checker = Checker(config_path)
+    checker = Checker(config_path, error_log=error_log)
     worker = threading.Thread(target=checker.run, args=(stop,), daemon=True)
     worker.start()
 
@@ -72,9 +68,13 @@ def main() -> None:
     )
 
     try:
-        App(config_path, warning=lambda: warning_text(checker.last_error, server_warning)).mainloop()
+        App(
+            config_path,
+            warning=lambda: warning_text(checker.last_error, server_warning),
+            sync=checker.request_sync,
+        ).mainloop()
     finally:
-        stop_blocking(stop, worker, checker, config_path.parent / "errors.log")
+        stop_blocking(stop, worker, checker, error_log)
         if server is not None:
             server.stop()
 

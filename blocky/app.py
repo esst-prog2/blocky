@@ -17,11 +17,12 @@ class App(ctk.CTk):
         hosts_path: Path = hosts.HOSTS_PATH,
         clock: Callable[[], datetime] = datetime.now,
         warning: Callable[[], str] = lambda: "",
+        sync: Callable[[], None] | None = None,
     ) -> None:
         super().__init__()
         self.title("Blocky")
         self.geometry("680x560")
-        self.controller = Controller(config_path, hosts_path, clock)
+        self.controller = Controller(config_path, hosts_path, clock, sync)
         self.warning = warning
         self._tick_id: str | None = None
 

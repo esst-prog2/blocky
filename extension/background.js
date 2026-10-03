@@ -1,4 +1,4 @@
-import { APP_ORIGIN, blockPageUrl, shouldRedirect } from "./logic.js";
+import { APP_ORIGIN, blockedHostname, blockPageUrl } from "./logic.js";
 
 async function fetchState() {
   try {
@@ -13,9 +13,8 @@ async function redirectIfBlocked(tabId, url) {
   if (!url.startsWith("http")) {
     return;
   }
-  const hostname = new URL(url).hostname;
-  const state = await fetchState();
-  if (shouldRedirect(state, hostname)) {
+  const hostname = blockedHostname(await fetchState(), url);
+  if (hostname) {
     chrome.tabs.update(tabId, { url: blockPageUrl(hostname) });
   }
 }
@@ -41,8 +40,9 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   const state = await fetchState();
   const tabs = await chrome.tabs.query({});
   for (const tab of tabs) {
-    if (tab.url && shouldRedirect(state, new URL(tab.url).hostname)) {
-      chrome.tabs.update(tab.id, { url: blockPageUrl(new URL(tab.url).hostname) });
+    const hostname = blockedHostname(state, tab.url);
+    if (hostname) {
+      chrome.tabs.update(tab.id, { url: blockPageUrl(hostname) });
     }
   }
 });
