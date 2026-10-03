@@ -61,3 +61,4 @@
 2026-10-03 | Spike p1-manual answer criteria: one pass/fail rule per case, as written in spike/p1-manual/checklist.md; spike/p1-manual/show-hosts.ps1 shows Blocky's hosts entries; results go in spike/p1-manual/results.md | agent decided
 2026-10-03 | Spike p1-manual check 5: in this Firefox version, Increased Protection = Custom (Aangepast) with Cloudflare and the 'always warn' box unticked; Max Protection = the same with the box ticked. Owner's original setting was Standaard | agent decided
 2026-10-03 | Spike p1-manual check 5, Max Protection (Custom, Cloudflare, 'always warn' ticked): reddit.com, chess.com, nos.nl, x.com and youtube.com all show Firefox's 'Kan geen verbinding maken' page; none loaded. wikipedia.org and Increased Protection still to check | observed by you
+2026-10-03 | Spike p1-manual check 5, Max Protection: wikipedia.org loads normally, so the blocked sites failing is due to Blocky, not the network. Max Protection passes | observed by you
