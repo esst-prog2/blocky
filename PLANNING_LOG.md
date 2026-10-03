@@ -16,3 +16,7 @@
 2026-10-03 | Hosts entries are written only between "# BEGIN BLOCKY" and "# END BLOCKY" | agent proposed, you decided
 2026-10-03 | Local server uses fixed port 8765 on 127.0.0.1 with no CORS header; the extension will use host permissions | agent proposed, you decided
 2026-10-03 | The app relaunches itself elevated at startup, which shows one UAC prompt (to verify in spike 1.1) | agent proposed, you decided
+2026-10-03 | The extension requests webNavigation and all-URLs host access, needed to see failed navigations (to verify in spike 1.2) | agent proposed, you decided
+2026-10-03 | On a failed navigation to a blocked domain, the extension asks the app for its state at that moment and redirects; it keeps no cache | agent proposed, you decided
+2026-10-03 | The new tab redirects to the app's shortlist, and shows a "not running" message when the app is closed | agent proposed, you decided
+2026-10-03 | Tests use pytest for Python and Node's built-in test runner for the extension logic | agent proposed, you decided

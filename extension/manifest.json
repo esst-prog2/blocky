@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Blocky",
+  "version": "0.1.0",
+  "description": "Shows Blocky's suggestions in new tabs and sends blocked sites to them.",
+  "permissions": ["webNavigation"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  }
+}
