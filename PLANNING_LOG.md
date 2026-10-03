@@ -53,3 +53,4 @@
 2026-10-03 | open-tab-block check 2.4 PASSED: reloading reddit.com during an active window still shows the block page | observed by you
 2026-10-03 | Spike vpn-dns question: does a VPN (Brave's built-in VPN, if available) let a blocked site load past the hosts-file block? | you decided
 2026-10-03 | Spike vpn-dns answer criteria: five blocked sites (reddit.com, x.com, nos.nl, chess.com, youtube.com) visited with blocking active, once with Brave's VPN on and once with it off; the answer is the count of sites where the real site loads with the VPN on, out of five, and the count of Blocky's page results; if Brave's VPN is not available, record that and use another VPN | you decided
+2026-10-03 | Spike vpn-dns VPN choice: Surfshark is used, as the owner does not use Brave's built-in VPN; the criteria otherwise stand | you decided
