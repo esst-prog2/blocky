@@ -43,6 +43,8 @@ class Controller:
 
     def edit_domain(self, index: int, entry: str) -> None:
         domain = validate(entry)
+        if domain != self.config.domains[index] and domain in self.config.domains:
+            raise ValueError(f"{domain} is already in the list")
         self.config.domains[index] = domain
         self.save()
 

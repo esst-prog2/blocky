@@ -51,6 +51,22 @@ def test_duplicate_domain_is_rejected(make):
     assert controller.config.domains == ["reddit.com"]
 
 
+def test_editing_into_a_duplicate_is_rejected(make):
+    controller = make()
+    controller.add_domain("reddit.com")
+    controller.add_domain("chess.com")
+    with pytest.raises(ValueError):
+        controller.edit_domain(1, "reddit.com")
+    assert controller.config.domains == ["reddit.com", "chess.com"]
+
+
+def test_saving_a_domain_unchanged_is_allowed(make):
+    controller = make()
+    controller.add_domain("reddit.com")
+    controller.edit_domain(0, "reddit.com")
+    assert controller.config.domains == ["reddit.com"]
+
+
 def test_block_list_persists_after_restart(make):
     make().add_domain("reddit.com")
     assert make().config.domains == ["reddit.com"]

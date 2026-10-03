@@ -1,4 +1,5 @@
 import os
+import threading
 
 import pytest
 
@@ -87,3 +88,25 @@ def test_apply_writes_in_place_when_the_swap_stays_locked(tmp_path, monkeypatch)
     assert hosts.apply([], path)
     assert path.read_text(encoding="utf-8") == "127.0.0.1 localhost\n"
     assert not (tmp_path / "hosts.tmp").exists()
+
+
+def test_two_writers_at_once_do_not_collide(tmp_path):
+    path = tmp_path / "hosts"
+    path.write_text("127.0.0.1 localhost\n", encoding="utf-8")
+    errors = []
+
+    def write(hostnames):
+        for turn in range(200):
+            try:
+                hosts.apply(hostnames if turn % 2 else [], path)
+            except OSError as error:
+                errors.append(error)
+
+    writers = [threading.Thread(target=write, args=([name],)) for name in ("a.com", "b.com")]
+    for writer in writers:
+        writer.start()
+    for writer in writers:
+        writer.join()
+
+    assert errors == []
+    assert "127.0.0.1 localhost" in path.read_text(encoding="utf-8")
