@@ -30,6 +30,10 @@ See proposal.md for motivation and specs/ for requirements. The repository has n
 
 **A `www.` variant is added automatically for each entry.** Closes the easiest bypass. Other subdomains are not covered in the MVP.
 
+**Undo appends a line rather than removing the override.** The override stays in the history, and an undo line is added after it. Undo re-blocks at once. Alternative: deleting the override, rejected because it would hide that the exception was taken.
+
+**Logic lives in a controller, not in the window.** The window only wires widgets to the controller, so the behaviour is tested without creating a Tk window per test. The window is created once, in a smoke test.
+
 ## Risks / Trade-offs
 
 - **Brave's new-tab override may not behave as expected.** Mitigation: verify with a short spike before building the extension.
@@ -37,3 +41,9 @@ See proposal.md for motivation and specs/ for requirements. The repository has n
 - **The block page is unavailable when the app is closed.** Mitigation: accepted in the proposal; blocks remain in the hosts file, and the redirect falls back to the browser's error page.
 - **Running elevated increases the impact of a bug.** Mitigation: the app writes only Blocky-marked lines to the hosts file and never touches other lines.
 - **Blocking is not tamper-proof.** Accepted in the README; the user can edit the hosts file directly.
+
+## Spike Results
+
+- **Elevated write, no UAC during a session (spike 1.1):** Blocky started with one UAC prompt. When the schedule opened, it wrote `reddit.com` and `www.reddit.com` to the hosts file, and Windows showed no further prompt. Observed on the owner's machine.
+- **Failed navigation in Brave (spike 1.2, partial):** with the extension loaded and the window active, `reddit.com` and `x.com` redirected to Blocky's block page. `youtube.com` was blocked but showed Brave's "no internet connection" page instead of Blocky's. An ordinary failing site showed Brave's normal error page. The cause of the `youtube.com` difference was not investigated; the owner accepts this limitation.
+- **New tab in Brave (spike 1.3):** with Blocky running, a new tab showed Blocky's shortlist page. With Blocky closed, a new tab showed the "not running" message.

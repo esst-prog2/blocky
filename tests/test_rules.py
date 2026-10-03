@@ -3,7 +3,7 @@ from datetime import datetime
 import pytest
 
 from blocky.config import Config
-from blocky.rules import blocked_domains, override, released_until, snapshot, status_text
+from blocky.rules import blocked_domains, override, released_until, snapshot, status_text, undo_override
 
 
 def at(day, hour, minute=0):
@@ -59,6 +59,28 @@ def test_override_is_logged_with_domain_timestamp_and_reason():
     assert entry["domain"] == "reddit.com"
     assert entry["timestamp"] == "2026-10-05T14:00:00"
     assert entry["reason"] == "checking a work thread"
+
+
+def test_undo_reblocks_at_once_and_keeps_override_line():
+    config = make_config()
+    override(config, "reddit.com", "reason", at(5, 14))
+    undo_override(config, "reddit.com", at(5, 14, 30))
+    assert blocked_domains(config, at(5, 14, 31)) == ["reddit.com", "www.reddit.com"]
+    assert released_until(config, at(5, 14, 31)) == {}
+    assert [entry.get("type", "override") for entry in config.overrides] == ["override", "undo"]
+
+
+def test_undo_requires_active_override():
+    with pytest.raises(ValueError):
+        undo_override(make_config(), "reddit.com", at(5, 14))
+
+
+def test_override_works_again_after_undo():
+    config = make_config()
+    override(config, "reddit.com", "first", at(5, 14))
+    undo_override(config, "reddit.com", at(5, 14, 30))
+    override(config, "reddit.com", "second", at(5, 15))
+    assert blocked_domains(config, at(5, 15, 1)) == []
 
 
 def test_status_text_shows_remaining_time():

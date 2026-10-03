@@ -8,10 +8,11 @@ from blocky.schedule import window_end
 def released_until(config: Config, now: datetime) -> dict[str, datetime]:
     released: dict[str, datetime] = {}
     for entry in config.overrides:
-        until = datetime.fromisoformat(entry["until"])
-        if until > now:
-            released[entry["domain"]] = until
-    return released
+        if entry.get("type") == "undo":
+            released.pop(entry["domain"], None)
+        else:
+            released[entry["domain"]] = datetime.fromisoformat(entry["until"])
+    return {domain: until for domain, until in released.items() if until > now}
 
 
 def released_domains(config: Config, now: datetime) -> set[str]:
@@ -45,11 +46,20 @@ def override(config: Config, domain: str, reason: str, now: datetime) -> None:
     until = window_end(config.schedule, now)
     config.overrides.append(
         {
+            "type": "override",
             "domain": domain,
             "timestamp": now.isoformat(timespec="seconds"),
             "reason": reason,
             "until": until.isoformat(timespec="seconds"),
         }
+    )
+
+
+def undo_override(config: Config, domain: str, now: datetime) -> None:
+    if domain not in released_until(config, now):
+        raise ValueError(f"{domain} is not unblocked right now")
+    config.overrides.append(
+        {"type": "undo", "domain": domain, "timestamp": now.isoformat(timespec="seconds")}
     )
 
 

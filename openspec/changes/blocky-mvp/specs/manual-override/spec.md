@@ -28,3 +28,14 @@ The system SHALL record each override with the domain, the timestamp, and the re
 #### Scenario: Override recorded
 - **WHEN** an override is confirmed
 - **THEN** the history log gains an entry containing the domain, timestamp, and reason
+
+### Requirement: Override can be undone
+The system SHALL let the user undo an active override, which re-blocks the domain at once, and SHALL keep the override's history line while adding a separate line stating the override was undone.
+
+#### Scenario: Undo re-blocks the domain
+- **WHEN** the user undoes the override of `reddit.com` at 14:30
+- **THEN** `reddit.com` is blocked again immediately
+
+#### Scenario: Undo is recorded without removing the override
+- **WHEN** the user undoes an override
+- **THEN** the history log keeps the override entry and gains a line stating that the override was undone

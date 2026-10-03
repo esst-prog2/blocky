@@ -29,7 +29,7 @@ in between   a background checker compares the current time against each
 - Define a weekly schedule: one time range that applies to the block list on the days I select
 - A background check (roughly once a minute) compares the clock against the schedule and writes/removes entries in the Windows hosts file accordingly
 - A live status panel showing which domains are currently blocked and time remaining until the next change
-- A manual override: pick a domain, type a required reason, and it's unblocked until the current scheduled block window ends — logged with domain, timestamp, and reason
+- A manual override: pick a domain, type a required reason, and it's unblocked until the current scheduled block window ends — logged with domain, timestamp, and reason. The override can be undone at any time, which re-blocks the domain at once; the history keeps the override line and adds an "override undone" line
 - A history tab listing past overrides
 - A shared shortlist of productive suggestions, defined once in the app, shown on a local page served by the app; a Brave extension sends the tab there whenever a blocked domain is requested or a new tab is opened
 **Not this term:**
@@ -47,7 +47,7 @@ in between   a background checker compares the current time against each
 - Given a domain on the block list and the current time inside its scheduled window, the Windows hosts file contains a `127.0.0.1` redirect entry for that domain.
 - Given an override submitted with a reason for a currently-blocked domain, the hosts file entry for that domain is removed, and the history log gains an entry with the domain, timestamp, and reason.
 - Given the current time outside the scheduled window for a domain, the hosts file contains no entry for that domain — including cleaning up any leftover entry from before the schedule changed.
-- Given a blocked domain requested while its block window is active, Brave displays the local block page with the shared suggestion shortlist, rather than the browser's error page.
+- Given a blocked domain requested while its block window is active, Brave displays the local block page with the shared suggestion shortlist, rather than the browser's error page. Known exception: `youtube.com` shows YouTube's own "connection failed" page instead. This limitation is accepted.
 - Given a malformed domain entered into the block list (e.g. missing a dot, containing spaces), the app rejects it with an error message and never writes it to the hosts file.
 ## 5. What could stop this
  

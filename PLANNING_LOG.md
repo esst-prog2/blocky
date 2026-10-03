@@ -20,3 +20,13 @@
 2026-10-03 | On a failed navigation to a blocked domain, the extension asks the app for its state at that moment and redirects; it keeps no cache | agent proposed, you decided
 2026-10-03 | The new tab redirects to the app's shortlist, and shows a "not running" message when the app is closed | agent proposed, you decided
 2026-10-03 | Tests use pytest for Python and Node's built-in test runner for the extension logic | agent proposed, you decided
+2026-10-03 | Spike 1.1 result: the elevated app wrote reddit.com and www.reddit.com to the hosts file during an active window with no UAC prompt after launch | observed by you
+2026-10-03 | Spike 1.2 result: reddit.com and x.com redirected to the block page; youtube.com showed Brave's "no internet connection" page instead; ordinary failing sites showed Brave's error page | observed by you
+2026-10-03 | youtube.com showing the browser's page instead of Blocky's is accepted as a limitation; it stays blocked | you decided
+2026-10-03 | Spike 1.3 result: the new tab shows the shortlist when Blocky runs, and the "not running" message when it does not | observed by you
+2026-10-03 | Styling the block page and the new tab is a later level | you decided
+2026-10-03 | Step 7 results: schedule tab shows one "Schedule"; status countdown moves; README demo walks through except that an override cannot be undone; section 4 criteria a, b, c, e hold; criterion d holds for reddit.com and x.com but not youtube.com | observed by you
+2026-10-03 | An override cannot be undone before its window ends; a decision on this is pending | observed by you
+2026-10-03 | Undo button: re-blocks at once, keeps the override line in history and adds an "override undone" line | you decided
+2026-10-03 | youtube.com shows YouTube's own connection page rather than Blocky's; accepted as a limitation, stated in README section 4 | you decided
+2026-10-03 | Logic moved into a controller class so tests run without creating a window per test; the window is created once in a smoke test | agent proposed, you decided
