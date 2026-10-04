@@ -359,9 +359,7 @@ class App(ctk.CTk):
 
     def _build_shortlist(self, frame: ctk.CTkFrame) -> None:
         ctk.CTkFrame(frame, fg_color="transparent", height=t.GAP).pack()
-        body = self._section(
-            frame, "Add a suggestion", "Something better to do, shown on the block page and in new tabs."
-        )
+        body = self._section(frame, "Add a suggestion", "Something better to do, shown on the block page.")
         row = ctk.CTkFrame(body, fg_color="transparent")
         row.pack(fill="x")
         self.new_suggestion_entry = self._suggestion_entry(row, placeholder_text="e.g. 10-minute walk")

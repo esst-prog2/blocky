@@ -30,10 +30,6 @@ def _suggestions(items: list[str]) -> str:
     )
 
 
-def render_home(state: dict) -> str:
-    return PAGE.format(body="<h1>Try something else</h1>" + _suggestions(state["shortlist"]))
-
-
 def render_blocked(state: dict, domain: str) -> str:
     if any(domain == blocked or domain.endswith(f".{blocked}") for blocked in state["blocked"]):
         message = f"{html.escape(domain)} is blocked until {html.escape(state['windowEnd'] or '')}"
@@ -47,9 +43,7 @@ def _handler(load_state: Callable[[], dict]) -> type[BaseHTTPRequestHandler]:
         def do_GET(self) -> None:
             url = urlparse(self.path)
             body: str | bytes
-            if url.path == "/":
-                body, content_type = render_home(load_state()), "text/html; charset=utf-8"
-            elif url.path == "/blocked":
+            if url.path == "/blocked":
                 domain = parse_qs(url.query).get("domain", [""])[0].lower()
                 body, content_type = render_blocked(load_state(), domain), "text/html; charset=utf-8"
             elif url.path == "/api/state":

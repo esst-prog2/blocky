@@ -9,7 +9,7 @@ EXTENSION = Path(__file__).resolve().parent.parent / "extension"
 def test_manifest_is_valid_manifest_v3():
     manifest = json.loads((EXTENSION / "manifest.json").read_text(encoding="utf-8"))
     assert manifest["manifest_version"] == 3
-    assert manifest["chrome_url_overrides"]["newtab"] == "newtab.html"
+    assert "chrome_url_overrides" not in manifest  # Brave keeps its own new tab
     assert manifest["background"]["type"] == "module"
     assert "webNavigation" in manifest["permissions"]
 
@@ -17,7 +17,6 @@ def test_manifest_is_valid_manifest_v3():
 def test_manifest_references_existing_files():
     manifest = json.loads((EXTENSION / "manifest.json").read_text(encoding="utf-8"))
     assert (EXTENSION / manifest["background"]["service_worker"]).exists()
-    assert (EXTENSION / manifest["chrome_url_overrides"]["newtab"]).exists()
     for size, icon in manifest["icons"].items():
         assert (EXTENSION / icon).exists(), icon
         assert size in ("16", "32", "48", "128")
