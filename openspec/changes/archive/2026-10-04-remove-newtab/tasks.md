@@ -7,4 +7,4 @@
 
 ## 2. Record
 
-- [ ] 2.1 Log the change in `PLANNING_LOG.md`, archive this change and update the browser-extension spec's purpose line
+- [x] 2.1 Log the change in `PLANNING_LOG.md`, archive this change and update the browser-extension spec's purpose line

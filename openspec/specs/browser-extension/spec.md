@@ -1,7 +1,7 @@
 # browser-extension Specification
 
 ## Purpose
-Connects Brave to Blocky, so that a blocked site sends the user to the block page and a new tab shows the shortlist, without the user needing to remember to open the app.
+Connects Brave to Blocky, so that a blocked site sends the user to the block page with the shortlist, without the user needing to remember to open the app.
 
 ## Requirements
 
@@ -44,13 +44,6 @@ The extension SHALL redirect a tab to the app's block page when a navigation to 
 - **WHEN** `reddit.com` has an active override and the user navigates to `old.reddit.com` during the block window
 - **THEN** the site loads normally
 
-### Requirement: New tab shows the shortlist
-The extension SHALL replace the new-tab page with the shortlist, served by the app.
-
-#### Scenario: New tab opened
-- **WHEN** the user opens a new tab in Brave
-- **THEN** the tab shows the shortlist from the app
-
 ### Requirement: Extension reads block list and shortlist from the app
 The extension SHALL obtain the block list and shortlist from the app's local server and SHALL NOT keep its own editable copy.
 
@@ -63,14 +56,14 @@ The extension SHALL run in Brave when loaded unpacked in developer mode, without
 
 #### Scenario: Loaded unpacked
 - **WHEN** the user loads the extension folder in `brave://extensions` with developer mode on
-- **THEN** the extension is active and its new-tab page is the shortlist
+- **THEN** the extension is active and a navigation to a blocked domain during an active block window opens the block page
 
 ### Requirement: Extension does not block on its own
 The extension SHALL NOT decide which domains are blocked; the block list comes from the app, and the blocked domains and their `www.` variants are blocked by the hosts file written by the app. Subdomains of blocked domains SHALL be blocked by the extension only, so they are blocked in Brave windows where the extension runs and not elsewhere.
 
 #### Scenario: Extension disabled
 - **WHEN** the extension is disabled
-- **THEN** blocked domains still fail to load, and only the redirect and new-tab page are lost
+- **THEN** blocked domains still fail to load, and only the redirect to the block page is lost
 
 #### Scenario: Subdomain without the extension
 - **WHEN** the extension is disabled, or another browser is used, during an active block window
