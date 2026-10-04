@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "Blocky spike console logger",
+  "version": "0.1.0",
+  "description": "Spike only: writes every failed navigation to the console, like Blocky's extension did in the HW4 spike.",
+  "permissions": ["webNavigation"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  }
+}
