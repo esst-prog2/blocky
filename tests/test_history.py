@@ -2,6 +2,7 @@ from datetime import datetime
 
 import pytest
 
+from blocky import history
 from blocky.config import Config, load, save
 from blocky.history import describe_days, describe_schedule, rows, when
 
@@ -70,3 +71,30 @@ def test_override_saved_without_a_type_is_shown_as_an_override():
     # Blocky's first version wrote overrides without a "type".
     overrides = [{"domain": "reddit.com", "timestamp": "2026-10-05T14:00:00", "reason": "work", "until": "x"}]
     assert [(row.event, row.details) for row in rows([], overrides)] == [("Override", "work")]
+
+
+# Today's output, captured from history.py before time formats existed; 24-hour time with Monday first must keep it.
+WHEN_BEFORE = {
+    datetime(2026, 10, 5, 14, 0): "Mon 5 Oct 2026, 14:00",
+    datetime(2026, 1, 4, 0, 5): "Sun 4 Jan 2026, 00:05",
+    datetime(2026, 12, 31, 23, 59): "Thu 31 Dec 2026, 23:59",
+    datetime(2026, 10, 11, 9, 7): "Sun 11 Oct 2026, 09:07",
+}
+DAYS_BEFORE = [
+    ([0, 1, 2, 3, 4], "Mon–Fri"),
+    ([0, 2, 4], "Mon, Wed, Fri"),
+    ([5, 6], "Sat, Sun"),
+    ([0, 1, 6], "Mon, Tue, Sun"),
+    ([6, 0, 1], "Mon, Tue, Sun"),
+    ([], "no days"),
+    ([0, 1, 2, 3, 4, 5, 6], "Mon–Sun"),
+    ([1, 2], "Tue, Wed"),
+    ([0, 1, 2, 4, 5, 6], "Mon–Wed, Fri–Sun"),
+    ([3], "Thu"),
+]
+
+
+def test_default_style_keeps_todays_output():
+    assert {moment: history.when(moment) for moment in WHEN_BEFORE} == WHEN_BEFORE
+    assert [(days, history.describe_days(days)) for days, _ in DAYS_BEFORE] == DAYS_BEFORE
+    assert history.describe_schedule([0, 1, 2, 3, 4], "09:00", "17:00") == "Mon–Fri, 09:00–17:00"

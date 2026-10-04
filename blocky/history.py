@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+from blocky import clock
+from blocky.clock import DEFAULT_STYLE, TimeStyle, format_time
 
 EVENTS = {
     "site_added": "Site added",
@@ -24,31 +25,16 @@ class Row:
     details: str
 
 
-def when(moment: datetime) -> str:
-    return f"{moment:%a} {moment.day} {moment:%b %Y, %H:%M}"
+def when(moment: datetime, style: TimeStyle = DEFAULT_STYLE) -> str:
+    return f"{moment:%a} {moment.day} {moment:%b %Y}, {format_time(moment.hour, moment.minute, style)}"
 
 
-def describe_days(weekdays: list[int]) -> str:
-    days = sorted(set(weekdays))
-    if not days:
-        return "no days"
-    runs: list[list[int]] = []
-    for day in days:
-        if runs and day == runs[-1][-1] + 1:
-            runs[-1].append(day)
-        else:
-            runs.append([day])
-    parts = []
-    for run in runs:
-        if len(run) >= 3:
-            parts.append(f"{DAY_NAMES[run[0]]}–{DAY_NAMES[run[-1]]}")
-        else:
-            parts.extend(DAY_NAMES[day] for day in run)
-    return ", ".join(parts)
+def describe_days(weekdays: list[int], style: TimeStyle = DEFAULT_STYLE) -> str:
+    return clock.describe_days(weekdays, style)
 
 
-def describe_schedule(weekdays: list[int], start: str, end: str) -> str:
-    return f"{describe_days(weekdays)}, {start}–{end}"
+def describe_schedule(weekdays: list[int], start: str, end: str, style: TimeStyle = DEFAULT_STYLE) -> str:
+    return clock.describe_schedule(weekdays, start, end, style)
 
 
 def rows(events: list[dict], overrides: list[dict]) -> list[Row]:

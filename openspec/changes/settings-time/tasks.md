@@ -4,12 +4,12 @@
 
 ## 1. Formatting
 
-- [ ] 1.1 Add `blocky/clock.py` with `TimeStyle`, `format_time`, `day_order`, `describe_days` and `describe_schedule`; verify with tests for every hour in both formats (00:00 as 12:00 AM, 12:00 as 12:00 PM, 17:05 as 5:05 PM), every first day, and runs across the end of the week ("Sun–Tue" with Sunday first, "Mon, Tue, Sun" with Monday first)
-- [ ] 1.2 Pin today's output: a test that with 24-hour time and Monday first, `history.when()` and the schedule descriptions give exactly what they give before this change; verify it fails when one is changed
+- [x] 1.1 Add `blocky/clock.py` with `TimeStyle`, `format_time`, `day_order`, `describe_days` and `describe_schedule`; verify with tests for every hour in both formats (00:00 as 12:00 AM, 12:00 as 12:00 PM, 17:05 as 5:05 PM), every first day, and runs across the end of the week ("Sun–Tue" with Sunday first, "Mon, Tue, Sun" with Monday first)
+- [x] 1.2 Pin today's output: a test that with 24-hour time and Monday first, `history.when()` and the schedule descriptions give exactly what they give before this change; verify it fails when one is changed
 
 ## 2. Settings
 
-- [ ] 2.1 Add `time_format` and `first_day` to `Settings` with Follow Windows as default and per-field fallback, `windows_time()` reading `sShortTime` and `iFirstDayOfWeek` (24-hour and Monday when unreadable), and `time_style(settings, windows)`; verify with tests for every combination, for faked registry values (`HH:mm`, `H:mm`, `h:mm tt`, `hh:mm tt`, first days 0 to 6) and for unreadable values, and that a part-1 config loads with both at Follow Windows
+- [x] 2.1 Add `time_format` and `first_day` to `Settings` with Follow Windows as default and per-field fallback, `windows_time()` reading `sShortTime` and `iFirstDayOfWeek` (24-hour and Monday when unreadable), and `time_style(settings, windows)`; verify with tests for every combination, for faked registry values (`HH:mm`, `H:mm`, `h:mm tt`, `hh:mm tt`, first days 0 to 6) and for unreadable values, and that a part-1 config loads with both at Follow Windows
 
 ## 3. History
 
