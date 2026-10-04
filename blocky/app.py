@@ -10,17 +10,18 @@ from blocky import history, hosts
 from blocky import settings as settings_module
 from blocky import suggestions as suggestions_module
 from blocky import theme as t
+from blocky.clock import DAY_NAMES, TimeStyle, day_order, format_time
 from blocky.controller import Controller
 from blocky.domainfield import DomainField, can_save_edit, hint
 from blocky.settings import FOLLOW_WINDOWS, Settings
 from blocky.timefield import TimeField
 
-DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 TABS = ("Status", "Block list", "Schedule", "Shortlist", "History", "Settings")
 ASSETS = Path(__file__).with_name("assets")
 WINDOWS_MODE_POLL_MS = 2000
 FONT_LIST_WIDTH = 220
 FONT_LIST_ROWS = 4
+FULL_DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
 
 class _Popup(tkinter.Toplevel):
@@ -55,10 +56,14 @@ class App(ctk.CTk):
         warning: Callable[[], str] = lambda: "",
         sync: Callable[[], None] | None = None,
         windows_is_light: Callable[[], bool] = settings_module.windows_is_light,
+        windows_time: Callable[[], settings_module.WindowsTime] = settings_module.windows_time,
     ) -> None:
         self.controller = Controller(config_path, hosts_path, clock, sync)
         self.windows_is_light = windows_is_light
         self._windows_light = False
+        self.windows_time = windows_time
+        self._windows_time = settings_module.WindowsTime()
+        self.time_style = TimeStyle()
         self._apply_settings()
         super().__init__(fg_color=t.BACKGROUND)
         self.title("Blocky")
@@ -79,6 +84,9 @@ class App(ctk.CTk):
         if settings.theme == FOLLOW_WINDOWS:
             self._windows_light = self.windows_is_light()
         t.apply(settings_module.effective_theme(settings, self._windows_light), settings.font, settings.text_size)
+        # Read at start and before every redraw; a change in Windows shows at the next settings change or start.
+        self._windows_time = self.windows_time()
+        self.time_style = settings_module.time_style(settings, self._windows_time)
 
     def _fit(self, width: int, height: int) -> tuple[int, int]:
         """A window size capped to the screen, which large text could otherwise exceed."""
@@ -261,7 +269,8 @@ class App(ctk.CTk):
         for domain, until in sorted(released.items()):
             row = ctk.CTkFrame(self.released_list, fg_color="transparent")
             row.pack(fill="x")
-            text = f"{domain} unblocked until {until:%H:%M} ({self._remaining(until, now)} left)"
+            until_text = format_time(until.hour, until.minute, self.time_style)
+            text = f"{domain} unblocked until {until_text} ({self._remaining(until, now)} left)"
             t.label(row, text).pack(side="left", fill="x", expand=True)
             t.quiet_button(row, "Undo", lambda d=domain: self._undo(d), width=t.px(72)).pack(side="right")
 
@@ -405,13 +414,14 @@ class App(ctk.CTk):
         body = self._section(frame, "Days", "Blocking only happens on the days you tick.")
         days_row = ctk.CTkFrame(body, fg_color="transparent")
         days_row.pack(fill="x")
-        self.day_boxes: list[ctk.CTkCheckBox] = []
-        for index, name in enumerate(DAYS):
-            box = t.checkbox(days_row, name)
-            if index in schedule.weekdays:
+        # Weekday number to box, in the order of the user's week; the numbers stored stay 0 (Monday) to 6 (Sunday).
+        self.day_boxes: dict[int, ctk.CTkCheckBox] = {}
+        for day in day_order(self.time_style):
+            box = t.checkbox(days_row, DAY_NAMES[day])
+            if day in schedule.weekdays:
                 box.select()
             box.pack(side="left")
-            self.day_boxes.append(box)
+            self.day_boxes[day] = box
 
         body = self._section(
             frame, "Time", "Sites are blocked between these times. Type, or use the arrow keys or mouse wheel."
@@ -419,10 +429,10 @@ class App(ctk.CTk):
         times = ctk.CTkFrame(body, fg_color="transparent")
         times.pack(fill="x")
         t.label(times, "From", "body", t.MUTED).pack(side="left", padx=(0, t.GAP))
-        self.start_time = TimeField(times, schedule.start)
+        self.start_time = TimeField(times, schedule.start, self.time_style.twelve_hour)
         self.start_time.pack(side="left")
         t.label(times, "to", "body", t.MUTED).pack(side="left", padx=t.PAD)
-        self.end_time = TimeField(times, schedule.end)
+        self.end_time = TimeField(times, schedule.end, self.time_style.twelve_hour)
         self.end_time.pack(side="left")
 
         actions = ctk.CTkFrame(frame, fg_color="transparent")
@@ -432,7 +442,7 @@ class App(ctk.CTk):
         self.schedule_message.pack(side="left", padx=t.PAD)
 
     def _save_schedule(self) -> None:
-        weekdays = [index for index, box in enumerate(self.day_boxes) if box.get()]
+        weekdays = sorted(day for day, box in self.day_boxes.items() if box.get())
         start = self.start_time.get()
         end = self.end_time.get()
         if self._attempt(lambda: self.controller.set_schedule(weekdays, start, end), self.schedule_message):
@@ -564,11 +574,11 @@ class App(ctk.CTk):
     def _render_history(self) -> None:
         for child in self.history_list.winfo_children():
             child.destroy()
-        rows = self.controller.history_rows()[: self.HISTORY_LIMIT]
+        rows = self.controller.history_rows(self.time_style)[: self.HISTORY_LIMIT]
         if not rows:
             t.label(self.history_list, "No changes yet.", "body", t.MUTED).pack(fill="x", padx=10, pady=6)
         for number, entry in enumerate(rows):
-            cells = [history.when(entry.moment), entry.event, entry.item, entry.details]
+            cells = [history.when(entry.moment, self.time_style), entry.event, entry.item, entry.details]
             self._history_row(self.history_list, cells, shaded=number % 2 == 1).pack(fill="x")
 
     def history_table(self) -> list[list[str]]:
@@ -640,6 +650,8 @@ class App(ctk.CTk):
         self.size_buttons = self._choice_row(size_column, sizes, current.text_size, "text_size")
         self._lay_out_font_and_size()
 
+        self._build_language_and_time(scroll, current)
+
         reset = ctk.CTkFrame(scroll, fg_color="transparent")
         reset.pack(fill="x", pady=(0, t.GAP))
         self.reset_button = t.quiet_button(reset, "Reset to default", self._reset_settings)
@@ -686,6 +698,25 @@ class App(ctk.CTk):
         for widget in self._descendants(tile):
             widget.bind("<Button-1>", lambda _event: tile.choose(), add="+")
         return tile
+
+    def _build_language_and_time(self, parent: ctk.CTkFrame, current: Settings) -> None:
+        body = self._section(parent, "Language and time")
+        windows = self._windows_time
+        t.label(body, "Time format", "button").pack(fill="x")
+        formats = {settings_module.FOLLOW_WINDOWS: "Follow Windows", "24h": "24-hour", "12h": "12-hour"}
+        self.time_format_buttons = self._choice_row(body, formats, current.time_format, "time_format")
+        windows_format = "12-hour" if windows.twelve_hour else "24-hour"
+        t.label(body, f"Windows uses {windows_format} time.", "caption", t.MUTED).pack(fill="x", pady=(t.GAP - 2, 0))
+
+        t.label(body, "First day of the week", "button").pack(fill="x", pady=(t.PAD, 0))
+        days = {settings_module.FOLLOW_WINDOWS: "Follow Windows"} | {
+            name: name.capitalize() for name in settings_module.FIRST_DAYS
+        }
+        self.first_day_buttons = self._choice_row(body, days, current.first_day, "first_day")
+        windows_day = FULL_DAY_NAMES[windows.first_day]
+        t.label(body, f"Windows starts the week on {windows_day}.", "caption", t.MUTED).pack(
+            fill="x", pady=(t.GAP - 2, 0)
+        )
 
     def _lay_out_font_and_size(self) -> None:
         """Text size next to the font when both fit in full, otherwise below it, so no button text is cut off."""

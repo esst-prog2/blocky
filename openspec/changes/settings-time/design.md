@@ -38,7 +38,7 @@ In 12-hour mode `TimeField` shows an hour box from 1 to 12 and an AM/PM switch (
 `page_state()` in `__main__.py` adds `"timeStyle": {"twelveHour": ..., "firstDay": ...}` next to `appearance`; `render_blocked` formats `windowEnd` with it. `windowEnd` itself stays "HH:MM", so the extension and the `/api/state` contract do not change.
 
 ### The Settings tab
-A second section, Language and time, under Appearance, with two rows of the same choice buttons as the text size. The Follow Windows button names what Windows uses now, for example "Follow Windows (24-hour)" and "Follow Windows (Monday)", so the user sees what they would get.
+A second section, Language and time, under Appearance, with two rows of the same choice buttons as the text size. A short line under each row names what Windows uses now, for example "Windows uses 24-hour time." and "Windows starts the week on Monday.", so the user sees what Follow Windows gives. (First planned inside the Follow Windows button, which cut the text off in the four-button row.)
 
 ## Risks / Trade-offs
 

@@ -243,3 +243,33 @@ def test_theme_change_shows_on_the_next_load():
         assert THEMES["blossom"]["CARD"] in fetch(srv, "/reddit.com")[2]
     finally:
         srv.stop()
+
+
+def with_time(twelve_hour):
+    return {**state(), "timeStyle": {"twelveHour": twelve_hour, "firstDay": 0}}
+
+
+def test_block_page_shows_the_end_time_in_12_hour_form():
+    body = render_blocked(with_time(True), "reddit.com")
+    assert heading(body) == "reddit.com is blocked until 5:00 PM"
+    assert '<span class="chip">5:00 PM</span>' in body
+
+
+def test_block_page_keeps_24_hour_form():
+    assert heading(render_blocked(with_time(False), "reddit.com")) == "reddit.com is blocked until 17:00"
+
+
+@pytest.mark.parametrize("style", [None, "12h", {"twelveHour": "yes"}, {}])
+def test_unusable_time_style_shows_the_stored_time(style):
+    assert heading(render_blocked({**state(), "timeStyle": style}, "reddit.com")) == "reddit.com is blocked until 17:00"
+
+
+def test_state_for_the_extension_keeps_24_hour_time():
+    srv = Server(lambda: with_time(True), port=0, page_port=None)
+    srv.start()
+    try:
+        data = json.loads(fetch(srv, "/api/state")[2])
+        assert data["windowEnd"] == "17:00"
+        assert heading(fetch(srv, "/reddit.com")[2]) == "reddit.com is blocked until 5:00 PM"
+    finally:
+        srv.stop()

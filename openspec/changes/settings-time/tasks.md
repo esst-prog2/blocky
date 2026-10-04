@@ -17,16 +17,16 @@
 
 ## 4. Window
 
-- [ ] 4.1 Give `TimeField` a 12-hour mode (hour 1–12, AM/PM switch, `get()` still 24-hour); verify with tests that 12:30 AM gives 00:30, 12:30 PM gives 12:30, 5:30 PM gives 17:30, that a saved 00:00 shows as 12:00 AM, and that stepping wraps from 12 to 1
-- [ ] 4.2 Add the Language and time section with both settings, the Follow Windows buttons naming Windows' current value; build the day boxes in the chosen order and show times on the Status and History tabs in the chosen format; verify with window tests that each choice changes the window at once, is saved and kept after reopening, that saving the schedule with Sunday first stores the same weekdays, that Reset puts both back to Follow Windows, and that the Settings tab still scrolls to its last row at Extra large and the smallest size
+- [x] 4.1 Give `TimeField` a 12-hour mode (hour 1–12, AM/PM switch, `get()` still 24-hour); verify with tests that 12:30 AM gives 00:30, 12:30 PM gives 12:30, 5:30 PM gives 17:30, that a saved 00:00 shows as 12:00 AM, and that stepping wraps from 12 to 1
+- [x] 4.2 Add the Language and time section with both settings, a line under each row naming Windows' current value; build the day boxes in the chosen order and show times on the Status and History tabs in the chosen format; verify with window tests that each choice changes the window at once, is saved and kept after reopening, that saving the schedule with Sunday first stores the same weekdays, that Reset puts both back to Follow Windows, and that the Settings tab still scrolls to its last row at Extra large and the smallest size
 
 ## 5. Block page
 
-- [ ] 5.1 Pass the time style to the block page and show the end time in it, keeping `windowEnd` 24-hour in `/api/state`; verify with server tests in both formats and the existing extension tests
+- [x] 5.1 Pass the time style to the block page and show the end time in it, keeping `windowEnd` 24-hour in `/api/state`; verify with server tests in both formats and the existing extension tests
 
 ## 6. Checks and record
 
-- [ ] 6.1 Run ruff check, ruff format --check, mypy, pytest and the extension tests and verify all pass
+- [x] 6.1 Run ruff check, ruff format --check, mypy, pytest and the extension tests and verify all pass
 - [ ] 6.2 Run `tools/mutation_test.py` on `clock` and `settings` (add `clock` to its module list) and add tests for real gaps
 - [ ] 6.3 Manual check by the owner: both settings in the window and on the block page, Follow Windows after changing Windows' time format and first day (then restarting Blocky), typing a 12-hour schedule, and Reset to default
 - [ ] 6.4 Log the decisions in `PLANNING_LOG.md`, update the README, and archive this change

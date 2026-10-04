@@ -1,11 +1,12 @@
 from datetime import datetime
 
+import customtkinter as ctk
 import pytest
 
 from blocky import config as config_module
 from blocky import settings as settings_module
 from blocky import theme as t
-from blocky.app import TABS
+from blocky.app import TABS, App
 from blocky.config import Config
 from blocky.settings import FOLLOW_WINDOWS, Settings
 
@@ -467,3 +468,95 @@ def test_layout_follows_a_window_resize(window):
     app.update()
     assert not app.font_and_size_side_by_side
     assert size_buttons_fit(app)
+
+
+# Language and time
+
+WINDOWS_24_MONDAY = settings_module.WindowsTime(twelve_hour=False, first_day=0)
+WINDOWS_12_SUNDAY = settings_module.WindowsTime(twelve_hour=True, first_day=6)
+
+
+def day_order_shown(app):
+    return [box.cget("text") for box in app.day_boxes.values()]
+
+
+def test_follow_windows_uses_windows_time_and_names_it(window):
+    app = window(Settings(), windows_time=lambda: WINDOWS_12_SUNDAY)
+    assert day_order_shown(app) == ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    assert (app.start_time.hour.get(), app.start_time.period.get()) == ("9", "AM")
+    assert (app.end_time.hour.get(), app.end_time.period.get()) == ("5", "PM")
+    captions = [
+        widget.cget("text") for widget in App._descendants(app.settings_scroll) if isinstance(widget, ctk.CTkLabel)
+    ]
+    assert "Windows uses 12-hour time." in captions
+    assert "Windows starts the week on Sunday." in captions
+
+
+def test_follow_windows_with_24_hour_monday_looks_as_before(window):
+    app = window(Settings(), windows_time=lambda: WINDOWS_24_MONDAY)
+    assert day_order_shown(app) == ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    assert app.start_time.period is None
+    assert app.start_time.get() == "09:00"
+
+
+def test_twelve_hour_choice_changes_the_window_and_is_kept(window, tmp_path):
+    app = window(Settings(), windows_time=lambda: WINDOWS_24_MONDAY)
+    app.tabs.set("Settings")
+    app.time_format_buttons["12h"].invoke()
+    app.update()
+    assert app.tabs.get() == "Settings"
+    assert (app.start_time.hour.get(), app.start_time.period.get()) == ("9", "AM")
+    assert config_module.load(tmp_path / "config.yaml").settings.time_format == "12h"
+    app.destroy()
+    t.apply()
+    again = window(windows_time=lambda: WINDOWS_24_MONDAY)
+    assert again.end_time.period.get() == "PM"
+
+
+def test_first_day_choice_reorders_the_days_and_is_kept(window, tmp_path):
+    app = window(Settings(), windows_time=lambda: WINDOWS_24_MONDAY)
+    app.first_day_buttons["sunday"].invoke()
+    app.update()
+    assert day_order_shown(app)[0] == "Sun"
+    assert config_module.load(tmp_path / "config.yaml").settings.first_day == "sunday"
+    app.first_day_buttons["saturday"].invoke()
+    app.update()
+    assert day_order_shown(app)[:3] == ["Sat", "Sun", "Mon"]
+
+
+def test_saving_with_sunday_first_stores_the_same_weekdays(window, tmp_path):
+    app = window(Settings(first_day="sunday"), windows_time=lambda: WINDOWS_24_MONDAY)
+    app.day_boxes[6].select()
+    app._save_schedule()
+    assert config_module.load(tmp_path / "config.yaml").schedule.weekdays == [0, 1, 2, 3, 4, 6]
+
+
+def test_twelve_hour_schedule_is_stored_as_24_hour_time(window, tmp_path):
+    app = window(Settings(time_format="12h"), windows_time=lambda: WINDOWS_24_MONDAY)
+    app.start_time.hour._set("9")
+    app.start_time.period.set("AM")
+    app.end_time.hour._set("5")
+    app.end_time.minute._set("30")
+    app.end_time.period.set("PM")
+    app._save_schedule()
+    schedule = config_module.load(tmp_path / "config.yaml").schedule
+    assert (schedule.start, schedule.end) == ("09:00", "17:30")
+
+
+def test_override_line_and_history_follow_the_time_format(window):
+    app = window(Settings(time_format="12h"), windows_time=lambda: WINDOWS_24_MONDAY)
+    app.reason_entry.insert(0, "work thread")
+    app._update_override_state()
+    app._override()
+    app.update()
+    assert app.released_texts() == ["reddit.com unblocked until 5:00 PM (3h 00m left)"]
+    assert app.history_table()[0][0] == "Mon 5 Oct 2026, 2:00 PM"
+
+
+def test_reset_puts_both_time_settings_back_to_follow_windows(window, tmp_path):
+    app = window(Settings(time_format="12h", first_day="sunday"), windows_time=lambda: WINDOWS_24_MONDAY)
+    app.reset_button.invoke()
+    app.update()
+    saved = config_module.load(tmp_path / "config.yaml").settings
+    assert (saved.time_format, saved.first_day) == (FOLLOW_WINDOWS, FOLLOW_WINDOWS)
+    assert app.start_time.period is None

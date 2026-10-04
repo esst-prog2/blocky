@@ -8,6 +8,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, quote, unquote, urlparse
 
 from blocky import settings as settings_module
+from blocky.clock import TimeStyle, format_hhmm
 from blocky.theme import THEMES
 
 HOST = "127.0.0.1"
@@ -72,6 +73,15 @@ def page_css(theme: str, font: str, scale: float) -> str:
     )
 
 
+def _end_time(state: dict) -> str:
+    """The block window's end in the user's time format; "HH:MM" as stored when no format is known."""
+    end = state.get("windowEnd") or ""
+    style = state.get("timeStyle")
+    if not isinstance(style, dict) or not re.fullmatch(r"[0-9]{2}:[0-9]{2}", end):
+        return end
+    return format_hhmm(end, TimeStyle(twelve_hour=style.get("twelveHour") is True))
+
+
 def favicon_path(theme: str) -> Path:
     return ASSETS / f"blocky-{theme}.ico"
 
@@ -90,7 +100,7 @@ def render_blocked(state: dict, domain: str) -> str:
     theme, font, scale = _appearance(state)
     name = f"<strong>{html.escape(domain)}</strong>"
     if any(domain == blocked or domain.endswith(f".{blocked}") for blocked in state["blocked"]):
-        message = f'{name} is blocked until <span class="chip">{html.escape(state["windowEnd"] or "")}</span>'
+        message = f'{name} is blocked until <span class="chip">{html.escape(_end_time(state))}</span>'
     else:
         message = f"{name} is not blocked right now"
     # The theme in the icon address keeps Brave from showing the previous theme's icon from its cache.

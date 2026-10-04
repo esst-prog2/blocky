@@ -276,7 +276,9 @@ def test_block_page_state_carries_the_effective_appearance(tmp_path, monkeypatch
     chosen = Settings(theme=FOLLOW_WINDOWS, dark_theme="navy", light_theme="aqua", font="Georgia", text_size="large")
     config_module.save(path, Config(domains=["reddit.com"], settings=chosen))
     monkeypatch.setattr(settings_module, "windows_is_light", lambda: True)
+    monkeypatch.setattr(settings_module, "windows_time", lambda: settings_module.WindowsTime(True, 6))
     assert page_state(path)["appearance"] == {"theme": "aqua", "font": "Georgia", "text_size": "large"}
+    assert page_state(path)["timeStyle"] == {"twelveHour": True, "firstDay": 6}
     monkeypatch.setattr(settings_module, "windows_is_light", lambda: False)
     assert page_state(path)["appearance"]["theme"] == "navy"
     assert page_state(path)["shortlist"] == []

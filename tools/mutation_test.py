@@ -32,6 +32,7 @@ TESTS = {
     "server": "test_server test_extension_files",
     "controller": "test_controller",
     "settings": "test_settings test_theme",
+    "clock": "test_clock test_history",
     "theme": "test_theme test_server",
 }
 
