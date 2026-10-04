@@ -77,6 +77,12 @@ Use `.venv\Scripts\python -m blocky` instead of `pythonw` to see error messages 
 
 To see which lines the tests never run, use `.venv\Scripts\python -m coverage run --branch --source=blocky -m pytest` and then `.venv\Scripts\python -m coverage report -m`. For the extension, add `--experimental-test-coverage` to the `node --test` command.
 
+`tests/test_properties.py` holds property tests: Hypothesis tries 100 generated inputs per rule on every run. To search harder (5000 inputs per rule, a few minutes), set `HYPOTHESIS_PROFILE=deep` before running pytest.
+
+Check style and types with `.venv\Scripts\python -m ruff check .`, `.venv\Scripts\python -m ruff format --check .` and `.venv\Scripts\python -m mypy`; their settings are in `pyproject.toml`. GitHub runs all of these checks and both test suites on Windows for every push (`.github/workflows/checks.yml`).
+
 To start Blocky from the Start menu or the taskbar, run `powershell -ExecutionPolicy Bypass -File tools\create_shortcut.ps1` once. It adds a Blocky shortcut with Blocky's icon to the Start menu; right-click it there and choose **Pin to taskbar**.
 
 The icon is drawn by `tools/make_icons.py`, which writes every size used by the app, the block page and the extension. Run `python tools/make_icons.py` after changing it.
+
+Mutation testing checks the tests themselves: `.venv\Scripts\python tools\mutation_test.py` makes small changes to the code (with cosmic-ray, installed separately with `pip install cosmic-ray`) and lists every change no test noticed. It takes up to an hour, edits files in `blocky/` while it runs, and keeps its results in `.mutation/`; add `--report` to show results without running.
