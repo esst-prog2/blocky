@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta
 
-from hypothesis import assume, example, given
+from hypothesis import assume, example, given, settings
 from hypothesis import strategies as st
 
 from blocky import config as config_module
@@ -113,6 +113,8 @@ def test_window_end_matches_the_schedule(schedule, now):
 
 @given(st.lists(domains, unique=True), schedules(), st.lists(st.text()))
 @example(domain_list=[], schedule=Schedule(), shortlist=["walk\x85"])  # found by Hypothesis
+# Writes a real file, which on GitHub's Windows runner can take over a second; no per-example time limit.
+@settings(deadline=None)
 def test_a_saved_config_loads_back_the_same(tmp_path_factory, domain_list, schedule, shortlist):
     path = tmp_path_factory.mktemp("config") / "config.yaml"
     config = Config(domains=domain_list, schedule=schedule, shortlist=shortlist)
