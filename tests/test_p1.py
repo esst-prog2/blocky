@@ -197,7 +197,8 @@ def started(tmp_path, monkeypatch):
             seen["warning"] = warning
 
         def mainloop(self):
-            deadline = time.monotonic() + 5
+            # Room for one retry (checker.RETRY_INTERVAL) if the first hosts write hits a brief lock.
+            deadline = time.monotonic() + 15 if seen.get("expect entries", True) else 0
             while "reddit.com" not in hosts_path.read_text(encoding="utf-8") and time.monotonic() < deadline:
                 time.sleep(0.05)
             seen["hosts while open"] = hosts_path.read_text(encoding="utf-8")
@@ -255,6 +256,7 @@ def test_startup_logs_and_shows_a_damaged_config(started):
     config_path, _, seen = started
     config_path.parent.mkdir(parents=True)
     config_path.write_text("domains: [reddit.com\n", encoding="utf-8")
+    seen["expect entries"] = False  # the damaged config is set aside, so nothing gets blocked
 
     startup.main()
 

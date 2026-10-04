@@ -7,6 +7,9 @@ from blocky import config as config_module
 from blocky import hosts
 from blocky.rules import blocked_domains
 
+# After a failed check, try again soon: a briefly locked hosts file should not delay blocking by a minute.
+RETRY_INTERVAL = 5
+
 
 def log_error(error_log: Path | None, message: str) -> None:
     if error_log is None:
@@ -53,5 +56,5 @@ class Checker:
                 if str(error) != self.last_error:
                     log_error(self.error_log, f"Background check failed: {error!r}")
                 self.last_error = str(error)
-            self._wake.wait(interval)
+            self._wake.wait(interval if self.last_error is None else min(interval, RETRY_INTERVAL))
             self._wake.clear()
