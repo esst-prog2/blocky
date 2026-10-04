@@ -1,3 +1,7 @@
+## 0. Layout tweak requested before building
+
+- [x] 0.1 Put Text size next to Font when both fit in full (font button 220 wide, choice buttons sized to their text), and below it otherwise, so no button text is cut off; verify with window tests for side by side at Normal and Large, stacked at the smallest size with Normal and with Verdana at Extra large, after a window resize, and that every size button shows its full text
+
 ## 1. Formatting
 
 - [ ] 1.1 Add `blocky/clock.py` with `TimeStyle`, `format_time`, `day_order`, `describe_days` and `describe_schedule`; verify with tests for every hour in both formats (00:00 as 12:00 AM, 12:00 as 12:00 PM, 17:05 as 5:05 PM), every first day, and runs across the end of the week ("Sun–Tue" with Sunday first, "Mon, Tue, Sun" with Monday first)

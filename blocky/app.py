@@ -19,7 +19,7 @@ DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 TABS = ("Status", "Block list", "Schedule", "Shortlist", "History", "Settings")
 ASSETS = Path(__file__).with_name("assets")
 WINDOWS_MODE_POLL_MS = 2000
-FONT_LIST_WIDTH = 260
+FONT_LIST_WIDTH = 220
 FONT_LIST_ROWS = 4
 
 
@@ -606,9 +606,18 @@ class App(ctk.CTk):
                     body, {name: settings_module.label(name) for name in names}, getattr(current, key), key
                 )
 
-        t.label(body, "Font", "button").pack(fill="x", pady=(t.PAD, 0))
+        # Font and text size side by side: both are about how text looks, and the row saves vertical space.
+        pair = ctk.CTkFrame(body, fg_color="transparent")
+        pair.pack(fill="x", pady=(t.PAD, 0))
+        pair.grid_columnconfigure(1, weight=1)
+        font_column = ctk.CTkFrame(pair, fg_color="transparent")
+        font_column.grid(row=0, column=0, sticky="nw", padx=(0, t.PAD))
+        size_column = ctk.CTkFrame(pair, fg_color="transparent")
+        self.font_and_size = (pair, font_column, size_column)
+        pair.bind("<Configure>", lambda _event: self._lay_out_font_and_size(), add="+")
+        t.label(font_column, "Font", "button").pack(fill="x")
         self.font_menu_button = ctk.CTkButton(
-            body,
+            font_column,
             text=f"{current.font}  ▾",
             command=self._toggle_font_list,
             font=t.font("body", current.font),
@@ -626,9 +635,10 @@ class App(ctk.CTk):
         self.font_list: tkinter.Toplevel | None = None
         self.font_options: dict[str, ctk.CTkButton] = {}
 
-        t.label(body, "Text size", "button").pack(fill="x", pady=(t.PAD, 0))
+        t.label(size_column, "Text size", "button").pack(fill="x")
         sizes = {name: settings_module.label(name) for name in settings_module.TEXT_SIZES}
-        self.size_buttons = self._choice_row(body, sizes, current.text_size, "text_size")
+        self.size_buttons = self._choice_row(size_column, sizes, current.text_size, "text_size")
+        self._lay_out_font_and_size()
 
         reset = ctk.CTkFrame(scroll, fg_color="transparent")
         reset.pack(fill="x", pady=(0, t.GAP))
@@ -676,6 +686,17 @@ class App(ctk.CTk):
         for widget in self._descendants(tile):
             widget.bind("<Button-1>", lambda _event: tile.choose(), add="+")
         return tile
+
+    def _lay_out_font_and_size(self) -> None:
+        """Text size next to the font when both fit in full, otherwise below it, so no button text is cut off."""
+        pair, font_column, size_column = self.font_and_size
+        needed = font_column.winfo_reqwidth() + pair._apply_widget_scaling(t.PAD) + size_column.winfo_reqwidth()
+        side_by_side = pair.winfo_width() >= needed
+        self.font_and_size_side_by_side = side_by_side
+        if side_by_side:
+            size_column.grid(row=0, column=1, columnspan=1, sticky="new", pady=0)
+        else:
+            size_column.grid(row=1, column=0, columnspan=2, sticky="new", pady=(t.PAD, 0))
 
     def _toggle_font_list(self) -> None:
         if self.font_list is not None:
@@ -807,6 +828,9 @@ class App(ctk.CTk):
         buttons = {}
         for column, (name, text) in enumerate(choices.items()):
             button = self._toggle(row, text, name == chosen, lambda n=name: self._choose(**{key: n}))
+            button.configure(
+                width=t.px(64)
+            )  # a minimum, not customtkinter's 140: the grid stretches them to fill the row
             button.grid(row=0, column=column, sticky="ew", padx=(0, t.GAP))
             row.grid_columnconfigure(column, weight=1, uniform=key)
             buttons[name] = button

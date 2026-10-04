@@ -248,3 +248,4 @@
 2026-10-04 | History formats when shown: new schedule changes store days and times next to the text, older text in the known pattern is reformatted, other text is shown as stored | agent proposed
 2026-10-04 | Follow Windows for time reads sShortTime and iFirstDayOfWeek at start and before each redraw, not while Blocky is open | agent proposed
 2026-10-04 | The Reset to default requirement is replaced by one without the Start with Windows exception, which moved to the installer level | agent proposed
+2026-10-04 | Text size sits next to Font when both fit in full, and below it otherwise (the window decides on every resize), so no button text is cut off; choice buttons size to their text instead of customtkinter's 140 minimum | you asked, agent decided

@@ -433,3 +433,37 @@ def test_closed_font_list_is_no_longer_tracked_for_dpi(window):
     app._close_font_list()
     assert popup not in ScalingTracker.window_dpi_scaling_dict
     assert popup not in ScalingTracker.window_widgets_dict
+
+
+def size_buttons_fit(app):
+    return all(button.winfo_width() >= button.winfo_reqwidth() for button in app.size_buttons.values())
+
+
+@pytest.mark.parametrize(
+    "font, size, geometry, side_by_side",
+    [
+        ("Segoe UI Variable", "normal", None, True),
+        ("Segoe UI Variable", "large", None, True),
+        ("Segoe UI Variable", "normal", "smallest", False),
+        ("Verdana", "extra-large", "smallest", False),
+    ],
+)
+def test_text_size_sits_next_to_the_font_only_when_it_fits(window, font, size, geometry, side_by_side):
+    app = window(Settings(font=font, text_size=size))
+    app.tabs.set("Settings")
+    if geometry == "smallest":
+        app.geometry(f"{app._min_width}x{app._min_height}")
+    app.update()
+    assert app.font_and_size_side_by_side is side_by_side
+    assert size_buttons_fit(app)
+
+
+def test_layout_follows_a_window_resize(window):
+    app = window()
+    app.tabs.set("Settings")
+    app.update()
+    assert app.font_and_size_side_by_side
+    app.geometry(f"{app._min_width}x{app._min_height}")
+    app.update()
+    assert not app.font_and_size_side_by_side
+    assert size_buttons_fit(app)
