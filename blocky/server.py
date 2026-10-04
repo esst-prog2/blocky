@@ -9,6 +9,7 @@ from urllib.parse import parse_qs, quote, unquote, urlparse
 
 from blocky import settings as settings_module
 from blocky.clock import TimeStyle, format_hhmm
+from blocky.language import LANGUAGES, translate
 from blocky.theme import THEMES
 
 HOST = "127.0.0.1"
@@ -20,7 +21,7 @@ PAGE_PORT = 80
 ASSETS = Path(__file__).with_name("assets")
 
 PAGE = (
-    '<!doctype html><html lang="en"><head><meta charset="utf-8">'
+    '<!doctype html><html lang="{lang}"><head><meta charset="utf-8">'
     '<meta name="viewport" content="width=device-width,initial-scale=1"><title>Blocky</title>'
     '<link rel="icon" href="{icon}">'
     "<style>{css}</style>"
@@ -73,24 +74,30 @@ def page_css(theme: str, font: str, scale: float) -> str:
     )
 
 
+def _language(state: dict) -> str:
+    """The page's language; English when the state has none or an unknown one."""
+    code = state.get("language")
+    return code if code in LANGUAGES else "en"
+
+
 def _end_time(state: dict) -> str:
     """The block window's end in the user's time format; "HH:MM" as stored when no format is known."""
     end = state.get("windowEnd") or ""
     style = state.get("timeStyle")
     if not isinstance(style, dict) or not re.fullmatch(r"[0-9]{2}:[0-9]{2}", end):
         return end
-    return format_hhmm(end, TimeStyle(twelve_hour=style.get("twelveHour") is True))
+    return format_hhmm(end, TimeStyle(twelve_hour=style.get("twelveHour") is True, language=_language(state)))
 
 
 def favicon_path(theme: str) -> Path:
     return ASSETS / f"blocky-{theme}.ico"
 
 
-def _suggestions(items: list[str]) -> str:
+def _suggestions(items: list[str], code: str) -> str:
     if not items:
-        return '<p class="muted">No suggestions yet. Add some in Blocky.</p>'
+        return f'<p class="muted">{translate("No suggestions yet. Add some in Blocky.", code)}</p>'
     return (
-        '<p class="lead">Try one of these instead:</p><ul>'
+        f'<p class="lead">{translate("Try one of these instead:", code)}</p><ul>'
         + "".join(f"<li>{html.escape(item)}</li>" for item in items)
         + "</ul>"
     )
@@ -98,16 +105,19 @@ def _suggestions(items: list[str]) -> str:
 
 def render_blocked(state: dict, domain: str) -> str:
     theme, font, scale = _appearance(state)
+    code = _language(state)
     name = f"<strong>{html.escape(domain)}</strong>"
     if any(domain == blocked or domain.endswith(f".{blocked}") for blocked in state["blocked"]):
-        message = f'{name} is blocked until <span class="chip">{html.escape(_end_time(state))}</span>'
+        end = f'<span class="chip">{html.escape(_end_time(state))}</span>'
+        message = translate("{domain} is blocked until {time}", code, domain=name, time=end)
     else:
-        message = f"{name} is not blocked right now"
+        message = translate("{domain} is not blocked right now", code, domain=name)
     # The theme in the icon address keeps Brave from showing the previous theme's icon from its cache.
     return PAGE.format(
+        lang=code,
         icon=f"/favicon.ico?theme={theme}",
         css=page_css(theme, font, scale),
-        body=f"<h1>{message}</h1>" + _suggestions(state["shortlist"]),
+        body=f"<h1>{message}</h1>" + _suggestions(state["shortlist"], code),
     )
 
 

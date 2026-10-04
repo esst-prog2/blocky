@@ -9,6 +9,7 @@ from blocky import domains as domains_module
 from blocky import schedule as schedule_module
 from blocky import settings as settings_module
 from blocky.files import write_safely
+from blocky.language import shown
 from blocky.schedule import Schedule
 from blocky.settings import Settings
 
@@ -34,40 +35,40 @@ def default_path() -> Path:
 def _list(data: dict, key: str, default: list) -> list:
     value = data.get(key, default)
     if not isinstance(value, list):
-        raise DamagedConfig(f"'{key}' is not a list")
+        raise DamagedConfig(shown("'{key}' is not a list", key=key))
     return value
 
 
 def _check_override(entry: object) -> None:
     if not isinstance(entry, dict) or not isinstance(entry.get("domain"), str):
-        raise DamagedConfig("an override entry has no domain")
+        raise DamagedConfig(shown("an override entry has no domain"))
     if entry.get("type") != "undo":
         try:
             datetime.fromisoformat(entry["until"])
         except (KeyError, TypeError, ValueError):
-            raise DamagedConfig("an override entry has no valid end time") from None
+            raise DamagedConfig(shown("an override entry has no valid end time")) from None
 
 
 def _check_event(entry: object) -> None:
     if not isinstance(entry, dict) or not isinstance(entry.get("type"), str):
-        raise DamagedConfig("a history entry has no type")
+        raise DamagedConfig(shown("a history entry has no type"))
     try:
         datetime.fromisoformat(entry["timestamp"])
     except (KeyError, TypeError, ValueError):
-        raise DamagedConfig("a history entry has no valid time") from None
+        raise DamagedConfig(shown("a history entry has no valid time")) from None
 
 
 def _parse(text: str) -> tuple[Config, list[str]]:
     try:
         data = yaml.safe_load(text)
     except yaml.YAMLError:
-        raise DamagedConfig("it is not valid YAML") from None
+        raise DamagedConfig(shown("it is not valid YAML")) from None
     if not isinstance(data, dict):
-        raise DamagedConfig("it is empty or not a Blocky config")
+        raise DamagedConfig(shown("it is empty or not a Blocky config"))
 
     schedule_data = data.get("schedule", {})
     if not isinstance(schedule_data, dict):
-        raise DamagedConfig("'schedule' is not a section")
+        raise DamagedConfig(shown("'schedule' is not a section"))
     schedule = Schedule(
         weekdays=_list(schedule_data, "weekdays", [0, 1, 2, 3, 4]),
         start=str(schedule_data.get("start", "09:00")),
@@ -76,7 +77,7 @@ def _parse(text: str) -> tuple[Config, list[str]]:
     try:
         schedule_module.validate(schedule)
     except (TypeError, ValueError):
-        raise DamagedConfig("the schedule is not valid") from None
+        raise DamagedConfig(shown("the schedule is not valid")) from None
 
     skipped: list[str] = []
     domains: list[str] = []
@@ -96,7 +97,9 @@ def _parse(text: str) -> tuple[Config, list[str]]:
     # Settings never count as damage: each unknown value falls back to its default on its own.
     settings = settings_module.from_data(data.get("settings"))
 
-    warnings = [f"Skipped invalid domains in the config: {', '.join(skipped)}."] if skipped else []
+    warnings: list[str] = (
+        [shown("Skipped invalid domains in the config: {domains}.", domains=", ".join(skipped))] if skipped else []
+    )
     config = Config(
         domains=domains, schedule=schedule, shortlist=shortlist, overrides=overrides, events=events, settings=settings
     )
@@ -118,11 +121,13 @@ def load_or_recover(path: Path, now: datetime) -> tuple[Config, str | None]:
     except DamagedConfig as problem:
         copy = path.with_name(f"{path.name}.damaged-{now:%Y%m%d-%H%M%S}")
         path.replace(copy)
-        return Config(), (
-            f"{path.name} could not be read ({problem}), so Blocky started with an empty list. "
-            f"The old file was kept as {copy.name}."
+        return Config(), shown(
+            "{name} could not be read ({problem}), so Blocky started with an empty list. The old file was kept as {copy}.",
+            name=path.name,
+            problem=problem.args[0],
+            copy=copy.name,
         )
-    return config, " ".join(warnings) or None
+    return config, (warnings[0] if warnings else None)  # at most one: the skipped domains
 
 
 def save(path: Path, config: Config) -> None:

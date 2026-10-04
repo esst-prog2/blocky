@@ -4,6 +4,7 @@ from collections.abc import Callable
 import customtkinter as ctk
 
 from blocky.domains import covered_hostnames, host_of, validate
+from blocky.language import _
 
 DOMAIN_CHARACTERS = set("abcdefghijklmnopqrstuvwxyz0123456789-.")
 MAX_LENGTH = 253
@@ -27,10 +28,13 @@ def hint(text: str, existing: list[str]) -> tuple[bool, str]:
     try:
         domain = validate(text)
     except ValueError:
-        return False, "Not a full domain yet, e.g. reddit.com"
+        return False, _("Not a full domain yet, e.g. reddit.com")
     if domain in existing:
-        return False, f"{domain} is already in the list"
-    return True, "Adds " + " and ".join(covered_hostnames(domain))
+        return False, _("{domain} is already in the list", domain=domain)
+    names = covered_hostnames(domain)
+    if len(names) == 1:
+        return True, _("Adds {domain}", domain=names[0])
+    return True, _("Adds {domain} and {other}", domain=names[0], other=names[1])
 
 
 def can_save_edit(text: str, original: str, existing: list[str]) -> bool:

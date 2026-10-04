@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 
 from blocky import config as config_module
-from blocky import hosts
+from blocky import hosts, language
 from blocky.rules import blocked_domains
 
 # After a failed check, try again soon: a briefly locked hosts file should not delay blocking by a minute.
@@ -54,7 +54,9 @@ class Checker:
                 self.last_error = None
             except Exception as error:
                 if str(error) != self.last_error:
-                    log_error(self.error_log, f"Background check failed: {error!r}")
+                    # errors.log stays English; Blocky's own messages keep their English next to the translation.
+                    arguments = ", ".join(repr(language.english(argument)) for argument in error.args)
+                    log_error(self.error_log, f"Background check failed: {type(error).__name__}({arguments})")
                 self.last_error = str(error)
             self._wake.wait(interval if self.last_error is None else min(interval, RETRY_INTERVAL))
             self._wake.clear()

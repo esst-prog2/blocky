@@ -2,6 +2,8 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime, time
 
+from blocky.language import _
+
 
 @dataclass
 class Schedule:
@@ -13,7 +15,7 @@ class Schedule:
 def parse_time(text: str) -> str:
     match = re.fullmatch(r"([0-9]{1,2}):([0-9]{2})", text.strip())
     if not match or int(match[1]) > 23 or int(match[2]) > 59:
-        raise ValueError("Use a time like 09:00")
+        raise ValueError(_("Use a time like 09:00"))
     return f"{int(match[1]):02d}:{match[2]}"
 
 
@@ -21,9 +23,9 @@ def validate(schedule: Schedule) -> None:
     start = time.fromisoformat(schedule.start)
     end = time.fromisoformat(schedule.end)
     if not start < end:
-        raise ValueError("The start time must be before the end time")
+        raise ValueError(_("The start time must be before the end time"))
     if not all(day in range(7) for day in schedule.weekdays):
-        raise ValueError("Weekdays must be between 0 (Monday) and 6 (Sunday)")
+        raise ValueError(_("Weekdays must be between 0 (Monday) and 6 (Sunday)"))
 
 
 def window_end(schedule: Schedule, now: datetime) -> datetime | None:

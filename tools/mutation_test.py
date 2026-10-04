@@ -33,6 +33,7 @@ TESTS = {
     "controller": "test_controller",
     "settings": "test_settings test_theme",
     "clock": "test_clock test_history",
+    "language": "test_language test_translations test_start_language test_clock",
     "theme": "test_theme test_server",
 }
 

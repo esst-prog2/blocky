@@ -1,7 +1,10 @@
 from datetime import datetime
 
+from blocky import language
+from blocky.clock import format_duration
 from blocky.config import Config
 from blocky.domains import covered_hostnames
+from blocky.language import _
 from blocky.schedule import window_end
 
 
@@ -40,9 +43,9 @@ def overridable_domains(config: Config, now: datetime) -> list[str]:
 def override(config: Config, domain: str, reason: str, now: datetime) -> None:
     reason = reason.strip()
     if not reason:
-        raise ValueError("A reason is required to override a block")
+        raise ValueError(_("A reason is required to override a block"))
     if domain not in overridable_domains(config, now):
-        raise ValueError(f"{domain} is not blocked right now")
+        raise ValueError(_("{domain} is not blocked right now", domain=domain))
     until = window_end(config.schedule, now)
     assert until is not None  # overridable_domains is empty outside the window
     config.overrides.append(
@@ -58,17 +61,18 @@ def override(config: Config, domain: str, reason: str, now: datetime) -> None:
 
 def undo_override(config: Config, domain: str, now: datetime) -> None:
     if domain not in released_until(config, now):
-        raise ValueError(f"{domain} is not unblocked right now")
+        raise ValueError(_("{domain} is not unblocked right now", domain=domain))
     config.overrides.append({"type": "undo", "domain": domain, "timestamp": now.isoformat(timespec="seconds")})
 
 
 def status_text(config: Config, now: datetime) -> str:
     end = window_end(config.schedule, now)
     if end is None:
-        return "No blocking right now"
-    remaining = int((end - now).total_seconds()) // 60
-    state = "Blocking active" if blocked_domains(config, now) else "Window active, nothing blocked"
-    return f"{state} — {remaining // 60}h {remaining % 60:02d}m remaining"
+        return _("No blocking right now")
+    remaining = format_duration(int((end - now).total_seconds()) // 60, language.current())
+    if blocked_domains(config, now):
+        return _("Blocking active — {remaining} remaining", remaining=remaining)
+    return _("Window active, nothing blocked — {remaining} remaining", remaining=remaining)
 
 
 def snapshot(config: Config, now: datetime) -> dict:

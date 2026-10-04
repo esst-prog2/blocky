@@ -6,22 +6,30 @@ from pathlib import Path
 
 import customtkinter as ctk
 
-from blocky import history, hosts
+from blocky import clock, history, hosts, language
 from blocky import settings as settings_module
 from blocky import suggestions as suggestions_module
 from blocky import theme as t
-from blocky.clock import DAY_NAMES, TimeStyle, day_order, format_time
+from blocky.clock import TimeStyle, day_order, format_duration, format_time
 from blocky.controller import Controller
 from blocky.domainfield import DomainField, can_save_edit, hint
+from blocky.language import _, marked
 from blocky.settings import FOLLOW_WINDOWS, Settings
 from blocky.timefield import TimeField
 
-TABS = ("Status", "Block list", "Schedule", "Shortlist", "History", "Settings")
+# The tabs by their English names, which the code uses; the window shows them translated.
+TABS = (
+    marked("Status"),
+    marked("Block list"),
+    marked("Schedule"),
+    marked("Shortlist"),
+    marked("History"),
+    marked("Settings"),
+)
 ASSETS = Path(__file__).with_name("assets")
 WINDOWS_MODE_POLL_MS = 2000
 FONT_LIST_WIDTH = 220
 FONT_LIST_ROWS = 4
-FULL_DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
 
 class _Popup(tkinter.Toplevel):
@@ -57,12 +65,15 @@ class App(ctk.CTk):
         sync: Callable[[], None] | None = None,
         windows_is_light: Callable[[], bool] = settings_module.windows_is_light,
         windows_time: Callable[[], settings_module.WindowsTime] = settings_module.windows_time,
+        windows_language: Callable[[], str] = language.windows_language,
     ) -> None:
         self.controller = Controller(config_path, hosts_path, clock, sync)
         self.windows_is_light = windows_is_light
         self._windows_light = False
         self.windows_time = windows_time
         self._windows_time = settings_module.WindowsTime()
+        self.windows_language = windows_language
+        self._windows_language = "en"
         self.time_style = TimeStyle()
         self._apply_settings()
         super().__init__(fg_color=t.BACKGROUND)
@@ -86,7 +97,10 @@ class App(ctk.CTk):
         t.apply(settings_module.effective_theme(settings, self._windows_light), settings.font, settings.text_size)
         # Read at start and before every redraw; a change in Windows shows at the next settings change or start.
         self._windows_time = self.windows_time()
-        self.time_style = settings_module.time_style(settings, self._windows_time)
+        self._windows_language = self.windows_language()
+        code = settings_module.effective_language(settings, self._windows_language)
+        language.apply(code)
+        self.time_style = settings_module.time_style(settings, self._windows_time, code)
 
     def _fit(self, width: int, height: int) -> tuple[int, int]:
         """A window size capped to the screen, which large text could otherwise exceed."""
@@ -98,6 +112,19 @@ class App(ctk.CTk):
     @property
     def icon_path(self) -> Path:
         return ASSETS / f"blocky-{t.THEME}.ico"
+
+    def tab(self, name: str) -> ctk.CTkFrame:
+        """A tab's frame, by its English name."""
+        return self.tabs.tab(_(name))
+
+    @property
+    def selected_tab(self) -> str:
+        """The English name of the open tab."""
+        shown = self.tabs.get()
+        return next((name for name in TABS if _(name) == shown), TABS[0])
+
+    def select_tab(self, name: str) -> None:
+        self.tabs.set(_(name))
 
     def _build(self, selected: str = TABS[0]) -> None:
         self.configure(fg_color=t.BACKGROUND)
@@ -122,20 +149,20 @@ class App(ctk.CTk):
         self.tabs._segmented_button.configure(font=t.font("button"), height=t.CONTROL_HEIGHT, corner_radius=8)
         self.tabs.pack(fill="both", expand=True, padx=t.MARGIN - 4, pady=(0, t.MARGIN - 6))
         for name in TABS:
-            self.tabs.add(name)
+            self.tabs.add(_(name))
         for button in self.tabs._segmented_button._buttons_dict.values():
             button.configure(width=t.px(96))
         # Before anything below lets Tk paint, so a redraw never shows another tab in between. Only when needed:
         # set() hides the other tabs 100 ms later, which would also hide a tab chosen within that time.
-        if selected != self.tabs.get():
-            self.tabs.set(selected)
+        if _(selected) != self.tabs.get():
+            self.tabs.set(_(selected))
 
-        self._build_status(self.tabs.tab("Status"))
-        self._build_block_list(self.tabs.tab("Block list"))
-        self._build_schedule(self.tabs.tab("Schedule"))
-        self._build_shortlist(self.tabs.tab("Shortlist"))
-        self._build_history(self.tabs.tab("History"))
-        self._build_settings(self.tabs.tab("Settings"))
+        self._build_status(self.tab("Status"))
+        self._build_block_list(self.tab("Block list"))
+        self._build_schedule(self.tab("Schedule"))
+        self._build_shortlist(self.tab("Shortlist"))
+        self._build_history(self.tab("History"))
+        self._build_settings(self.tab("Settings"))
 
         self._refresh_status()
         t.paint_window_frame(self)
@@ -143,7 +170,7 @@ class App(ctk.CTk):
     def redraw(self) -> None:
         """Build the window again in the current settings, on the same tab."""
         self._redraw_id = None
-        selected = self.tabs.get()
+        selected = self.selected_tab  # by its English name: the language may change with the redraw
         settings_position = self.settings_scroll._parent_canvas.yview()[0]
         for child in self.winfo_children():
             child.destroy()
@@ -199,7 +226,7 @@ class App(ctk.CTk):
         header = ctk.CTkFrame(self, fg_color="transparent")
         header.pack(fill="x", padx=t.MARGIN - 4, pady=(t.MARGIN - 4, t.GAP))
         t.label(header, "Blocky", "brand", t.ACCENT).pack(side="left")
-        t.label(header, "Fewer distractions, on your schedule", "caption", t.MUTED).pack(
+        t.label(header, _("Fewer distractions, on your schedule"), "caption", t.MUTED).pack(
             side="left", padx=(t.GAP + 4, 0), pady=(6, 0)
         )
         self.banner = t.card(self, border_width=1, border_color=t.WARNING)
@@ -218,36 +245,36 @@ class App(ctk.CTk):
     def _build_status(self, frame: ctk.CTkFrame) -> None:
         hero = t.card(frame, color=t.DEEP)
         hero.pack(fill="x", pady=(t.GAP, t.GAP + 4))
-        t.label(hero, "RIGHT NOW", "caption", t.SOFT_ON_DEEP).pack(fill="x", padx=t.PAD + 4, pady=(t.PAD + 2, 0))
+        t.label(hero, _("RIGHT NOW"), "caption", t.SOFT_ON_DEEP).pack(fill="x", padx=t.PAD + 4, pady=(t.PAD + 2, 0))
         self.status_label = t.label(hero, "", "display", t.ON_DEEP, wraplength=t.px(640))
         self.status_label.pack(fill="x", padx=t.PAD + 4, pady=(2, t.GAP))
         self.blocked_chips = ctk.CTkFrame(hero, fg_color="transparent")
         self.blocked_chips.pack(fill="x", padx=t.PAD + 4, pady=(0, t.PAD + 4))
 
         body = self._section(
-            frame, "Override a block", "Unblocks one site until this window ends. Your reason is kept in History."
+            frame,
+            _("Override a block"),
+            _("Unblocks one site until this window ends. Your reason is kept in History."),
         )
         row = ctk.CTkFrame(body, fg_color="transparent")
         row.pack(fill="x")
-        self.override_menu = t.option_menu(row, ["No domain blocked"], width=t.px(170))
+        self.override_menu = t.option_menu(row, [_("No domain blocked")], width=t.px(170))
         self.override_menu.pack(side="left", padx=(0, t.GAP))
-        self.reason_entry = t.entry(row, placeholder_text="Why do you need it?")
+        self.reason_entry = t.entry(row, placeholder_text=_("Why do you need it?"))
         self.reason_entry.pack(side="left", fill="x", expand=True, padx=(0, t.GAP))
         self.reason_entry.bind("<KeyRelease>", lambda _event: self._update_override_state())
         self.reason_entry.bind("<Return>", lambda _event: self._override())
-        self.override_button = t.primary_button(row, "Override", self._override, width=t.px(104))
+        self.override_button = t.primary_button(row, _("Override"), self._override, width=t.px(104))
         self.override_button.pack(side="left")
         self.override_hint = t.Message(body)
         self.override_hint.pack(fill="x", pady=(t.GAP, 0))
         self.status_message = t.Message(body, t.DANGER)
         self.status_message.pack(fill="x", pady=(t.GAP, 0))
 
-        self.released_list = self._section(frame, "Unblocked right now")
+        self.released_list = self._section(frame, _("Unblocked right now"))
 
-    @staticmethod
-    def _remaining(until: datetime, now: datetime) -> str:
-        minutes = int((until - now).total_seconds()) // 60
-        return f"{minutes // 60}h {minutes % 60:02d}m"
+    def _remaining(self, until: datetime, now: datetime) -> str:
+        return format_duration(int((until - now).total_seconds()) // 60, self.time_style.language)
 
     def _refresh_status(self) -> None:
         now = self.controller.clock()
@@ -256,7 +283,7 @@ class App(ctk.CTk):
         self._show_warning(" ".join(text for text in (self.controller.load_warning, self.warning()) if text))
         self._render_chips(view["overridable"])
         self._render_released(view["released"], now)
-        self._set_menu(self.override_menu, view["overridable"], "No domain blocked")
+        self._set_menu(self.override_menu, view["overridable"], _("No domain blocked"))
         self._overridable = view["overridable"]
         self._update_override_state()
 
@@ -264,15 +291,21 @@ class App(ctk.CTk):
         for child in self.released_list.winfo_children():
             child.destroy()
         if not released:
-            t.label(self.released_list, "Nothing is unblocked.", "body", t.MUTED).pack(fill="x")
+            t.label(self.released_list, _("Nothing is unblocked."), "body", t.MUTED).pack(fill="x")
             return
         for domain, until in sorted(released.items()):
             row = ctk.CTkFrame(self.released_list, fg_color="transparent")
             row.pack(fill="x")
             until_text = format_time(until.hour, until.minute, self.time_style)
-            text = f"{domain} unblocked until {until_text} ({self._remaining(until, now)} left)"
+            remaining = self._remaining(until, now)
+            text = _(
+                "{domain} unblocked until {time} ({remaining} left)",
+                domain=domain,
+                time=until_text,
+                remaining=remaining,
+            )
             t.label(row, text).pack(side="left", fill="x", expand=True)
-            t.quiet_button(row, "Undo", lambda d=domain: self._undo(d), width=t.px(72)).pack(side="right")
+            t.quiet_button(row, _("Undo"), lambda d=domain: self._undo(d), width=t.px(72)).pack(side="right")
 
     def released_texts(self) -> list[str]:
         rows = [row for row in self.released_list.winfo_children() if isinstance(row, ctk.CTkFrame)]
@@ -282,7 +315,7 @@ class App(ctk.CTk):
         for child in self.blocked_chips.winfo_children():
             child.destroy()
         if not domains:
-            t.label(self.blocked_chips, "No sites are blocked.", "body", t.SOFT_ON_DEEP).pack(side="left")
+            t.label(self.blocked_chips, _("No sites are blocked."), "body", t.SOFT_ON_DEEP).pack(side="left")
             return
         for domain in domains:
             t.chip(self.blocked_chips, domain).pack(side="left", padx=(0, t.GAP - 2))
@@ -297,7 +330,7 @@ class App(ctk.CTk):
         domain_available = self.override_menu.get() in self._overridable
         t.set_enabled(self.override_button, self._can_override())
         missing_reason = domain_available and not self.reason_entry.get().strip()
-        self.override_hint.configure(text="Type a reason to override" if missing_reason else "")
+        self.override_hint.configure(text=_("Type a reason to override") if missing_reason else "")
 
     @staticmethod
     def _set_menu(menu: ctk.CTkOptionMenu, options: list[str], empty: str) -> None:
@@ -327,7 +360,9 @@ class App(ctk.CTk):
 
     def _build_block_list(self, frame: ctk.CTkFrame) -> None:
         ctk.CTkFrame(frame, fg_color="transparent", height=t.GAP).pack()
-        body = self._section(frame, "Add a site", "Its www. version is blocked too. You can paste a full web address.")
+        body = self._section(
+            frame, _("Add a site"), _("Its www. version is blocked too. You can paste a full web address.")
+        )
         row = ctk.CTkFrame(body, fg_color="transparent")
         row.pack(fill="x")
         self.new_domain_entry = DomainField(
@@ -335,7 +370,7 @@ class App(ctk.CTk):
         )
         self.new_domain_entry.pack(side="left", fill="x", expand=True, padx=(0, t.GAP))
         self.new_domain_entry.bind("<Return>", lambda _event: self._add_domain())
-        self.add_button = t.primary_button(row, "Add", self._add_domain, width=t.px(96))
+        self.add_button = t.primary_button(row, _("Add"), self._add_domain, width=t.px(96))
         self.add_button.pack(side="left")
         t.set_enabled(self.add_button, False)
         self.domain_hint = t.Message(body)
@@ -355,9 +390,9 @@ class App(ctk.CTk):
         for child in self.domain_list.winfo_children():
             child.destroy()
         domains = self.controller.config.domains
-        self.list_title.configure(text=f"Blocked sites ({len(domains)})")
+        self.list_title.configure(text=_("Blocked sites ({count})", count=len(domains)))
         if not domains:
-            t.label(self.domain_list, "No sites yet. Add one above.", "body", t.MUTED).pack(fill="x", padx=6)
+            t.label(self.domain_list, _("No sites yet. Add one above."), "body", t.MUTED).pack(fill="x", padx=6)
         for index, domain in enumerate(domains):
             row = ctk.CTkFrame(self.domain_list, fg_color="transparent")
             row.pack(fill="x", pady=(0, t.GAP - 2))
@@ -365,7 +400,9 @@ class App(ctk.CTk):
             t.list_entry_focus(entry)
             entry.insert(0, domain)
             entry.pack(side="left", fill="x", expand=True, padx=(6, t.GAP))
-            save = t.quiet_button(row, "Save", lambda i=index, e=entry: self._edit_domain(i, e.get()), width=t.px(64))
+            save = t.quiet_button(
+                row, _("Save"), lambda i=index, e=entry: self._edit_domain(i, e.get()), width=t.px(64)
+            )
             save.pack(side="left", padx=(0, 2))
             t.set_enabled(save, False)
 
@@ -373,7 +410,7 @@ class App(ctk.CTk):
                 t.set_enabled(b, can_save_edit(e.get(), original, self.controller.config.domains))
 
             entry.on_change = check_edit
-            remove = t.quiet_button(row, "Remove", lambda i=index: self._remove_domain(i), width=t.px(80))
+            remove = t.quiet_button(row, _("Remove"), lambda i=index: self._remove_domain(i), width=t.px(80))
             t.danger_on_hover(remove)
             remove.pack(side="left")
 
@@ -411,33 +448,33 @@ class App(ctk.CTk):
     def _build_schedule(self, frame: ctk.CTkFrame) -> None:
         ctk.CTkFrame(frame, fg_color="transparent", height=t.GAP).pack()
         schedule = self.controller.config.schedule
-        body = self._section(frame, "Days", "Blocking only happens on the days you tick.")
+        body = self._section(frame, _("Days"), _("Blocking only happens on the days you tick."))
         days_row = ctk.CTkFrame(body, fg_color="transparent")
         days_row.pack(fill="x")
         # Weekday number to box, in the order of the user's week; the numbers stored stay 0 (Monday) to 6 (Sunday).
         self.day_boxes: dict[int, ctk.CTkCheckBox] = {}
         for day in day_order(self.time_style):
-            box = t.checkbox(days_row, DAY_NAMES[day])
+            box = t.checkbox(days_row, clock.day_name(day, self.time_style))
             if day in schedule.weekdays:
                 box.select()
             box.pack(side="left")
             self.day_boxes[day] = box
 
         body = self._section(
-            frame, "Time", "Sites are blocked between these times. Type, or use the arrow keys or mouse wheel."
+            frame, _("Time"), _("Sites are blocked between these times. Type, or use the arrow keys or mouse wheel.")
         )
         times = ctk.CTkFrame(body, fg_color="transparent")
         times.pack(fill="x")
-        t.label(times, "From", "body", t.MUTED).pack(side="left", padx=(0, t.GAP))
-        self.start_time = TimeField(times, schedule.start, self.time_style.twelve_hour)
+        t.label(times, _("From"), "body", t.MUTED).pack(side="left", padx=(0, t.GAP))
+        self.start_time = TimeField(times, schedule.start, self.time_style.twelve_hour, clock.periods(self.time_style))
         self.start_time.pack(side="left")
-        t.label(times, "to", "body", t.MUTED).pack(side="left", padx=t.PAD)
-        self.end_time = TimeField(times, schedule.end, self.time_style.twelve_hour)
+        t.label(times, _("to"), "body", t.MUTED).pack(side="left", padx=t.PAD)
+        self.end_time = TimeField(times, schedule.end, self.time_style.twelve_hour, clock.periods(self.time_style))
         self.end_time.pack(side="left")
 
         actions = ctk.CTkFrame(frame, fg_color="transparent")
         actions.pack(fill="x")
-        t.primary_button(actions, "Save schedule", self._save_schedule, width=t.px(140)).pack(side="left")
+        t.primary_button(actions, _("Save schedule"), self._save_schedule, width=t.px(140)).pack(side="left")
         self.schedule_message = t.Message(actions, t.DANGER)
         self.schedule_message.pack(side="left", padx=t.PAD)
 
@@ -453,14 +490,14 @@ class App(ctk.CTk):
 
     def _build_shortlist(self, frame: ctk.CTkFrame) -> None:
         ctk.CTkFrame(frame, fg_color="transparent", height=t.GAP).pack()
-        body = self._section(frame, "Add a suggestion", "Something better to do, shown on the block page.")
+        body = self._section(frame, _("Add a suggestion"), _("Something better to do, shown on the block page."))
         row = ctk.CTkFrame(body, fg_color="transparent")
         row.pack(fill="x")
-        self.new_suggestion_entry = self._suggestion_entry(row, placeholder_text="e.g. 10-minute walk")
+        self.new_suggestion_entry = self._suggestion_entry(row, placeholder_text=_("e.g. 10-minute walk"))
         self.new_suggestion_entry.pack(side="left", fill="x", expand=True, padx=(0, t.GAP))
         self.new_suggestion_entry.bind("<KeyRelease>", lambda _event: self._update_suggestion_hint(), add="+")
         self.new_suggestion_entry.bind("<Return>", lambda _event: self._add_suggestion())
-        self.add_suggestion_button = t.primary_button(row, "Add", self._add_suggestion, width=t.px(96))
+        self.add_suggestion_button = t.primary_button(row, _("Add"), self._add_suggestion, width=t.px(96))
         self.add_suggestion_button.pack(side="left")
         t.set_enabled(self.add_suggestion_button, False)
         self.suggestion_hint = t.Message(body, t.WARNING)
@@ -486,9 +523,11 @@ class App(ctk.CTk):
         for child in self.suggestion_list.winfo_children():
             child.destroy()
         shortlist = self.controller.config.shortlist
-        self.shortlist_title.configure(text=f"Suggestions ({len(shortlist)})")
+        self.shortlist_title.configure(text=_("Suggestions ({count})", count=len(shortlist)))
         if not shortlist:
-            t.label(self.suggestion_list, "No suggestions yet. Add one above.", "body", t.MUTED).pack(fill="x", padx=6)
+            t.label(self.suggestion_list, _("No suggestions yet. Add one above."), "body", t.MUTED).pack(
+                fill="x", padx=6
+            )
         for index, suggestion in enumerate(shortlist):
             row = ctk.CTkFrame(self.suggestion_list, fg_color="transparent")
             row.pack(fill="x", pady=(0, t.GAP - 2))
@@ -497,7 +536,7 @@ class App(ctk.CTk):
             entry.insert(0, suggestion)
             entry.pack(side="left", fill="x", expand=True, padx=(6, t.GAP))
             save = t.quiet_button(
-                row, "Save", lambda i=index, e=entry: self._edit_suggestion(i, e.get()), width=t.px(64)
+                row, _("Save"), lambda i=index, e=entry: self._edit_suggestion(i, e.get()), width=t.px(64)
             )
             save.pack(side="left", padx=(0, 2))
             t.set_enabled(save, False)
@@ -505,7 +544,7 @@ class App(ctk.CTk):
                 b, suggestions_module.can_save_edit(e.get(), original, self.controller.config.shortlist)
             )
             entry.bind("<KeyRelease>", lambda _event, e=entry: e.on_change(), add="+")
-            remove = t.quiet_button(row, "Remove", lambda i=index: self._remove_suggestion(i), width=t.px(80))
+            remove = t.quiet_button(row, _("Remove"), lambda i=index: self._remove_suggestion(i), width=t.px(80))
             t.danger_on_hover(remove)
             remove.pack(side="left")
 
@@ -541,29 +580,29 @@ class App(ctk.CTk):
 
     # History tab
 
-    HISTORY_COLUMNS = (("When", 160), ("Event", 148), ("Item", 150), ("Details", 0))
+    HISTORY_COLUMNS = ((marked("When"), 160), (marked("Event"), 148), (marked("Item"), 150), (marked("Details"), 0))
     HISTORY_LIMIT = 300
 
     def _build_history(self, frame: ctk.CTkFrame) -> None:
         ctk.CTkFrame(frame, fg_color="transparent", height=t.GAP).pack()
-        body = self._section(frame, "History", "Every change you make in Blocky, newest first.", expand=True)
-        header = self._history_row(body, [name for name, _ in self.HISTORY_COLUMNS], header=True)
+        body = self._section(frame, _("History"), _("Every change you make in Blocky, newest first."), expand=True)
+        header = self._history_row(body, [_(name) for name, _width in self.HISTORY_COLUMNS], header=True)
         header.pack(fill="x", padx=(6, 22))
         self.history_list = t.scrollable_frame(body)
         self.history_list.pack(fill="both", expand=True)
         self._render_history()
 
     def _history_row(
-        self, parent: ctk.CTkFrame, cells: list[str], header: bool = False, shaded: bool = False
+        self, parent: ctk.CTkFrame, cells: list[str], header: bool = False, shaded: bool = False, accent: bool = False
     ) -> ctk.CTkFrame:
         """One table row. Every cell has a fixed, DPI-scaled width, so the columns line up from row to row."""
         row = ctk.CTkFrame(parent, fg_color=t.HOVER if shaded else "transparent", corner_radius=6)
-        for column, ((_, width), text) in enumerate(zip(self.HISTORY_COLUMNS, cells, strict=True)):
+        for column, ((_name, width), text) in enumerate(zip(self.HISTORY_COLUMNS, cells, strict=True)):
             if header:
                 role, color = "caption", t.MUTED
                 text = text.upper()
             elif column == 1:
-                role, color = "button", t.ACCENT if text.startswith("Override") else t.TEXT
+                role, color = "button", t.ACCENT if accent else t.TEXT
             else:
                 role, color = "body", t.MUTED if column == 0 else t.TEXT
             last = width == 0
@@ -576,10 +615,11 @@ class App(ctk.CTk):
             child.destroy()
         rows = self.controller.history_rows(self.time_style)[: self.HISTORY_LIMIT]
         if not rows:
-            t.label(self.history_list, "No changes yet.", "body", t.MUTED).pack(fill="x", padx=10, pady=6)
+            t.label(self.history_list, _("No changes yet."), "body", t.MUTED).pack(fill="x", padx=10, pady=6)
         for number, entry in enumerate(rows):
             cells = [history.when(entry.moment, self.time_style), entry.event, entry.item, entry.details]
-            self._history_row(self.history_list, cells, shaded=number % 2 == 1).pack(fill="x")
+            accent = entry.kind in ("override", "undo")
+            self._history_row(self.history_list, cells, shaded=number % 2 == 1, accent=accent).pack(fill="x")
 
     def history_table(self) -> list[list[str]]:
         rows = [row for row in self.history_list.winfo_children() if isinstance(row, ctk.CTkFrame)]
@@ -594,8 +634,8 @@ class App(ctk.CTk):
         ctk.CTkFrame(scroll, fg_color="transparent", height=t.GAP).pack()
         current = self.controller.config.settings
 
-        body = self._section(scroll, "Appearance", "Changes show at once and are saved.")
-        t.label(body, "Theme", "button").pack(fill="x")
+        body = self._section(scroll, _("Appearance"), _("Changes show at once and are saved."))
+        t.label(body, _("Theme"), "button").pack(fill="x")
         tiles = ctk.CTkFrame(body, fg_color="transparent")
         tiles.pack(fill="x", pady=(t.GAP, 0))
         self.theme_tiles: dict[str, ctk.CTkFrame] = {}
@@ -608,12 +648,12 @@ class App(ctk.CTk):
         self.follow_choices: dict[str, dict[str, ctk.CTkButton]] = {}
         if current.theme == FOLLOW_WINDOWS:
             for key, title, names in (
-                ("dark_theme", "Dark theme when Windows is dark", settings_module.DARK_THEMES),
-                ("light_theme", "Light theme when Windows is light", settings_module.LIGHT_THEMES),
+                ("dark_theme", _("Dark theme when Windows is dark"), settings_module.DARK_THEMES),
+                ("light_theme", _("Light theme when Windows is light"), settings_module.LIGHT_THEMES),
             ):
                 t.label(body, title, "caption", t.MUTED).pack(fill="x", pady=(t.GAP, 0))
                 self.follow_choices[key] = self._choice_row(
-                    body, {name: settings_module.label(name) for name in names}, getattr(current, key), key
+                    body, {name: _(settings_module.NAMES[name]) for name in names}, getattr(current, key), key
                 )
 
         # Font and text size side by side: both are about how text looks, and the row saves vertical space.
@@ -625,7 +665,7 @@ class App(ctk.CTk):
         size_column = ctk.CTkFrame(pair, fg_color="transparent")
         self.font_and_size = (pair, font_column, size_column)
         pair.bind("<Configure>", lambda _event: self._lay_out_font_and_size(), add="+")
-        t.label(font_column, "Font", "button").pack(fill="x")
+        t.label(font_column, _("Font"), "button").pack(fill="x")
         self.font_menu_button = ctk.CTkButton(
             font_column,
             text=f"{current.font}  ▾",
@@ -645,8 +685,8 @@ class App(ctk.CTk):
         self.font_list: tkinter.Toplevel | None = None
         self.font_options: dict[str, ctk.CTkButton] = {}
 
-        t.label(size_column, "Text size", "button").pack(fill="x")
-        sizes = {name: settings_module.label(name) for name in settings_module.TEXT_SIZES}
+        t.label(size_column, _("Text size"), "button").pack(fill="x")
+        sizes = {name: _(settings_module.NAMES[name]) for name in settings_module.TEXT_SIZES}
         self.size_buttons = self._choice_row(size_column, sizes, current.text_size, "text_size")
         self._lay_out_font_and_size()
 
@@ -654,11 +694,11 @@ class App(ctk.CTk):
 
         reset = ctk.CTkFrame(scroll, fg_color="transparent")
         reset.pack(fill="x", pady=(0, t.GAP))
-        self.reset_button = t.quiet_button(reset, "Reset to default", self._reset_settings)
+        self.reset_button = t.quiet_button(reset, _("Reset to default"), self._reset_settings)
         self.reset_button.pack(side="left")
         self.reset_notice = ctk.CTkFrame(reset, fg_color="transparent")
-        t.label(self.reset_notice, "Settings reset.", "body", t.MUTED).pack(side="left", padx=(t.GAP, 0))
-        self.undo_reset_button = t.quiet_button(self.reset_notice, "Undo", self._undo_reset, width=t.px(72))
+        t.label(self.reset_notice, _("Settings reset."), "body", t.MUTED).pack(side="left", padx=(t.GAP, 0))
+        self.undo_reset_button = t.quiet_button(self.reset_notice, _("Undo"), self._undo_reset, width=t.px(72))
         self.undo_reset_button.pack(side="left")
         if self.settings_before_reset is not None:
             self.reset_notice.pack(side="left")
@@ -669,12 +709,12 @@ class App(ctk.CTk):
         """A tile in the theme's own colours; Follow Windows shows its dark and light choice side by side."""
         settings = self.controller.config.settings
         if name == FOLLOW_WINDOWS:
-            surface, ink, title = t.BACKGROUND, t.TEXT, "Follow Windows"
+            surface, ink, title = t.BACKGROUND, t.TEXT, _("Follow Windows")
             dark, light = t.THEMES[settings.dark_theme], t.THEMES[settings.light_theme]
             swatches = [dark["DEEP"], dark["PRIMARY"], light["DEEP"], light["PRIMARY"]]
         else:
             colours = t.THEMES[name]
-            surface, ink, title = colours["BACKGROUND"], colours["TEXT"], settings_module.label(name)
+            surface, ink, title = colours["BACKGROUND"], colours["TEXT"], _(settings_module.NAMES[name])
             swatches = [colours["CARD"], colours["DEEP"], colours["PRIMARY"]]
         tile = ctk.CTkFrame(
             parent,
@@ -700,21 +740,32 @@ class App(ctk.CTk):
         return tile
 
     def _build_language_and_time(self, parent: ctk.CTkFrame, current: Settings) -> None:
-        body = self._section(parent, "Language and time")
-        windows = self._windows_time
-        t.label(body, "Time format", "button").pack(fill="x")
-        formats = {settings_module.FOLLOW_WINDOWS: "Follow Windows", "24h": "24-hour", "12h": "12-hour"}
-        self.time_format_buttons = self._choice_row(body, formats, current.time_format, "time_format")
-        windows_format = "12-hour" if windows.twelve_hour else "24-hour"
-        t.label(body, f"Windows uses {windows_format} time.", "caption", t.MUTED).pack(fill="x", pady=(t.GAP - 2, 0))
+        body = self._section(parent, _("Language and time"))
+        t.label(body, _("Language"), "button").pack(fill="x")
+        languages = {settings_module.FOLLOW_WINDOWS: _("Follow Windows")} | language.NAMES
+        self.language_buttons = self._choice_row(body, languages, current.language, "language")
+        windows_language = {
+            "en": _("Windows uses English."),
+            "nl": _("Windows uses Dutch."),
+            "hu": _("Windows uses Hungarian."),
+        }.get(self._windows_language, _("Windows uses another language, so Follow Windows gives English."))
+        t.label(body, windows_language, "caption", t.MUTED).pack(fill="x", pady=(t.GAP - 2, 0))
 
-        t.label(body, "First day of the week", "button").pack(fill="x", pady=(t.PAD, 0))
-        days = {settings_module.FOLLOW_WINDOWS: "Follow Windows"} | {
-            name: name.capitalize() for name in settings_module.FIRST_DAYS
+        windows = self._windows_time
+        t.label(body, _("Time format"), "button").pack(fill="x", pady=(t.PAD, 0))
+        formats = {settings_module.FOLLOW_WINDOWS: _("Follow Windows"), "24h": _("24-hour"), "12h": _("12-hour")}
+        self.time_format_buttons = self._choice_row(body, formats, current.time_format, "time_format")
+        windows_format = _("Windows uses 12-hour time.") if windows.twelve_hour else _("Windows uses 24-hour time.")
+        t.label(body, windows_format, "caption", t.MUTED).pack(fill="x", pady=(t.GAP - 2, 0))
+
+        t.label(body, _("First day of the week"), "button").pack(fill="x", pady=(t.PAD, 0))
+        days = {settings_module.FOLLOW_WINDOWS: _("Follow Windows")} | {
+            name: clock.full_day_name(number, self.time_style).capitalize()
+            for name, number in settings_module.FIRST_DAYS.items()
         }
         self.first_day_buttons = self._choice_row(body, days, current.first_day, "first_day")
-        windows_day = FULL_DAY_NAMES[windows.first_day]
-        t.label(body, f"Windows starts the week on {windows_day}.", "caption", t.MUTED).pack(
+        windows_day = clock.full_day_name(windows.first_day, self.time_style)
+        t.label(body, _("Windows starts the week on {day}.", day=windows_day), "caption", t.MUTED).pack(
             fill="x", pady=(t.GAP - 2, 0)
         )
 

@@ -10,6 +10,7 @@ from blocky.checker import Checker
 from blocky.clock import DEFAULT_STYLE, TimeStyle
 from blocky.config import Config
 from blocky.domains import validate
+from blocky.language import _
 from blocky.schedule import Schedule
 from blocky.settings import Settings
 
@@ -44,7 +45,7 @@ class Controller:
     def add_domain(self, entry: str) -> None:
         domain = validate(entry)
         if domain in self.config.domains:
-            raise ValueError(f"{domain} is already in the list")
+            raise ValueError(_("{domain} is already in the list", domain=domain))
         self.config.domains.append(domain)
         self._record("site_added", domain)
         self.save()
@@ -52,7 +53,7 @@ class Controller:
     def edit_domain(self, index: int, entry: str) -> None:
         domain = validate(entry)
         if domain != self.config.domains[index] and domain in self.config.domains:
-            raise ValueError(f"{domain} is already in the list")
+            raise ValueError(_("{domain} is already in the list", domain=domain))
         old = self.config.domains[index]
         self.config.domains[index] = domain
         if domain != old:
@@ -66,7 +67,7 @@ class Controller:
 
     def set_schedule(self, weekdays: list[int], start: str, end: str) -> None:
         if not weekdays:
-            raise ValueError("Pick at least one day")
+            raise ValueError(_("Pick at least one day"))
         schedule = Schedule(
             weekdays=weekdays,
             start=schedule_module.parse_time(start),

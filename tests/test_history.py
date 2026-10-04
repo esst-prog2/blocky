@@ -184,3 +184,32 @@ def test_every_text_earlier_versions_wrote_is_read_back(days, h1, m1, h2, m2):
     start, end = f"{h1:02d}:{m1:02d}", f"{h2:02d}:{m2:02d}"
     text = history.describe_schedule(sorted(days), start, end)
     assert history.schedule_parts(schedule_event(details=text)) == (sorted(days), start, end)
+
+
+# Languages: stored text stays English, shown text follows the language
+
+
+@pytest.mark.parametrize(
+    "code, text", [("en", "Mon–Fri, 09:00–17:00"), ("nl", "ma–vr, 09:00–17:00"), ("hu", "H–P, 09:00–17:00")]
+)
+def test_older_english_text_is_shown_in_the_language(code, text):
+    entry = schedule_event(details="Mon–Fri, 09:00–17:00")
+    assert details(entry, TimeStyle(language=code)) == text
+
+
+def test_new_schedule_events_are_shown_in_the_language():
+    entry = schedule_event(details="Mon, Tue, Sun, 09:00–17:30", weekdays=[0, 1, 6], start="09:00", end="17:30")
+    assert details(entry, TimeStyle(twelve_hour=True, first_day=6, language="hu")) == "V–K, de. 9:00–du. 5:30"
+
+
+@pytest.mark.parametrize("code", ["nl", "hu"])
+def test_details_stored_for_a_new_schedule_are_english_whatever_the_language(tmp_path, code):
+    from blocky import language
+    from blocky.controller import Controller
+
+    language.apply(code)
+    controller = Controller(tmp_path / "config.yaml", tmp_path / "hosts", clock=lambda: datetime(2026, 10, 5, 14))
+    controller.sync = lambda: None
+    controller.set_schedule([0, 2, 4], "08:30", "16:00")
+    assert controller.config.events[-1]["details"] == "Mon, Wed, Fri, 08:30–16:00"
+    assert load(tmp_path / "config.yaml").events[-1]["details"] == "Mon, Wed, Fri, 08:30–16:00"

@@ -387,3 +387,90 @@ def test_windows_time_defaults_are_24_hour_and_monday():
 def test_windows_time_cannot_change_in_place():
     with pytest.raises(dataclasses.FrozenInstanceError):
         settings_module.WindowsTime().first_day = 6  # type: ignore[misc]
+
+
+# Language
+
+
+def test_language_follows_windows_by_default():
+    assert Settings().language == FOLLOW_WINDOWS
+    assert settings_module.CHOICES["language"] == (FOLLOW_WINDOWS, "en", "nl", "hu")
+
+
+@pytest.mark.parametrize("windows", ["en", "nl", "hu"])
+@pytest.mark.parametrize("chosen", [FOLLOW_WINDOWS, "en", "nl", "hu"])
+def test_effective_language_for_every_combination(chosen, windows):
+    expected = windows if chosen == FOLLOW_WINDOWS else chosen
+    assert settings_module.effective_language(Settings(language=chosen), windows) == expected
+
+
+def test_part_two_config_loads_with_the_language_at_follow_windows(tmp_path):
+    text = "settings:\n  theme: navy\n  time_format: 12h\n  first_day: sunday\n"
+    config, warning = load_text(tmp_path, text)
+    assert config.settings == Settings(theme="navy", time_format="12h", first_day="sunday")
+    assert config.settings.language == FOLLOW_WINDOWS
+    assert warning is None
+
+
+def test_a_part_two_config_saves_unchanged_apart_from_the_language(tmp_path):
+    part_two = {
+        "theme": "aqua",
+        "dark_theme": "navy",
+        "light_theme": "blossom",
+        "font": "Georgia",
+        "text_size": "large",
+        "time_format": "12h",
+        "first_day": "sunday",
+    }
+    path = tmp_path / "config.yaml"
+    path.write_text(yaml.safe_dump({"domains": ["reddit.com"], "settings": part_two}), encoding="utf-8")
+    config, _ = config_module.load_or_recover(path, MONDAY_2PM)
+    config_module.save(path, config)
+    saved = yaml.safe_load(path.read_text(encoding="utf-8"))["settings"]
+    assert saved == {**part_two, "language": FOLLOW_WINDOWS}
+
+
+@pytest.mark.parametrize("bad", ["fr", "Nederlands", "NL", 3, None, ["nl"]])
+def test_a_wrong_language_falls_back_on_its_own(tmp_path, bad):
+    chosen = Settings(theme="aqua", time_format="12h", language="hu")
+    config, warning = load_text(
+        tmp_path, yaml.safe_dump({"settings": {**settings_module.to_data(chosen), "language": bad}})
+    )
+    assert config.settings == dataclasses.replace(chosen, language=FOLLOW_WINDOWS)
+    assert warning is None
+
+
+@pytest.mark.parametrize("chosen", ["en", "nl", "hu"])
+def test_a_chosen_language_round_trips(tmp_path, chosen):
+    path = tmp_path / "config.yaml"
+    config_module.save(path, Config(settings=Settings(language=chosen)))
+    assert config_module.load(path).settings.language == chosen
+
+
+@pytest.mark.parametrize("code", ["en", "nl", "hu"])
+def test_time_style_carries_the_language(code):
+    style = settings_module.time_style(Settings(time_format="12h"), settings_module.WindowsTime(), code)
+    assert (style.twelve_hour, style.language) == (True, code)
+
+
+def test_time_style_is_english_without_a_language():
+    assert settings_module.time_style(Settings(), settings_module.WindowsTime()).language == "en"
+
+
+def test_another_windows_language_gives_english():
+    assert settings_module.effective_language(Settings(), "other") == "en"
+    assert settings_module.effective_language(Settings(language="nl"), "other") == "nl"
+
+
+@pytest.mark.parametrize(
+    ("chosen", "windows", "expected"),
+    [(FOLLOW_WINDOWS, "hu", "hu"), (FOLLOW_WINDOWS, "other", "en"), ("nl", "hu", "nl")],
+)
+def test_block_page_state_carries_the_effective_language(tmp_path, monkeypatch, chosen, windows, expected):
+    from blocky import language
+    from blocky.__main__ import page_state
+
+    path = tmp_path / "config.yaml"
+    config_module.save(path, Config(settings=Settings(language=chosen)))
+    monkeypatch.setattr(language, "windows_language", lambda: windows)
+    assert page_state(path)["language"] == expected

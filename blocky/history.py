@@ -2,19 +2,21 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 
-from blocky import clock
-from blocky.clock import DEFAULT_STYLE, TimeStyle, format_time
+from blocky import clock, language
+from blocky.clock import DEFAULT_STYLE, TimeStyle
+from blocky.language import marked
 
+# Event names in English; History shows them in the language of the style it is given.
 EVENTS = {
-    "site_added": "Site added",
-    "site_edited": "Site edited",
-    "site_removed": "Site removed",
-    "suggestion_added": "Suggestion added",
-    "suggestion_edited": "Suggestion edited",
-    "suggestion_removed": "Suggestion removed",
-    "schedule_changed": "Schedule changed",
-    "override": "Override",
-    "undo": "Override undone",
+    "site_added": marked("Site added", context="event"),
+    "site_edited": marked("Site edited", context="event"),
+    "site_removed": marked("Site removed", context="event"),
+    "suggestion_added": marked("Suggestion added", context="event"),
+    "suggestion_edited": marked("Suggestion edited", context="event"),
+    "suggestion_removed": marked("Suggestion removed", context="event"),
+    "schedule_changed": marked("Schedule changed", context="event"),
+    "override": marked("Override", context="event"),
+    "undo": marked("Override undone", context="event"),
 }
 
 
@@ -24,10 +26,11 @@ class Row:
     event: str
     item: str
     details: str
+    kind: str = ""  # the stored event type, such as "override"
 
 
 def when(moment: datetime, style: TimeStyle = DEFAULT_STYLE) -> str:
-    return f"{moment:%a} {moment.day} {moment:%b %Y}, {format_time(moment.hour, moment.minute, style)}"
+    return clock.format_date(moment, style)
 
 
 def describe_days(weekdays: list[int], style: TimeStyle = DEFAULT_STYLE) -> str:
@@ -88,25 +91,32 @@ def _details(entry: dict, style: TimeStyle) -> str:
     return entry.get("details", "")
 
 
+def _event_name(kind: str, style: TimeStyle) -> str:
+    """The event's name in the style's language; an unknown type is shown as stored."""
+    return language.translate(EVENTS[kind], style.language, context="event") if kind in EVENTS else kind
+
+
 def rows(events: list[dict], overrides: list[dict], style: TimeStyle = DEFAULT_STYLE) -> list[Row]:
-    """All recorded changes, newest first, with schedule details in the given time style."""
+    """All recorded changes, newest first, with names and schedule details in the given time style."""
     found = [
         (
             datetime.fromisoformat(entry["timestamp"]),
-            EVENTS.get(entry["type"], entry["type"]),
+            _event_name(entry["type"], style),
             entry.get("item", ""),
             _details(entry, style),
+            entry["type"],
         )
         for entry in events
     ]
     for entry in overrides:
-        undo = entry.get("type") == "undo"
+        kind = "undo" if entry.get("type") == "undo" else "override"
         found.append(
             (
                 datetime.fromisoformat(entry["timestamp"]),
-                EVENTS["undo" if undo else "override"],
+                _event_name(kind, style),
                 entry["domain"],
-                "" if undo else entry.get("reason", ""),
+                "" if kind == "undo" else entry.get("reason", ""),
+                kind,
             )
         )
     ordered = sorted(enumerate(found), key=lambda pair: (pair[1][0], pair[0]), reverse=True)
