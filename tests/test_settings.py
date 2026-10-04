@@ -279,3 +279,11 @@ def test_block_page_state_carries_the_effective_appearance(tmp_path, monkeypatch
     monkeypatch.setattr(settings_module, "windows_is_light", lambda: False)
     assert page_state(path)["appearance"]["theme"] == "navy"
     assert page_state(path)["shortlist"] == []
+
+
+def test_settings_cannot_change_in_place():
+    # Undo keeps the earlier Settings object; it must stay as it was.
+    import dataclasses
+
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        Settings().theme = "navy"  # type: ignore[misc]

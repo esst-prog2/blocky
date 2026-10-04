@@ -33,6 +33,6 @@
 ## 6. Checks and record
 
 - [x] 6.1 Run ruff check, ruff format --check, mypy, pytest and the extension tests and verify all pass
-- [ ] 6.2 Run `tools/mutation_test.py` on `settings` and `theme` (add both to its module list) and add tests for any real gaps it finds
+- [x] 6.2 Run `tools/mutation_test.py` on `settings` and `theme` (add both to its module list) and add tests for any real gaps it finds
 - [ ] 6.3 Manual check by the owner: every theme, font and size in the real window and on the block page in Brave, Follow Windows by switching Windows' mode, and Reset to default
 - [ ] 6.4 Log the decisions in `PLANNING_LOG.md`, update the README, and archive this change

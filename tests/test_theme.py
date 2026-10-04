@@ -189,3 +189,70 @@ def test_forest_is_the_look_before_any_apply():
 
     importlib.reload(theme)
     assert {role: getattr(theme, role) for role in theme.ROLES} == FOREST_BEFORE
+
+
+def test_set_enabled_shows_the_state_on_main_buttons_only(tk_root):
+    theme.apply("sand")
+    main = theme.primary_button(tk_root, "Add", None)
+    quiet = theme.quiet_button(tk_root, "Save", None)
+    theme.set_enabled(main, False)
+    theme.set_enabled(quiet, False)
+    assert (main.cget("fg_color"), main.cget("state")) == (theme.DISABLED, "disabled")
+    assert (quiet.cget("fg_color"), quiet.cget("state")) == ("transparent", "disabled")
+    theme.set_enabled(main, True)
+    theme.set_enabled(quiet, True)
+    assert (main.cget("fg_color"), main.cget("state")) == (theme.PRIMARY, "normal")
+    assert (quiet.cget("fg_color"), quiet.cget("state")) == ("transparent", "normal")
+
+
+def test_message_takes_space_only_while_it_has_text(tk_root):
+    message = theme.Message(tk_root)
+    message.configure(text="Type a reason")
+    assert message.winfo_manager() == ""  # not placed until packed
+    message.pack(fill="x")
+    assert message.winfo_manager() == "pack"
+    message.configure(text="")
+    assert message.winfo_manager() == ""
+    message.configure(text="Type a reason")
+    assert message.winfo_manager() == "pack"
+    message.configure(text_color=theme.DANGER)
+    assert message.winfo_manager() == "pack"
+    message.configure(text="")
+    assert message.winfo_manager() == ""
+
+
+@pytest.mark.parametrize(
+    "hex_color, value",
+    [("#000000", 0), ("#FF0000", 0xFF), ("#00FF00", 0xFF00), ("#0000FF", 0xFF0000), ("#2B5748", 0x48572B)],
+)
+def test_colorref_is_red_green_blue_from_low_to_high_byte(hex_color, value):
+    assert theme._colorref(hex_color) == value
+
+
+def test_window_frame_gets_the_theme_colours(tk_root, monkeypatch):
+    import ctypes
+    import sys
+
+    calls = []
+
+    class Fake:
+        def GetParent(self, _handle):
+            return 42
+
+        def DwmSetWindowAttribute(self, hwnd, attribute, value, size):
+            calls.append((hwnd, attribute, value._obj.value, size))
+
+    monkeypatch.setattr(ctypes, "windll", type("Windll", (), {"user32": Fake(), "dwmapi": Fake()})(), raising=False)
+    theme.apply("aqua")
+    calls.clear()  # customtkinter sets its own title bar mode while switching
+    theme.paint_window_frame(tk_root)
+    size = ctypes.sizeof(ctypes.c_int)
+    assert calls == [
+        (42, 34, theme._colorref(theme.DEEP), size),  # border
+        (42, 35, theme._colorref(theme.BACKGROUND), size),  # caption
+        (42, 36, theme._colorref(theme.TEXT), size),  # caption text
+    ]
+    calls.clear()
+    monkeypatch.setattr(sys, "platform", "linux")
+    theme.paint_window_frame(tk_root)
+    assert calls == []
