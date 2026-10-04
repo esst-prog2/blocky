@@ -80,7 +80,7 @@ Blocky speaks English, Dutch and Hungarian. The Language setting, also under Lan
 3. Start the app with `.venv\Scripts\pythonw -m blocky`. Windows asks for administrator rights, because the app edits the hosts file. Accept the prompt.
 4. Load the browser extension: open `brave://extensions`, turn on Developer mode, click "Load unpacked", and select the `extension` folder.
 
-Use `.venv\Scripts\python -m blocky` instead of `pythonw` to see error messages in a console window. Run the tests with `.venv\Scripts\python -m pytest`. The extension has its own tests, which need Node.js 22 or newer: `node --test "extension/*.test.js"`.
+Use `.venv\Scripts\python -m blocky` instead of `pythonw` to see error messages in a console window. Run the tests with `.venv\Scripts\python -m pytest`. The tests that open a real window take most of the 5 to 6 minutes; `.venv\Scripts\python -m pytest -m "not window"` skips them and runs the rest in about half a minute, which suits quick checks while working. Run the full suite before pushing. The extension has its own tests, which need Node.js 22 or newer: `node --test "extension/*.test.js"`.
 
 To see which lines the tests never run, use `.venv\Scripts\python -m coverage run --branch --source=blocky -m pytest` and then `.venv\Scripts\python -m coverage report -m`. For the extension, add `--experimental-test-coverage` to the `node --test` command.
 

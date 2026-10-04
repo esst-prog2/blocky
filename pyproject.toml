@@ -21,3 +21,6 @@ warn_redundant_casts = true
 [[tool.mypy.overrides]]
 module = ["customtkinter", "customtkinter.*"]
 ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+markers = ['window: opens a real Tk window, which is slow; skip these with -m "not window"']
