@@ -16,6 +16,14 @@ DAMAGED = {
     "domains as text": "domains: reddit.com\n",
 }
 
+DAMAGED_PARTS = {
+    "schedule as text": ("schedule: weekdays\n", "'schedule' is not a section"),
+    "start after end": ("schedule:\n  start: '18:00'\n  end: '09:00'\n", "schedule is not valid"),
+    "override without domain": ("overrides:\n- until: '2026-10-05T15:00:00'\n", "override entry has no domain"),
+    "override without end time": ("overrides:\n- domain: reddit.com\n  until: soon\n", "no valid end time"),
+    "history entry without type": ("events:\n- timestamp: '2026-10-05T14:00:00'\n", "history entry has no type"),
+}
+
 
 def test_config_save_succeeds_when_the_swap_is_briefly_locked(tmp_path, monkeypatch):
     path = tmp_path / "config.yaml"
@@ -61,6 +69,21 @@ def test_damaged_config_writes_no_wrong_hosts_entries(tmp_path, text):
     except Exception:
         pass
     assert "127.0.0.1 r\n" not in hosts_path.read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize("text, reason", DAMAGED_PARTS.values(), ids=DAMAGED_PARTS.keys())
+def test_damaged_part_of_a_config_is_named_in_the_warning(tmp_path, text, reason):
+    path = tmp_path / "config.yaml"
+    path.write_text(text, encoding="utf-8")
+    config, warning = config_module.load_or_recover(path, MONDAY_2PM)
+    assert config == Config()
+    assert reason in warning
+    assert len(list(tmp_path.glob("config.yaml.damaged-*"))) == 1
+
+
+def test_config_lives_in_appdata(monkeypatch, tmp_path):
+    monkeypatch.setenv("APPDATA", str(tmp_path))
+    assert config_module.default_path() == tmp_path / "Blocky" / "config.yaml"
 
 
 def test_invalid_domains_in_a_good_config_are_skipped_with_a_warning(tmp_path):

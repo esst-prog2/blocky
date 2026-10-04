@@ -35,10 +35,20 @@ def test_crlf_line_endings_are_preserved():
     assert hosts.render(text, ["reddit.com"]).count("\r\n") == 4
 
 
-def test_unterminated_section_is_rejected_without_changes():
-    broken = "# BEGIN BLOCKY\n127.0.0.1 reddit.com\n"
+BROKEN_SECTIONS = {
+    "unterminated": "# BEGIN BLOCKY\n127.0.0.1 reddit.com\n",
+    "nested": "# BEGIN BLOCKY\n# BEGIN BLOCKY\n# END BLOCKY\n",
+    "end without start": "127.0.0.1 localhost\n# END BLOCKY\n",
+}
+
+
+@pytest.mark.parametrize("broken", BROKEN_SECTIONS.values(), ids=BROKEN_SECTIONS.keys())
+def test_broken_section_is_rejected_without_changes(tmp_path, broken):
+    path = tmp_path / "hosts"
+    path.write_text(broken, encoding="utf-8")
     with pytest.raises(ValueError):
-        hosts.render(broken, [])
+        hosts.apply(["reddit.com"], path)
+    assert path.read_text(encoding="utf-8") == broken
 
 
 def test_apply_writes_only_when_changed(tmp_path):

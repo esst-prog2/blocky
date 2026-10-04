@@ -3,7 +3,7 @@ import time
 from datetime import datetime
 
 from blocky import config as config_module
-from blocky.checker import Checker
+from blocky.checker import Checker, log_error
 from blocky.config import Config
 from blocky.hosts import BEGIN
 
@@ -57,3 +57,10 @@ def test_sync_request_wakes_the_checker_before_the_interval(tmp_path):
     worker.join(timeout=2)
     assert "127.0.0.1 reddit.com" in text
     assert not worker.is_alive()
+
+
+def test_an_unwritable_error_log_does_not_stop_the_checker(tmp_path):
+    blocker = tmp_path / "not-a-folder"
+    blocker.write_text("", encoding="utf-8")
+    log_error(blocker / "errors.log", "Background check failed")
+    assert blocker.read_text(encoding="utf-8") == ""
