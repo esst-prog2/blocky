@@ -60,6 +60,7 @@ in between   a background checker compares the current time against each
 - **Timing.** The app checks once a minute, so blocking starts between 0 and 60 seconds after a window opens. In five tests it took 46 seconds, and in a later test 5 seconds.
 - **Sleep.** When the PC wakes during an active window with Blocky open, its entries are back in the hosts file within 38 seconds, averaging 12 seconds across five cycles.
 - **IP addresses, secure DNS and VPNs.** Typing a blocked site's IP address didn't load the real site in five tests. With Brave's secure DNS on (Cloudflare), none of ten blocked sites got past the block. With Surfshark on, in a normal and a private window, none of five got past the block. These VPN results cover one Surfshark connection, so other VPNs may behave differently.
+- **Moving between monitors.** When the window moves to a monitor with other scaling, Windows resizes the title bar and frame at once, and the contents follow a moment later with a short fade while customtkinter redraws them. This only happens while crossing between screens. Checking for the change more often (every 30 ms instead of 100 ms) made it look worse, so it stays as it is.
 - **Data/privacy.** All data is local config (my own block list and schedule) with no personal or sensitive third-party data involved, so the full real setup can be shown in class.
 ## Tech
  

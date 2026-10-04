@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 
 from blocky import config as config_module
-from blocky import rules
+from blocky import dpi, rules
 from blocky import settings as settings_module
 from blocky.app import App
 from blocky.checker import Checker, log_error
@@ -65,6 +65,8 @@ def start_block_page(load_state) -> tuple[Server | None, str | None]:
 
 
 def main() -> None:
+    # Before any window, the administrator message included: Windows lets a process choose its DPI mode only once.
+    dpi.follow_each_monitor()
     if os.name == "nt" and not is_admin():
         if not relaunch_as_admin():
             show_admin_needed()
