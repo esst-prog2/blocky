@@ -126,3 +126,11 @@ def test_a_context_picks_its_own_entry(monkeypatch):
     assert translate("Override", "nl", context="event") == "Blokkade opgeheven"
     assert translate("Override", "en", context="event") == "Override"
     assert language.marked("Override", context="event") == "Override"
+
+
+@pytest.mark.parametrize("code", ["en", "nl"])
+def test_placeholders_may_be_called_text_or_code(code):
+    # The suggestion messages fill a placeholder named "text"; it must not collide with the parameters.
+    assert translate("“{text}” is {code}", code, text="Tidy desk", code="x") == "“Tidy desk” is x"
+    language.apply(code)
+    assert _("“{text}” is {code}", text="Tidy desk", code="x") == "“Tidy desk” is x"

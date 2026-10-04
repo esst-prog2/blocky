@@ -173,3 +173,8 @@ def test_unknown_language_writes_english():
     style = TimeStyle(twelve_hour=True, language="fr")
     assert format_date(SUNDAY_4_OCT_1705, style) == "Sun 4 Oct 2026, 5:05 PM"
     assert format_duration(65, "fr") == "1h 05m"
+
+
+@pytest.mark.parametrize(("minutes", "text"), [(59, "0h 59m"), (60, "1h 00m"), (180, "3h 00m"), (61 * 60, "61h 00m")])
+def test_durations_split_hours_at_sixty_minutes(minutes, text):
+    assert format_duration(minutes, "en") == text
