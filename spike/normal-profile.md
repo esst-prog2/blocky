@@ -20,7 +20,7 @@
 
 How to read the file, in order:
 
-- Lines 1 to 36: the visits with secure DNS on (Cloudflare), the "on" run of `secure-dns/no-extension.md`. Lines 37 to 64: the same domains with secure DNS off.
+- Lines 1 to 38: the visits with secure DNS on (Cloudflare), the "on" run of `secure-dns/no-extension.md`. Lines 39 to 64: the same domains with secure DNS off, starting with reddit.com.
 - The number after the address is the frame: `0` is the page itself; other numbers are frames inside a page and are not visits. `drive.google.com` and `sites.google.com/view/temubv` came from the address bar turning "temu" into a search; the `linkedin.com/tscp-serving`, `li.protechts.net` and `cs.ns1p.net` lines are trackers Brave's shields blocked (`ERR_BLOCKED_BY_CLIENT`).
 - Each refused page is followed by one or more `ERR_ABORTED` lines for the same address as Brave stops the attempt.
 - temu.com (both runs) and hardverapro.hu (secure DNS on) have no line: they were opened over http and reached Blocky's own server on port 80, which answered with a 404 page.
