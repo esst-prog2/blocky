@@ -93,8 +93,17 @@ def test_main_asks_for_the_mode_before_anything_else(monkeypatch, accepted):
         return record
 
     monkeypatch.setattr(dpi, "follow_each_monitor", step("dpi", accepted))
+    monkeypatch.setattr(dpi, "notice_monitor_changes_sooner", step("monitor check", None))
     monkeypatch.setattr(startup, "is_admin", step("admin check", False))
     monkeypatch.setattr(startup, "relaunch_as_admin", step("relaunch", True))
     startup.main()
     # A refused mode changes nothing: startup goes on to the administrator check either way.
-    assert steps == ["dpi", "admin check", "relaunch"]
+    assert steps == ["dpi", "monitor check", "admin check", "relaunch"]
+
+
+def test_customtkinter_checks_the_monitor_every_30_ms(monkeypatch):
+    from customtkinter.windows.widgets.scaling.scaling_tracker import ScalingTracker
+
+    monkeypatch.setattr(ScalingTracker, "update_loop_interval", 100)  # restored after the test
+    dpi.notice_monitor_changes_sooner()
+    assert ScalingTracker.update_loop_interval == 30

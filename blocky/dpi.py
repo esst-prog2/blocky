@@ -17,3 +17,15 @@ def follow_each_monitor() -> bool:
         return bool(ctypes.windll.user32.SetProcessDpiAwarenessContext(ctypes.c_void_p(PER_MONITOR_AWARE_V2)))
     except (AttributeError, OSError):
         return False
+
+
+# How often customtkinter checks whether the window's monitor scaling changed (its default is 100 ms). Windows resizes
+# the frame at once when the window crosses to another monitor; the sooner customtkinter notices, the shorter the
+# moment in which the contents still have the old size.
+MONITOR_CHECK_MS = 30
+
+
+def notice_monitor_changes_sooner() -> None:
+    from customtkinter.windows.widgets.scaling.scaling_tracker import ScalingTracker
+
+    ScalingTracker.update_loop_interval = MONITOR_CHECK_MS
