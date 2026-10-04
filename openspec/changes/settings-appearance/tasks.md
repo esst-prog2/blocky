@@ -4,11 +4,14 @@
 - [ ] 1.2 Add `theme.apply()` and make the helpers look colours up when called instead of in their default arguments; verify with a test that `label()`, `card()`, `quiet_button()`, `chip()` and `Message` created after `apply("navy")` use Navy colours
 - [ ] 1.3 Make `font(role)` take family and scale from the current appearance (Segoe UI Variable keeps its Display/Text/Semibold families, other fonts use bold for display, brand, title and button), scale fixed control sizes with the text size, and verify with tests for every font and size
 
+- [ ] 1.4 Pin today's look: a test that Forest's colour values, the default font roles (Segoe UI Variable Display/Text/Semibold) and the font sizes at Normal equal the values `theme.py` has before this change; verify it fails when one Forest value or size is changed
+
 ## 2. Settings storage
 
 - [ ] 2.1 Add `blocky/settings.py` with the `Settings` dataclass, defaults, the list of themes, fonts and sizes, and `effective_theme(settings, windows_is_light)`; verify with tests for defaults and every combination of theme choice and Windows mode
 - [ ] 2.2 Load and save a `settings` section in `blocky/config.py`; a missing section, a missing field, a wrong type or an unknown value falls back per field and never raises `DamagedConfig`; verify with tests per case, a round-trip test, and a property test that any YAML value in the section loads without an error
-- [ ] 2.3 Add `Controller.set_settings()` and `Controller.reset_settings()`; verify that reset changes only the settings and leaves block list, schedule, shortlist, overrides and history as they were
+- [ ] 2.3 Keep existing configs working: a test with a config.yaml in today's format (no `settings` section, with sites, schedule, shortlist, overrides and events) that loads with default settings and every other value unchanged, and that saving it again keeps all of them; verify it also passes with `load_or_recover` and gives no warning
+- [ ] 2.4 Add `Controller.set_settings()` and `Controller.reset_settings()`; verify that reset changes only the settings and leaves block list, schedule, shortlist, overrides and history as they were
 
 ## 3. Window
 
