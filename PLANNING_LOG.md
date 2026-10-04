@@ -269,3 +269,6 @@
 2026-10-04 | Mutation testing on language (57 killed, 0 survived after two tests) and clock (171 killed, 2 survived): tests added for a placeholder named text and for durations of 59, 60, 180 and 3660 minutes; the 2 left are the equivalent comparison in describe_days already accepted in part 2. A session saved by an earlier run is reused, so .mutation/<module>.sqlite must be deleted after the module changes | agent decided
 2026-10-04 | Language is chosen from a drop-down list like the font, instead of a row of buttons; both use one drop-down list in the window | you decided
 2026-10-04 | Dutch review: the Shortlist caption becomes "Iets beters om te doen, dit wordt getoond op de blokkeerpagina." and the Status caption ends "Je reden komt in “Geschiedenis”."; Hungarian approved as written | you decided
+2026-10-04 | Dutch block page lead becomes "Probeer in plaats daarvan een van deze opties:" | you decided
+2026-10-04 | settings-language manual check PASSED: every language in the window and on the block page in Brave, Follow Windows after changing Windows' display language and restarting, History after a language change, the administrator message in Dutch, and Reset to default | observed by you
+2026-10-04 | settings-language archived; the settings spec now covers the language, and its purpose names time and language too | agent decided

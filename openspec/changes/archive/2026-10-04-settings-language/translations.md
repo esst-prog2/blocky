@@ -114,7 +114,7 @@ other languages word differently from the Override button.
 | 106 | Use a time like 09:00 | Gebruik een tijd als 09:00 | Adj meg egy időt, pl. 09:00 | schedule.py:18 |
 | 107 | The start time must be before the end time | De begintijd moet voor de eindtijd liggen | A kezdésnek a befejezés előtt kell lennie | schedule.py:26 |
 | 108 | Weekdays must be between 0 (Monday) and 6 (Sunday) | Weekdagen moeten tussen 0 (maandag) en 6 (zondag) liggen | A napoknak 0 (hétfő) és 6 (vasárnap) között kell lenniük | schedule.py:28 |
-| 109 | Try one of these instead: | Probeer in plaats daarvan een van deze: | Próbáld inkább ezek egyikét: | server.py:100 |
+| 109 | Try one of these instead: | Probeer in plaats daarvan een van deze opties: | Próbáld inkább ezek egyikét: | server.py:100 |
 | 110 | {domain} is blocked until {time} | {domain} is geblokkeerd tot {time} | {domain} tiltva eddig: {time} | server.py:112 |
 | 111 | No suggestions yet. Add some in Blocky. | Nog geen suggesties. Voeg ze toe in Blocky. | Még nincs javaslat. Adj hozzá néhányat a Blockyban. | server.py:98 |
 | 112 | Forest | Bos | Erdő | settings.py:30 |

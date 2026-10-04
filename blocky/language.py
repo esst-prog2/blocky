@@ -205,7 +205,7 @@ NL: dict[str, str] = {
     "{domain} is not unblocked right now": "{domain} is nu niet vrijgegeven",
     # Block page
     "{domain} is blocked until {time}": "{domain} is geblokkeerd tot {time}",
-    "Try one of these instead:": "Probeer in plaats daarvan een van deze:",
+    "Try one of these instead:": "Probeer in plaats daarvan een van deze opties:",
     "No suggestions yet. Add some in Blocky.": "Nog geen suggesties. Voeg ze toe in Blocky.",
     # Starting and warnings
     "Blocky needs administrator rights to edit the hosts file. Start it again and choose Yes.": (
