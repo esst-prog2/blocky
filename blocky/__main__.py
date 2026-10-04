@@ -67,7 +67,6 @@ def start_block_page(load_state) -> tuple[Server | None, str | None]:
 def main() -> None:
     # Before any window, the administrator message included: Windows lets a process choose its DPI mode only once.
     dpi.follow_each_monitor()
-    dpi.notice_monitor_changes_sooner()
     if os.name == "nt" and not is_admin():
         if not relaunch_as_admin():
             show_admin_needed()
