@@ -8,7 +8,7 @@ from shown_texts import SAMPLE_SETTINGS, open_sample, sample_pages, window_texts
 
 ENGLISH = json.loads(Path(__file__).with_name("english_texts.json").read_text(encoding="utf-8"))
 # The one addition since the pin: the Language row, first in the Language and time section.
-LANGUAGE_ROW = ["Language", "Follow Windows", "English", "Nederlands", "Magyar", "Windows uses English."]
+LANGUAGE_ROW = ["Language", "Follow Windows  ▾", "Windows uses English."]
 
 
 def with_language_row(texts: list[str]) -> list[str]:

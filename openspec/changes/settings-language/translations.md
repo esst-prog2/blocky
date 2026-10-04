@@ -9,72 +9,72 @@ other languages word differently from the Override button.
 | 1 | Blocky needs administrator rights to edit the hosts file. Start it again and choose Yes. | Blocky heeft beheerdersrechten nodig om het hosts-bestand aan te passen. Start Blocky opnieuw en kies Ja. | A Blockynak rendszergazdai jogok kellenek a hosts fájl szerkesztéséhez. Indítsd újra, és válaszd az Igen gombot. | __main__.py:16 |
 | 2 | The block page could not start, so blocked sites show the browser's error page: {error} | De blokkeerpagina kon niet starten, dus geblokkeerde sites tonen de foutpagina van de browser: {error} | A tiltóoldal nem tudott elindulni, ezért a tiltott webhelyeken a böngésző hibaoldala jelenik meg: {error} | __main__.py:86 |
 | 3 | Status | Status | Állapot | app.py:22 |
-| 4 | Fewer distractions, on your schedule | Minder afleiding, volgens jouw schema | Kevesebb zavaró tényező, a saját időbeosztásod szerint | app.py:229 |
-| 5 | Block list | Blokkeerlijst | Tiltólista | app.py:23 |
-| 6 | Schedule | Schema | Ütemezés | app.py:24 |
-| 7 | RIGHT NOW | NU | MOST | app.py:248 |
-| 8 | Shortlist | Suggesties | Javaslatok | app.py:25 |
-| 9 | Override a block | Een blokkade opheffen | Tiltás feloldása | app.py:256 |
-| 10 | Unblocks one site until this window ends. Your reason is kept in History. | Geeft één site vrij tot de blokkeertijd eindigt. Je reden komt in Geschiedenis. | Egy webhelyet felold a tiltási időszak végéig. Az okot az Előzmények megőrzi. | app.py:257 |
-| 11 | History | Geschiedenis | Előzmények | app.py:26, app.py:588 |
-| 12 | Why do you need it? | Waarom heb je het nodig? | Miért van rá szükséged? | app.py:263 |
-| 13 | Override | Opheffen | Feloldás | app.py:267 |
-| 14 | Settings | Instellingen | Beállítások | app.py:27 |
-| 15 | Unblocked right now | Nu vrijgegeven | Most feloldva | app.py:274 |
-| 16 | No domain blocked | Geen domein geblokkeerd | Nincs tiltott domain | app.py:286, app.py:261 |
-| 17 | Nothing is unblocked. | Er is niets vrijgegeven. | Semmi sincs feloldva. | app.py:294 |
-| 18 | {domain} unblocked until {time} ({remaining} left) | {domain} vrijgegeven tot {time} (nog {remaining}) | {domain} feloldva eddig: {time} (még {remaining}) | app.py:301 |
-| 19 | No sites are blocked. | Er zijn geen sites geblokkeerd. | Nincs tiltott webhely. | app.py:318 |
-| 20 | Type a reason to override | Typ een reden om op te heffen | A feloldáshoz írd be az okát | app.py:333 |
-| 21 | Add a site | Een site toevoegen | Webhely hozzáadása | app.py:364 |
-| 22 | Its www. version is blocked too. You can paste a full web address. | De www.-versie wordt ook geblokkeerd. Je kunt een volledig webadres plakken. | A www. változata is tiltva lesz. Teljes webcímet is beilleszthetsz. | app.py:364 |
-| 23 | Add | Toevoegen | Hozzáadás | app.py:373, app.py:500 |
-| 24 | Blocked sites ({count}) | Geblokkeerde sites ({count}) | Tiltott webhelyek ({count}) | app.py:393 |
-| 25 | No sites yet. Add one above. | Nog geen sites. Voeg er hierboven een toe. | Még nincs webhely. Adj hozzá egyet fent. | app.py:395 |
-| 26 | Save | Opslaan | Mentés | app.py:404, app.py:539 |
-| 27 | Remove | Verwijderen | Eltávolítás | app.py:413, app.py:547 |
-| 28 | Days | Dagen | Napok | app.py:451 |
-| 29 | Blocking only happens on the days you tick. | Er wordt alleen geblokkeerd op de dagen die je aanvinkt. | Csak a bejelölt napokon van tiltás. | app.py:451 |
-| 30 | Time | Tijd | Idő | app.py:464 |
-| 31 | Sites are blocked between these times. Type, or use the arrow keys or mouse wheel. | Sites zijn tussen deze tijden geblokkeerd. Typ, of gebruik pijltjes of muiswiel. | Tiltás ezen időpontok között. Gépelj, vagy használd a nyilakat vagy a görgőt. | app.py:464 |
-| 32 | From | Van | Ettől | app.py:468 |
-| 33 | to | tot | eddig | app.py:471 |
-| 34 | Save schedule | Schema opslaan | Ütemezés mentése | app.py:477 |
-| 35 | Add a suggestion | Een suggestie toevoegen | Javaslat hozzáadása | app.py:493 |
-| 36 | Something better to do, shown on the block page. | Iets beters om te doen, getoond op de blokkeerpagina. | Valami jobb elfoglaltság, a tiltóoldalon jelenik meg. | app.py:493 |
-| 37 | e.g. 10-minute walk | bijv. 10 minuten wandelen | pl. 10 perces séta | app.py:496 |
-| 38 | Suggestions ({count}) | Suggesties ({count}) | Javaslatok ({count}) | app.py:526 |
-| 39 | No suggestions yet. Add one above. | Nog geen suggesties. Voeg er hierboven een toe. | Még nincs javaslat. Adj hozzá egyet fent. | app.py:528 |
-| 40 | When | Wanneer | Mikor | app.py:583 |
-| 41 | Event | Gebeurtenis | Esemény | app.py:583 |
-| 42 | Item | Item | Elem | app.py:583 |
-| 43 | Details | Details | Részletek | app.py:583 |
-| 44 | Every change you make in Blocky, newest first. | Elke wijziging die je in Blocky maakt, nieuwste eerst. | Minden változtatásod a Blockyban, a legújabb elöl. | app.py:588 |
-| 45 | No changes yet. | Nog geen wijzigingen. | Még nincs változtatás. | app.py:618 |
-| 46 | Appearance | Weergave | Megjelenés | app.py:637 |
-| 47 | Changes show at once and are saved. | Wijzigingen zijn meteen zichtbaar en worden opgeslagen. | A változások azonnal látszanak, és mentésre kerülnek. | app.py:637 |
-| 48 | Theme | Thema | Téma | app.py:638 |
-| 49 | Dark theme when Windows is dark | Donker thema als Windows donker is | Sötét téma, ha a Windows sötét | app.py:651 |
-| 50 | Light theme when Windows is light | Licht thema als Windows licht is | Világos téma, ha a Windows világos | app.py:652 |
-| 51 | Font | Lettertype | Betűtípus | app.py:668 |
-| 52 | Text size | Tekstgrootte | Szövegméret | app.py:688 |
-| 53 | Reset to default | Standaard herstellen | Alapértékek visszaállítása | app.py:697 |
-| 54 | Settings reset. | Instellingen hersteld. | Beállítások visszaállítva. | app.py:700 |
-| 55 | Undo | Ongedaan maken | Visszavonás | app.py:701, app.py:308 |
-| 56 | Language and time | Taal en tijd | Nyelv és idő | app.py:743 |
-| 57 | Language | Taal | Nyelv | app.py:744 |
-| 58 | Windows uses English. | Windows gebruikt Engels. | A Windows nyelve angol. | app.py:748 |
-| 59 | Windows uses Dutch. | Windows gebruikt Nederlands. | A Windows nyelve holland. | app.py:749 |
-| 60 | Windows uses Hungarian. | Windows gebruikt Hongaars. | A Windows nyelve magyar. | app.py:750 |
-| 61 | Windows uses another language, so Follow Windows gives English. | Windows gebruikt een andere taal, dus Volg Windows geeft Engels. | A Windows más nyelvet használ, ezért a Windows szerint beállítás angolt ad. | app.py:751 |
-| 62 | Time format | Tijdnotatie | Időformátum | app.py:755 |
-| 63 | Follow Windows | Volg Windows | Windows szerint | app.py:756, app.py:712, app.py:745, app.py:762 |
-| 64 | 24-hour | 24-uurs | 24 órás | app.py:756 |
-| 65 | 12-hour | 12-uurs | 12 órás | app.py:756 |
-| 66 | Windows uses 12-hour time. | Windows gebruikt de 12-uursnotatie. | A Windows 12 órás időt használ. | app.py:758 |
-| 67 | Windows uses 24-hour time. | Windows gebruikt de 24-uursnotatie. | A Windows 24 órás időt használ. | app.py:758 |
-| 68 | First day of the week | Eerste dag van de week | A hét első napja | app.py:761 |
-| 69 | Windows starts the week on {day}. | Windows begint de week op {day}. | A Windowsban a hét első napja: {day}. | app.py:768 |
+| 4 | Block list | Blokkeerlijst | Tiltólista | app.py:23 |
+| 5 | Schedule | Schema | Ütemezés | app.py:24 |
+| 6 | Shortlist | Suggesties | Javaslatok | app.py:25 |
+| 7 | History | Geschiedenis | Előzmények | app.py:26, app.py:725 |
+| 8 | Settings | Instellingen | Beállítások | app.py:27 |
+| 9 | Fewer distractions, on your schedule | Minder afleiding, volgens jouw schema | Kevesebb zavaró tényező, a saját időbeosztásod szerint | app.py:366 |
+| 10 | RIGHT NOW | NU | MOST | app.py:385 |
+| 11 | Override a block | Een blokkade opheffen | Tiltás feloldása | app.py:393 |
+| 12 | Unblocks one site until this window ends. Your reason is kept in History. | Geeft één site vrij tot de blokkeertijd eindigt. Je reden komt in “Geschiedenis”. | Egy webhelyet felold a tiltási időszak végéig. Az okot az Előzmények megőrzi. | app.py:394 |
+| 13 | Why do you need it? | Waarom heb je het nodig? | Miért van rá szükséged? | app.py:400 |
+| 14 | Override | Opheffen | Feloldás | app.py:404 |
+| 15 | Unblocked right now | Nu vrijgegeven | Most feloldva | app.py:411 |
+| 16 | No domain blocked | Geen domein geblokkeerd | Nincs tiltott domain | app.py:423, app.py:398 |
+| 17 | Nothing is unblocked. | Er is niets vrijgegeven. | Semmi sincs feloldva. | app.py:431 |
+| 18 | {domain} unblocked until {time} ({remaining} left) | {domain} vrijgegeven tot {time} (nog {remaining}) | {domain} feloldva eddig: {time} (még {remaining}) | app.py:438 |
+| 19 | No sites are blocked. | Er zijn geen sites geblokkeerd. | Nincs tiltott webhely. | app.py:455 |
+| 20 | Type a reason to override | Typ een reden om op te heffen | A feloldáshoz írd be az okát | app.py:470 |
+| 21 | Add a site | Een site toevoegen | Webhely hozzáadása | app.py:501 |
+| 22 | Its www. version is blocked too. You can paste a full web address. | De www.-versie wordt ook geblokkeerd. Je kunt een volledig webadres plakken. | A www. változata is tiltva lesz. Teljes webcímet is beilleszthetsz. | app.py:501 |
+| 23 | Add | Toevoegen | Hozzáadás | app.py:510, app.py:637 |
+| 24 | Blocked sites ({count}) | Geblokkeerde sites ({count}) | Tiltott webhelyek ({count}) | app.py:530 |
+| 25 | No sites yet. Add one above. | Nog geen sites. Voeg er hierboven een toe. | Még nincs webhely. Adj hozzá egyet fent. | app.py:532 |
+| 26 | Save | Opslaan | Mentés | app.py:541, app.py:676 |
+| 27 | Remove | Verwijderen | Eltávolítás | app.py:550, app.py:684 |
+| 28 | Days | Dagen | Napok | app.py:588 |
+| 29 | Blocking only happens on the days you tick. | Er wordt alleen geblokkeerd op de dagen die je aanvinkt. | Csak a bejelölt napokon van tiltás. | app.py:588 |
+| 30 | Time | Tijd | Idő | app.py:601 |
+| 31 | Sites are blocked between these times. Type, or use the arrow keys or mouse wheel. | Sites zijn tussen deze tijden geblokkeerd. Typ, of gebruik pijltjes of muiswiel. | Tiltás ezen időpontok között. Gépelj, vagy használd a nyilakat vagy a görgőt. | app.py:601 |
+| 32 | From | Van | Ettől | app.py:605 |
+| 33 | to | tot | eddig | app.py:608 |
+| 34 | Save schedule | Schema opslaan | Ütemezés mentése | app.py:614 |
+| 35 | Add a suggestion | Een suggestie toevoegen | Javaslat hozzáadása | app.py:630 |
+| 36 | Something better to do, shown on the block page. | Iets beters om te doen, dit wordt getoond op de blokkeerpagina. | Valami jobb elfoglaltság, a tiltóoldalon jelenik meg. | app.py:630 |
+| 37 | e.g. 10-minute walk | bijv. 10 minuten wandelen | pl. 10 perces séta | app.py:633 |
+| 38 | Suggestions ({count}) | Suggesties ({count}) | Javaslatok ({count}) | app.py:663 |
+| 39 | No suggestions yet. Add one above. | Nog geen suggesties. Voeg er hierboven een toe. | Még nincs javaslat. Adj hozzá egyet fent. | app.py:665 |
+| 40 | When | Wanneer | Mikor | app.py:720 |
+| 41 | Event | Gebeurtenis | Esemény | app.py:720 |
+| 42 | Item | Item | Elem | app.py:720 |
+| 43 | Details | Details | Részletek | app.py:720 |
+| 44 | Every change you make in Blocky, newest first. | Elke wijziging die je in Blocky maakt, nieuwste eerst. | Minden változtatásod a Blockyban, a legújabb elöl. | app.py:725 |
+| 45 | No changes yet. | Nog geen wijzigingen. | Még nincs változtatás. | app.py:755 |
+| 46 | Appearance | Weergave | Megjelenés | app.py:774 |
+| 47 | Changes show at once and are saved. | Wijzigingen zijn meteen zichtbaar en worden opgeslagen. | A változások azonnal látszanak, és mentésre kerülnek. | app.py:774 |
+| 48 | Theme | Thema | Téma | app.py:775 |
+| 49 | Dark theme when Windows is dark | Donker thema als Windows donker is | Sötét téma, ha a Windows sötét | app.py:788 |
+| 50 | Light theme when Windows is light | Licht thema als Windows licht is | Világos téma, ha a Windows világos | app.py:789 |
+| 51 | Font | Lettertype | Betűtípus | app.py:805 |
+| 52 | Text size | Tekstgrootte | Szövegméret | app.py:810 |
+| 53 | Reset to default | Standaard herstellen | Alapértékek visszaállítása | app.py:819 |
+| 54 | Settings reset. | Instellingen hersteld. | Beállítások visszaállítva. | app.py:822 |
+| 55 | Undo | Ongedaan maken | Visszavonás | app.py:823, app.py:445 |
+| 56 | Language and time | Taal en tijd | Nyelv és idő | app.py:865 |
+| 57 | Language | Taal | Nyelv | app.py:866 |
+| 58 | Windows uses English. | Windows gebruikt Engels. | A Windows nyelve angol. | app.py:871 |
+| 59 | Windows uses Dutch. | Windows gebruikt Nederlands. | A Windows nyelve holland. | app.py:872 |
+| 60 | Windows uses Hungarian. | Windows gebruikt Hongaars. | A Windows nyelve magyar. | app.py:873 |
+| 61 | Windows uses another language, so Follow Windows gives English. | Windows gebruikt een andere taal, dus Volg Windows geeft Engels. | A Windows más nyelvet használ, ezért a Windows szerint beállítás angolt ad. | app.py:874 |
+| 62 | Time format | Tijdnotatie | Időformátum | app.py:878 |
+| 63 | Follow Windows | Volg Windows | Windows szerint | app.py:879, app.py:834, app.py:867, app.py:885 |
+| 64 | 24-hour | 24-uurs | 24 órás | app.py:879 |
+| 65 | 12-hour | 12-uurs | 12 órás | app.py:879 |
+| 66 | Windows uses 12-hour time. | Windows gebruikt de 12-uursnotatie. | A Windows 12 órás időt használ. | app.py:881 |
+| 67 | Windows uses 24-hour time. | Windows gebruikt de 24-uursnotatie. | A Windows 24 órás időt használ. | app.py:881 |
+| 68 | First day of the week | Eerste dag van de week | A hét első napja | app.py:884 |
+| 69 | Windows starts the week on {day}. | Windows begint de week op {day}. | A Windowsban a hét első napja: {day}. | app.py:891 |
 | 70 | no days | geen dagen | nincs nap | clock.py:109 |
 | 71 | Skipped invalid domains in the config: {domains}. | Ongeldige domeinen in de configuratie overgeslagen: {domains}. | A beállítási fájl érvénytelen domainjei kimaradtak: {domains}. | config.py:101 |
 | 72 | {name} could not be read ({problem}), so Blocky started with an empty list. The old file was kept as {copy}. | {name} kon niet worden gelezen ({problem}), dus Blocky is gestart met een lege lijst. Het oude bestand is bewaard als {copy}. | A(z) {name} nem olvasható ({problem}), ezért a Blocky üres listával indult. A régi fájl {copy} néven megmaradt. | config.py:124 |

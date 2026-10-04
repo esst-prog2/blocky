@@ -97,7 +97,7 @@ NL: dict[str, str] = {
     "No sites are blocked.": "Er zijn geen sites geblokkeerd.",
     "Override a block": "Een blokkade opheffen",
     "Unblocks one site until this window ends. Your reason is kept in History.": (
-        "Geeft één site vrij tot de blokkeertijd eindigt. Je reden komt in Geschiedenis."
+        "Geeft één site vrij tot de blokkeertijd eindigt. Je reden komt in “Geschiedenis”."
     ),
     "No domain blocked": "Geen domein geblokkeerd",
     "Why do you need it?": "Waarom heb je het nodig?",
@@ -139,7 +139,9 @@ NL: dict[str, str] = {
     "no days": "geen dagen",
     # Shortlist tab
     "Add a suggestion": "Een suggestie toevoegen",
-    "Something better to do, shown on the block page.": "Iets beters om te doen, getoond op de blokkeerpagina.",
+    "Something better to do, shown on the block page.": (
+        "Iets beters om te doen, dit wordt getoond op de blokkeerpagina."
+    ),
     "e.g. 10-minute walk": "bijv. 10 minuten wandelen",
     "Suggestions ({count})": "Suggesties ({count})",
     "No suggestions yet. Add one above.": "Nog geen suggesties. Voeg er hierboven een toe.",

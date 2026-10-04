@@ -109,11 +109,20 @@ def window(tmp_path, open_app):
             pass  # the test closed it already
 
 
+def open_language_list(app):
+    app.select_tab("Settings")
+    app.update()
+    app.language_list.button.invoke()
+    app.update()
+    return app.language_list.popup
+
+
 def test_picking_dutch_shows_the_window_in_dutch_at_once_and_keeps_it(window, tmp_path):
     app = window(Settings())
-    app.select_tab("Settings")
-    app.language_buttons["nl"].invoke()
+    open_language_list(app)
+    app.language_list.options["nl"].invoke()
     app.update()
+    assert app.language_list.popup is None or not app.language_list.popup.winfo_exists()
     assert app.selected_tab == "Settings"
     assert app.tabs.get() == "Instellingen"
     assert app.list_title.cget("text") == "Geblokkeerde sites (3)"
@@ -125,10 +134,38 @@ def test_picking_dutch_shows_the_window_in_dutch_at_once_and_keeps_it(window, tm
     assert again.list_title.cget("text") == "Geblokkeerde sites (3)"
 
 
-def test_language_buttons_name_each_language_in_itself(window):
+def test_language_list_names_each_language_in_itself(window):
     app = window(Settings(language="hu"))
-    texts = [button.cget("text") for button in app.language_buttons.values()]
+    assert app.language_list.button.cget("text") == "Magyar  ▾"
+    open_language_list(app)
+    texts = [option.cget("text") for option in app.language_list.options.values()]
     assert texts == ["Windows szerint", "English", "Nederlands", "Magyar"]
+    assert app.language_list.options["hu"].cget("fg_color") == t.DEEP  # the current one stands out
+
+
+def test_language_list_shows_all_four_choices_without_scrolling(window):
+    app = window(Settings(text_size="extra-large"))
+    popup = open_language_list(app)
+    canvas = app.language_list.scroll._parent_canvas
+    top, bottom = canvas.winfo_rooty(), canvas.winfo_rooty() + canvas.winfo_height()
+    for option in app.language_list.options.values():
+        assert top - 1 <= option.winfo_rooty() and option.winfo_rooty() + option.winfo_height() <= bottom + 1
+    assert not app.language_list.scroll._scrollbar.winfo_ismapped()
+    assert popup.winfo_width() == app.language_list.button.winfo_width()
+    assert app.language_list.button.cget("font").cget("family") == app.font_list.button.cget("font").cget("family")
+
+
+def test_language_list_closes_like_the_font_list(window):
+    app = window(Settings())
+    popup = open_language_list(app)
+    popup.event_generate("<Escape>")
+    app.update()
+    assert app.language_list.popup is None
+    popup = open_language_list(app)
+    popup.event_generate("<Button-1>", x=-50, y=-50)
+    app.update()
+    assert app.language_list.popup is None
+    assert app.controller.config.settings.language == FOLLOW_WINDOWS
 
 
 @pytest.mark.parametrize(

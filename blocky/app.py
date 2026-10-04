@@ -28,8 +28,8 @@ TABS = (
 )
 ASSETS = Path(__file__).with_name("assets")
 WINDOWS_MODE_POLL_MS = 2000
-FONT_LIST_WIDTH = 220
-FONT_LIST_ROWS = 4
+LIST_WIDTH = 220  # a drop-down list's button, and the list under it
+LIST_ROWS = 4
 
 
 class _Popup(tkinter.Toplevel):
@@ -53,6 +53,143 @@ class _Popup(tkinter.Toplevel):
         ScalingTracker.window_widgets_dict.pop(self, None)
         ScalingTracker.window_dpi_scaling_dict.pop(self, None)
         super().destroy()
+
+
+class DropList:
+    """A button that opens a list of choices under it, LIST_ROWS whole rows at a time, the current one filled.
+
+    A standard menu cannot do what the font list needs: it shows every entry in one font and never scrolls. With
+    `fonts`, the button and each choice are shown in the font they name.
+    """
+
+    def __init__(
+        self,
+        app: "App",
+        parent: ctk.CTkFrame,
+        choices: dict[str, str],
+        current: str,
+        pick: Callable[[str], None],
+        fonts: bool = False,
+    ) -> None:
+        self.app = app
+        self.choices = choices
+        self.names = list(choices)
+        self.current = current
+        self.pick = pick
+        self.fonts = fonts
+        self.rows = min(LIST_ROWS, len(self.names))
+        self.button = ctk.CTkButton(
+            parent,
+            text=f"{choices[current]}  ▾",
+            command=self.toggle,
+            font=t.font("body", current if fonts else None),
+            width=t.px(LIST_WIDTH),
+            height=t.CONTROL_HEIGHT,
+            corner_radius=8,
+            border_width=1,
+            border_color=t.BORDER,
+            fg_color=t.BACKGROUND,
+            hover_color=t.HOVER,
+            text_color=t.TEXT,
+            anchor="w",
+        )
+        self.popup: tkinter.Toplevel | None = None
+        self.options: dict[str, ctk.CTkButton] = {}
+        self.top = 0
+
+    def toggle(self) -> None:
+        if self.popup is not None:
+            self.close()
+        else:
+            self.open()
+
+    def open(self) -> None:
+        button = self.button
+        # Placed under the button before its widgets are made, so customtkinter scales them for that monitor.
+        popup = _Popup(self.app, background=t.BORDER)
+        popup.withdraw()
+        popup.overrideredirect(True)
+        popup.wm_geometry(f"+{button.winfo_rootx()}+{button.winfo_rooty() + button.winfo_height() + 4}")
+        popup.deiconify()
+        popup.update_idletasks()
+        box = ctk.CTkFrame(popup, fg_color=t.CARD, corner_radius=0)
+        box.pack(fill="both", expand=True, padx=1, pady=1)
+        row_height = t.CONTROL_HEIGHT + 4
+        list_height = self.rows * row_height - 4
+        scroll = t.scrollable_frame(box, width=t.px(LIST_WIDTH) - 33, height=list_height)
+        scroll._scrollbar.configure(height=list_height)  # its default of 200 would make the list taller
+        if len(self.names) <= self.rows:
+            scroll._scrollbar.grid_remove()  # every choice fits: nothing to scroll
+        scroll.pack(fill="both", expand=True, padx=4, pady=4)
+        self.scroll = scroll
+        self.options = {}
+        for name in self.names:
+            font_name = name if self.fonts else None
+            option = self.app._toggle(
+                scroll, self.choices[name], name == self.current, lambda n=name: self.choose(n), font_name
+            )
+            option.configure(anchor="w", border_width=0)
+            option.pack(fill="x", pady=(0, 4))
+            self.options[name] = option
+        # Sized and placed in the window's own pixels, not customtkinter's scaled units: as wide as the button and
+        # exactly `rows` rows tall, whatever padding customtkinter adds around the list.
+        popup.update_idletasks()
+        first = self.options[self.names[0]]
+        rows_pixels = self.rows * (self.options[self.names[1]].winfo_y() - first.winfo_y())
+        popup.update()  # actual sizes: the scrollbar's minimum height stretches the list beyond what it asks for
+        height = popup.winfo_height() - scroll._parent_canvas.winfo_height() + rows_pixels
+        x, y = button.winfo_rootx(), button.winfo_rooty() + button.winfo_height() + 4
+        if y + height > popup.winfo_vrooty() + popup.winfo_vrootheight() - 60:  # no room above the taskbar
+            y = button.winfo_rooty() - height - 4
+        popup.wm_geometry(f"{button.winfo_width()}x{height}+{x}+{y}")
+        popup.bind("<Escape>", lambda _event: self.close())
+        popup.bind("<Button-1>", self._click_outside, add="+")
+        self.popup = popup
+        popup.update_idletasks()
+        popup.lift()
+        popup.focus_force()
+        try:
+            popup.grab_set()  # clicks elsewhere in Blocky come here, so they can close the list
+        except tkinter.TclError:
+            pass  # not viewable yet; Escape and picking a choice still close it
+        # Start on whole rows, with the current choice second from the top where the list allows it. After the new
+        # size has taken effect: Tk limits the scroll position by the list's height at that moment.
+        popup.update()
+        self.show_rows(self.names.index(self.current) - 1)
+        # One wheel notch moves one whole row; "break" keeps customtkinter's own wheel handler from also scrolling.
+        popup.bind("<MouseWheel>", self._wheel)
+
+    def show_rows(self, top: int) -> None:
+        """Scroll the list so that the choice at index `top` is the first row."""
+        self.top = min(max(0, top), len(self.names) - self.rows)
+        first = self.options[self.names[0]]
+        offset = self.options[self.names[self.top]].winfo_y() - first.winfo_y()
+        canvas = self.scroll._parent_canvas
+        canvas.yview_moveto(offset / float(canvas.cget("scrollregion").split()[3]))
+
+    def _wheel(self, event: tkinter.Event) -> str:
+        self.show_rows(self.top + (-1 if event.delta > 0 else 1))
+        return "break"
+
+    def _click_outside(self, event: tkinter.Event) -> None:
+        popup = self.popup
+        if popup is None:
+            return
+        left, top = popup.winfo_rootx(), popup.winfo_rooty()
+        inside = left <= event.x_root < left + popup.winfo_width() and top <= event.y_root < top + popup.winfo_height()
+        if not inside:
+            self.close()
+
+    def close(self) -> None:
+        if self.popup is not None:
+            self.popup.grab_release()
+            self.popup.destroy()
+            self.popup = None
+            self.options = {}
+
+    def choose(self, name: str) -> None:
+        self.close()
+        self.pick(name)
 
 
 class App(ctk.CTk):
@@ -666,24 +803,9 @@ class App(ctk.CTk):
         self.font_and_size = (pair, font_column, size_column)
         pair.bind("<Configure>", lambda _event: self._lay_out_font_and_size(), add="+")
         t.label(font_column, _("Font"), "button").pack(fill="x")
-        self.font_menu_button = ctk.CTkButton(
-            font_column,
-            text=f"{current.font}  ▾",
-            command=self._toggle_font_list,
-            font=t.font("body", current.font),
-            width=t.px(FONT_LIST_WIDTH),
-            height=t.CONTROL_HEIGHT,
-            corner_radius=8,
-            border_width=1,
-            border_color=t.BORDER,
-            fg_color=t.BACKGROUND,
-            hover_color=t.HOVER,
-            text_color=t.TEXT,
-            anchor="w",
-        )
-        self.font_menu_button.pack(anchor="w", pady=(t.GAP, 0))
-        self.font_list: tkinter.Toplevel | None = None
-        self.font_options: dict[str, ctk.CTkButton] = {}
+        fonts = {name: name for name in settings_module.FONTS}
+        self.font_list = DropList(self, font_column, fonts, current.font, lambda n: self._choose(font=n), fonts=True)
+        self.font_list.button.pack(anchor="w", pady=(t.GAP, 0))
 
         t.label(size_column, _("Text size"), "button").pack(fill="x")
         sizes = {name: _(settings_module.NAMES[name]) for name in settings_module.TEXT_SIZES}
@@ -743,7 +865,8 @@ class App(ctk.CTk):
         body = self._section(parent, _("Language and time"))
         t.label(body, _("Language"), "button").pack(fill="x")
         languages = {settings_module.FOLLOW_WINDOWS: _("Follow Windows")} | language.NAMES
-        self.language_buttons = self._choice_row(body, languages, current.language, "language")
+        self.language_list = DropList(self, body, languages, current.language, lambda n: self._choose(language=n))
+        self.language_list.button.pack(anchor="w", pady=(t.GAP, 0))
         windows_language = {
             "en": _("Windows uses English."),
             "nl": _("Windows uses Dutch."),
@@ -779,100 +902,6 @@ class App(ctk.CTk):
             size_column.grid(row=0, column=1, columnspan=1, sticky="new", pady=0)
         else:
             size_column.grid(row=1, column=0, columnspan=2, sticky="new", pady=(t.PAD, 0))
-
-    def _toggle_font_list(self) -> None:
-        if self.font_list is not None:
-            self._close_font_list()
-        else:
-            self._open_font_list()
-
-    def _open_font_list(self) -> None:
-        """A list under the font button that shows each font in itself, FONT_LIST_ROWS at a time.
-
-        A standard menu cannot do this: it shows every entry in one font and never scrolls.
-        """
-        current = self.controller.config.settings.font
-        button = self.font_menu_button
-        # Placed under the button before its widgets are made, so customtkinter scales them for that monitor.
-        popup = _Popup(self, background=t.BORDER)
-        popup.withdraw()
-        popup.overrideredirect(True)
-        popup.wm_geometry(f"+{button.winfo_rootx()}+{button.winfo_rooty() + button.winfo_height() + 4}")
-        popup.deiconify()
-        popup.update_idletasks()
-        box = ctk.CTkFrame(popup, fg_color=t.CARD, corner_radius=0)
-        box.pack(fill="both", expand=True, padx=1, pady=1)
-        row_height = t.CONTROL_HEIGHT + 4
-        list_height = FONT_LIST_ROWS * row_height - 4
-        scroll = t.scrollable_frame(box, width=t.px(FONT_LIST_WIDTH) - 33, height=list_height)
-        scroll._scrollbar.configure(height=list_height)  # its default of 200 would make the list taller
-        scroll.pack(fill="both", expand=True, padx=4, pady=4)
-        self.font_scroll = scroll
-        self.font_options = {}
-        for name in settings_module.FONTS:
-            option = self._toggle(scroll, name, name == current, lambda n=name: self._pick_font(n), name)
-            option.configure(anchor="w", border_width=0)
-            option.pack(fill="x", pady=(0, 4))
-            self.font_options[name] = option
-        # Sized and placed in the window's own pixels, not customtkinter's scaled units: as wide as the button and
-        # exactly FONT_LIST_ROWS rows tall, whatever padding customtkinter adds around the list.
-        popup.update_idletasks()
-        first = self.font_options[settings_module.FONTS[0]]
-        rows_pixels = FONT_LIST_ROWS * (self.font_options[settings_module.FONTS[1]].winfo_y() - first.winfo_y())
-        popup.update()  # actual sizes: the scrollbar's minimum height stretches the list beyond what it asks for
-        height = popup.winfo_height() - scroll._parent_canvas.winfo_height() + rows_pixels
-        x, y = button.winfo_rootx(), button.winfo_rooty() + button.winfo_height() + 4
-        if y + height > popup.winfo_vrooty() + popup.winfo_vrootheight() - 60:  # no room above the taskbar
-            y = button.winfo_rooty() - height - 4
-        popup.wm_geometry(f"{button.winfo_width()}x{height}+{x}+{y}")
-        popup.bind("<Escape>", lambda _event: self._close_font_list())
-        popup.bind("<Button-1>", self._click_outside_font_list, add="+")
-        self.font_list = popup
-        popup.update_idletasks()
-        popup.lift()
-        popup.focus_force()
-        try:
-            popup.grab_set()  # clicks elsewhere in Blocky come here, so they can close the list
-        except tkinter.TclError:
-            pass  # not viewable yet; Escape and picking a font still close it
-        # Start on whole rows, with the chosen font second from the top where the list allows it. After the new
-        # size has taken effect: Tk limits the scroll position by the list's height at that moment.
-        popup.update()
-        self._show_font_rows(settings_module.FONTS.index(current) - 1)
-        # One wheel notch moves one whole row; "break" keeps customtkinter's own wheel handler from also scrolling.
-        popup.bind("<MouseWheel>", self._wheel_font_list)
-
-    def _show_font_rows(self, top: int) -> None:
-        """Scroll the font list so that the font at index `top` is the first row."""
-        self.font_list_top = min(max(0, top), len(settings_module.FONTS) - FONT_LIST_ROWS)
-        first = self.font_options[settings_module.FONTS[0]]
-        offset = self.font_options[settings_module.FONTS[self.font_list_top]].winfo_y() - first.winfo_y()
-        canvas = self.font_scroll._parent_canvas
-        canvas.yview_moveto(offset / float(canvas.cget("scrollregion").split()[3]))
-
-    def _wheel_font_list(self, event: tkinter.Event) -> str:
-        self._show_font_rows(self.font_list_top + (-1 if event.delta > 0 else 1))
-        return "break"
-
-    def _click_outside_font_list(self, event: tkinter.Event) -> None:
-        popup = self.font_list
-        if popup is None:
-            return
-        left, top = popup.winfo_rootx(), popup.winfo_rooty()
-        inside = left <= event.x_root < left + popup.winfo_width() and top <= event.y_root < top + popup.winfo_height()
-        if not inside:
-            self._close_font_list()
-
-    def _close_font_list(self) -> None:
-        if self.font_list is not None:
-            self.font_list.grab_release()
-            self.font_list.destroy()
-            self.font_list = None
-            self.font_options = {}
-
-    def _pick_font(self, name: str) -> None:
-        self._close_font_list()
-        self._choose(font=name)
 
     @staticmethod
     def _descendants(widget) -> list:

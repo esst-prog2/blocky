@@ -35,6 +35,7 @@
 - [x] 7.1 Run ruff check, ruff format --check, mypy, pytest and the extension tests as separate commands and verify all pass
 - [x] 7.2 Run `tools/mutation_test.py` on `language` and `clock` (add `language` to its module list) and add tests for real gaps
 - [x] 7.3 Generate `openspec/changes/settings-language/translations.md` (English, Dutch, Hungarian and where each appears) for the owner; verify it lists every table entry
-- [ ] 7.4 Owner review of the Dutch and Hungarian texts from `translations.md`, with corrections applied to the tables and the table regenerated
+- [x] 7.4 Owner review of the Dutch and Hungarian texts from `translations.md`, with corrections applied to the tables and the table regenerated
+- [x] 7.4a Apply the owner's review: the language as a drop-down list like the font (one drop-down list class for both), and the two Dutch captions; verify with window tests that the language list opens, shows the four choices, picks Nederlands and closes like the font list, that the existing font list tests still pass, and that the layout test still passes with the new captions
 - [ ] 7.5 Manual check by the owner: each language in the window and on the block page in Brave, Follow Windows after changing Windows' display language (then restarting Blocky), History after a language change, the administrator message in Dutch, and Reset to default
 - [ ] 7.6 Log the decisions in `PLANNING_LOG.md`, update the README, and archive this change
