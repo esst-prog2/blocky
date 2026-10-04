@@ -7,8 +7,10 @@ import yaml
 
 from blocky import domains as domains_module
 from blocky import schedule as schedule_module
+from blocky import settings as settings_module
 from blocky.files import write_safely
 from blocky.schedule import Schedule
+from blocky.settings import Settings
 
 
 class DamagedConfig(ValueError):
@@ -22,6 +24,7 @@ class Config:
     shortlist: list[str] = field(default_factory=list)
     overrides: list[dict] = field(default_factory=list)
     events: list[dict] = field(default_factory=list)
+    settings: Settings = field(default_factory=Settings)
 
 
 def default_path() -> Path:
@@ -90,8 +93,13 @@ def _parse(text: str) -> tuple[Config, list[str]]:
     for entry in events:
         _check_event(entry)
 
+    # Settings never count as damage: each unknown value falls back to its default on its own.
+    settings = settings_module.from_data(data.get("settings"))
+
     warnings = [f"Skipped invalid domains in the config: {', '.join(skipped)}."] if skipped else []
-    config = Config(domains=domains, schedule=schedule, shortlist=shortlist, overrides=overrides, events=events)
+    config = Config(
+        domains=domains, schedule=schedule, shortlist=shortlist, overrides=overrides, events=events, settings=settings
+    )
     return config, warnings
 
 

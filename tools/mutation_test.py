@@ -5,7 +5,7 @@ Usage: .venv\\Scripts\\python tools\\mutation_test.py [module ...] [--report]
 Each module is tested against its own test files only, to keep runs short. Results go to .mutation/ (ignored by
 git); a stopped run resumes where it left off. cosmic-ray edits the source files in place while it runs, so the
 script refuses to start with uncommitted changes in blocky/ and restores blocky/ when it stops.
-UI and startup code (app.py, theme.py, __main__.py) are left out.
+Window and startup code (app.py, __main__.py) are left out; theme.py is in for its colour table and fonts.
 """
 
 import json
@@ -31,6 +31,8 @@ TESTS = {
     "files": "test_hosts test_p1_config test_robustness",
     "server": "test_server test_extension_files",
     "controller": "test_controller",
+    "settings": "test_settings test_theme",
+    "theme": "test_theme test_server",
 }
 
 

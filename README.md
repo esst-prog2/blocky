@@ -65,6 +65,8 @@ in between   a background checker compares the current time against each
  
 Python, with a `customtkinter` UI for a modern look with minimal setup overhead. A local HTTP server in the app serves the block page with the shortlist at `blocky.localhost/<domain>` (port 80 when it is free, otherwise `blocky.localhost:8765`); a Brave extension (Chromium, Manifest V3) redirects blocked requests to it. Config (block list + schedule) is stored as YAML under the hood but never hand-edited — all changes go through the app.
 
+The Settings tab changes how Blocky looks: five themes (Forest and Navy are dark; Sand, Aqua and Blossom are light) or Follow Windows, which uses a chosen dark and light theme to match Windows' app mode; ten fonts that come with Windows; and four text sizes. Changes show at once, also on the block page, and are saved in the `settings` section of the config. Reset to default puts them back to Forest, Segoe UI Variable and Normal, with Undo. The colours are in `blocky/theme.py`; `tests/test_theme.py` checks their contrast. After changing a theme's colours, redraw the icons with `.venv\Scripts\python tools\make_icons.py` (needs Pillow: `.venv\Scripts\python -m pip install pillow`).
+
 ## Running it
 
 1. Install Python 3.11 or newer. Keep the project outside OneDrive or other synced folders: syncing interferes with git and with Blocky's own file writes.

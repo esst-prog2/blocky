@@ -7,6 +7,7 @@ from pathlib import Path
 
 from blocky import config as config_module
 from blocky import rules
+from blocky import settings as settings_module
 from blocky.app import App
 from blocky.checker import Checker, log_error
 from blocky.controller import warning_text
@@ -41,6 +42,19 @@ def stop_blocking(stop: threading.Event, worker: threading.Thread, checker: Chec
         log_error(error_log, f"Could not remove Blocky's hosts entries: {error!r}")
 
 
+def page_state(config_path: Path) -> dict:
+    """What the block page shows, in the theme, font and text size the window uses."""
+    config = config_module.load(config_path)
+    settings = config.settings
+    windows_light = settings.theme == settings_module.FOLLOW_WINDOWS and settings_module.windows_is_light()
+    appearance = {
+        "theme": settings_module.effective_theme(settings, windows_light),
+        "font": settings.font,
+        "text_size": settings.text_size,
+    }
+    return {**rules.snapshot(config, datetime.now()), "appearance": appearance}
+
+
 def start_block_page(load_state) -> tuple[Server | None, str | None]:
     try:
         server = Server(load_state)
@@ -69,7 +83,7 @@ def main() -> None:
     worker = threading.Thread(target=checker.run, args=(stop,), daemon=True)
     worker.start()
 
-    server, server_warning = start_block_page(lambda: rules.snapshot(config_module.load(config_path), datetime.now()))
+    server, server_warning = start_block_page(lambda: page_state(config_path))
 
     try:
         App(
