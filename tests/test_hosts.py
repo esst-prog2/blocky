@@ -30,6 +30,11 @@ def test_rendering_twice_is_idempotent():
     assert hosts.render(once, ["reddit.com"]) == once
 
 
+def test_last_line_without_a_line_break_is_kept():
+    result = hosts.render("127.0.0.1 localhost", ["reddit.com"])
+    assert result.startswith("127.0.0.1 localhost\n# BEGIN BLOCKY\n")
+
+
 def test_crlf_line_endings_are_preserved():
     text = "127.0.0.1 localhost\r\n"
     assert hosts.render(text, ["reddit.com"]).count("\r\n") == 4
@@ -63,6 +68,24 @@ def test_apply_creates_missing_file(tmp_path):
     path = tmp_path / "hosts"
     assert hosts.apply(["reddit.com"], path) is True
     assert path.read_text(encoding="utf-8").startswith("# BEGIN BLOCKY")
+
+
+def test_apply_swaps_in_a_fully_written_file(tmp_path, monkeypatch):
+    # Writing a copy and swapping it in means the hosts file is never left half-written.
+    path = tmp_path / "hosts"
+    path.write_text("127.0.0.1 localhost\n", encoding="utf-8")
+    real_replace = os.replace
+    swaps = []
+
+    def recording_replace(source, target):
+        swaps.append((source, target))
+        real_replace(source, target)
+
+    monkeypatch.setattr(files.os, "replace", recording_replace)
+
+    assert hosts.apply(["reddit.com"], path)
+    assert swaps == [(tmp_path / "hosts.tmp", path)]
+    assert "127.0.0.1 reddit.com" in path.read_text(encoding="utf-8")
 
 
 def test_apply_retries_when_the_swap_is_briefly_locked(tmp_path, monkeypatch):

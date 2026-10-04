@@ -8,7 +8,7 @@ def test_valid_domain_is_normalized():
 
 
 @pytest.mark.parametrize(
-    "entry", ["reddit", "red dit.com", "", "https://reddit/", "reddit..com", "-bad.com", "reddit.c1"]
+    "entry", ["reddit", "red dit.com", "", "https://reddit/", "reddit..com", "-bad.com", "reddit.c1", "reddit.c"]
 )
 def test_malformed_domain_is_rejected(entry):
     with pytest.raises(ValueError):

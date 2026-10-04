@@ -1,6 +1,7 @@
 import os
 import tkinter
 
+import customtkinter as ctk
 import pytest
 from hypothesis import settings
 
@@ -24,3 +25,17 @@ def open_app():
                     raise
 
     return open_window
+
+
+@pytest.fixture
+def tk_root():
+    # Same retry as open_app: Tk sometimes cannot read its library files while a window opens.
+    for attempt in range(3):
+        try:
+            root = ctk.CTk()
+            break
+        except tkinter.TclError:
+            if attempt == 2:
+                raise
+    yield root
+    root.destroy()

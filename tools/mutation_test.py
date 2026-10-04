@@ -29,7 +29,7 @@ TESTS = {
     "suggestions": "test_suggestions test_controller",
     "checker": "test_checker test_robustness test_p1",
     "files": "test_hosts test_p1_config test_robustness",
-    "server": "test_server",
+    "server": "test_server test_extension_files",
     "controller": "test_controller",
 }
 

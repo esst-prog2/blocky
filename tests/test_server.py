@@ -1,4 +1,5 @@
 import json
+import threading
 import urllib.request
 
 import pytest
@@ -40,6 +41,11 @@ def test_unblocked_domain_is_reported_as_not_blocked(server):
     assert "example.com is not blocked right now" in body
 
 
+def test_domain_sorting_after_a_blocked_one_is_reported_as_not_blocked(server):
+    _, _, body = fetch(server, "/blocked?domain=youtube.com")
+    assert "youtube.com is not blocked right now" in body
+
+
 def test_blocked_page_names_a_subdomain_as_blocked(server):
     _, _, body = fetch(server, "/blocked?domain=old.reddit.com")
     assert "old.reddit.com is blocked until 17:00" in body
@@ -56,6 +62,13 @@ def test_state_endpoint_returns_json(server):
     assert json.loads(body) == state()
 
 
+def test_server_thread_does_not_keep_blocky_running(server):
+    # A daemon thread ends with the app even if stop() is never reached.
+    threads = [thread for thread in threading.enumerate() if thread is not threading.main_thread()]
+    assert threads
+    assert all(thread.daemon for thread in threads)
+
+
 def test_server_is_bound_to_localhost(server):
     assert server._httpd.server_address[0] == "127.0.0.1"
 
@@ -69,9 +82,11 @@ def test_server_refuses_connections_after_stop():
         urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=2)
 
 
-def test_unknown_path_returns_404(server):
+# "/about" sorts before the real paths, "/nope" after them.
+@pytest.mark.parametrize("path", ["/nope", "/about"])
+def test_unknown_path_returns_404(server, path):
     with pytest.raises(urllib.error.HTTPError) as error:
-        fetch(server, "/nope")
+        fetch(server, path)
     assert error.value.code == 404
 
 

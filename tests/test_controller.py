@@ -4,7 +4,7 @@ import pytest
 
 from blocky import config as config_module
 from blocky import rules
-from blocky.controller import Controller
+from blocky.controller import Controller, warning_text
 from blocky.server import render_home
 
 MONDAY_2PM = datetime(2026, 10, 5, 14, 0)
@@ -57,6 +57,8 @@ def test_editing_into_a_duplicate_is_rejected(make):
     controller.add_domain("chess.com")
     with pytest.raises(ValueError):
         controller.edit_domain(1, "reddit.com")
+    with pytest.raises(ValueError):
+        controller.edit_domain(0, "chess.com")
     assert controller.config.domains == ["reddit.com", "chess.com"]
 
 
@@ -173,7 +175,27 @@ def test_unchanged_saves_are_not_recorded(make):
     controller.add_domain("chess.com")
     controller.edit_domain(0, "chess.com")
     controller.set_schedule([0, 1, 2, 3, 4], "09:00", "17:00")
-    assert rows(controller) == [("Site added", "chess.com", "")]
+    controller.add_suggestion("10-minute walk")
+    controller.edit_suggestion(0, "10-minute walk")
+    assert rows(controller) == [("Suggestion added", "10-minute walk", ""), ("Site added", "chess.com", "")]
+
+
+def test_edits_to_an_earlier_sorting_name_are_recorded(make):
+    controller = make()
+    controller.add_domain("lichess.org")
+    controller.add_suggestion("Walk")
+    controller.edit_domain(0, "chess.com")
+    controller.edit_suggestion(0, "Read")
+    assert rows(controller)[:2] == [
+        ("Suggestion edited", "Read", "Walk \u2192 Read"),
+        ("Site edited", "chess.com", "lichess.org \u2192 chess.com"),
+    ]
+
+
+def test_warning_text_joins_all_problems():
+    assert warning_text(None) == ""
+    assert warning_text(None, None, "") == ""
+    assert warning_text("hosts locked", "config damaged", None) == "Warning: config damaged hosts locked"
 
 
 def test_history_survives_a_restart(make):

@@ -37,13 +37,22 @@ def test_start_must_be_before_end():
         validate(Schedule(start="17:00", end="09:00"))
 
 
+def test_start_equal_to_end_is_rejected():
+    with pytest.raises(ValueError):
+        validate(Schedule(start="09:00", end="09:00"))
+
+
+def test_default_schedule_is_monday_to_friday():
+    assert Schedule().weekdays == [0, 1, 2, 3, 4]
+
+
 def test_weekday_must_be_in_range():
     with pytest.raises(ValueError):
         validate(Schedule(weekdays=[7]))
 
 
 @pytest.mark.parametrize(
-    "text, stored", [("9:00", "09:00"), ("09:00", "09:00"), (" 17:30 ", "17:30"), ("0:05", "00:05")]
+    "text, stored", [("9:00", "09:00"), ("09:00", "09:00"), (" 17:30 ", "17:30"), ("0:05", "00:05"), ("23:59", "23:59")]
 )
 def test_time_is_accepted_as_hours_and_minutes(text, stored):
     assert parse_time(text) == stored

@@ -2,6 +2,7 @@ from datetime import datetime
 
 import pytest
 
+from blocky.config import Config, load, save
 from blocky.history import describe_days, describe_schedule, rows, when
 
 
@@ -17,6 +18,7 @@ def test_dates_are_readable():
         ([0, 2, 4], "Mon, Wed, Fri"),
         ([5, 6], "Sat, Sun"),
         ([0, 1, 2, 5], "Mon\u2013Wed, Sat"),
+        ([0, 2, 3, 4], "Mon, Wed\u2013Fri"),
         ([], "no days"),
     ],
 )
@@ -45,3 +47,26 @@ def test_events_and_overrides_are_merged_newest_first():
         ("Override", "work"),
         ("Site added", ""),
     ]
+
+
+def test_overrides_read_back_from_the_config_keep_their_labels(tmp_path):
+    config = Config(
+        overrides=[
+            {
+                "type": "override",
+                "domain": "reddit.com",
+                "timestamp": "2026-10-05T14:00:00",
+                "until": "2026-10-05T17:00:00",
+            },
+            {"type": "undo", "domain": "reddit.com", "timestamp": "2026-10-05T14:30:00"},
+        ]
+    )
+    save(tmp_path / "config.yaml", config)
+    loaded = load(tmp_path / "config.yaml")
+    assert [row.event for row in rows(loaded.events, loaded.overrides)] == ["Override undone", "Override"]
+
+
+def test_override_saved_without_a_type_is_shown_as_an_override():
+    # Blocky's first version wrote overrides without a "type".
+    overrides = [{"domain": "reddit.com", "timestamp": "2026-10-05T14:00:00", "reason": "work", "until": "x"}]
+    assert [(row.event, row.details) for row in rows([], overrides)] == [("Override", "work")]
