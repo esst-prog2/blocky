@@ -235,3 +235,62 @@ def test_6_main_gives_the_window_the_cleanup(tmp_path, monkeypatch):
     startup.main()
 
     assert stopped == ["stopped", "stopped"]  # once at the session's end, once as Blocky closes
+
+
+SESSION_SCRIPT = """
+import sys, threading
+from pathlib import Path
+from blocky.__main__ import stop_blocking
+from blocky.app import App
+from blocky.checker import Checker
+from blocky.settings import WindowsTime
+
+config_path, hosts_path = Path(sys.argv[1]), Path(sys.argv[2])
+checker = Checker(config_path, hosts_path)
+stop = threading.Event()
+worker = threading.Thread(target=checker.run, args=(stop, 0.2), daemon=True)
+worker.start()
+app = App(
+    config_path,
+    hosts_path=hosts_path,
+    sync=checker.request_sync,
+    windows_time=lambda: WindowsTime(),
+    windows_language=lambda: "en",
+    session_ending=lambda: stop_blocking(stop, worker, checker, config_path.parent / "errors.log"),
+)
+app.update()
+print(int(app.wm_frame(), 16), flush=True)
+app.mainloop()
+print("closed", flush=True)
+"""
+
+
+@pytest.mark.window
+def test_6_windows_shutdown_message_removes_the_blocking_in_a_running_blocky(tmp_path):
+    import ctypes
+
+    config_path, hosts_path = tmp_path / "config.yaml", tmp_path / "hosts"
+    hosts_path.write_bytes((WINDOWS_PART + DOCKER).encode("utf-8"))
+    config_module.save(config_path, Config(domains=["reddit.com"], schedule=all_day_today()))
+    process = subprocess.Popen(
+        [sys.executable, "-c", SESSION_SCRIPT, str(config_path), str(hosts_path)],
+        cwd=ROOT,
+        stdout=subprocess.PIPE,
+        text=True,
+    )
+    try:
+        assert process.stdout is not None
+        frame = int(process.stdout.readline())
+        deadline = time.monotonic() + 15
+        while "127.0.0.1 reddit.com" not in hosts_path.read_text(encoding="utf-8"):
+            assert time.monotonic() < deadline, "the background check never blocked"
+            time.sleep(0.1)
+
+        # What Windows sends every program's windows when it shuts down, restarts or signs out.
+        ctypes.windll.user32.PostMessageW(frame, 0x0011, 0, 0)  # WM_QUERYENDSESSION
+
+        process.wait(timeout=20)  # fails instead of hanging if the window does not close
+        assert process.stdout.read().strip() == "closed"
+    finally:
+        process.kill()
+    assert hosts_path.read_text(encoding="utf-8") == WINDOWS_PART + DOCKER
