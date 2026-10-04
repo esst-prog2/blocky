@@ -7,11 +7,14 @@ def test_spaces_are_tidied():
     assert check("  10-minute   walk ", []) == "10-minute walk"
 
 
-@pytest.mark.parametrize("text, message", [
-    ("", "Type a suggestion"),
-    ("   ", "Type a suggestion"),
-    ("x" * (MAX_LENGTH + 1), "Keep it to 120 characters"),
-])
+@pytest.mark.parametrize(
+    "text, message",
+    [
+        ("", "Type a suggestion"),
+        ("   ", "Type a suggestion"),
+        ("x" * (MAX_LENGTH + 1), "Keep it to 120 characters"),
+    ],
+)
 def test_empty_or_long_suggestions_are_refused(text, message):
     with pytest.raises(ValueError, match=message):
         check(text, [])

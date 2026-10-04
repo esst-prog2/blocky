@@ -87,7 +87,9 @@ def test_apply_retries_when_the_swap_is_briefly_locked(tmp_path, monkeypatch):
 
 def test_apply_writes_in_place_when_the_swap_stays_locked(tmp_path, monkeypatch):
     path = tmp_path / "hosts"
-    path.write_text("127.0.0.1 localhost\n" + hosts.BEGIN + "\n127.0.0.1 reddit.com\n" + hosts.END + "\n", encoding="utf-8")
+    path.write_text(
+        "127.0.0.1 localhost\n" + hosts.BEGIN + "\n127.0.0.1 reddit.com\n" + hosts.END + "\n", encoding="utf-8"
+    )
 
     def always_locked(source, target):
         raise PermissionError(13, "Access is denied")

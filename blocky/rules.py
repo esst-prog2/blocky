@@ -44,6 +44,7 @@ def override(config: Config, domain: str, reason: str, now: datetime) -> None:
     if domain not in overridable_domains(config, now):
         raise ValueError(f"{domain} is not blocked right now")
     until = window_end(config.schedule, now)
+    assert until is not None  # overridable_domains is empty outside the window
     config.overrides.append(
         {
             "type": "override",
@@ -58,9 +59,7 @@ def override(config: Config, domain: str, reason: str, now: datetime) -> None:
 def undo_override(config: Config, domain: str, now: datetime) -> None:
     if domain not in released_until(config, now):
         raise ValueError(f"{domain} is not unblocked right now")
-    config.overrides.append(
-        {"type": "undo", "domain": domain, "timestamp": now.isoformat(timespec="seconds")}
-    )
+    config.overrides.append({"type": "undo", "domain": domain, "timestamp": now.isoformat(timespec="seconds")})
 
 
 def status_text(config: Config, now: datetime) -> str:

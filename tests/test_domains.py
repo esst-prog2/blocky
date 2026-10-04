@@ -7,7 +7,9 @@ def test_valid_domain_is_normalized():
     assert validate(" YouTube.com ") == "youtube.com"
 
 
-@pytest.mark.parametrize("entry", ["reddit", "red dit.com", "", "https://reddit/", "reddit..com", "-bad.com", "reddit.c1"])
+@pytest.mark.parametrize(
+    "entry", ["reddit", "red dit.com", "", "https://reddit/", "reddit..com", "-bad.com", "reddit.c1"]
+)
 def test_malformed_domain_is_rejected(entry):
     with pytest.raises(ValueError):
         validate(entry)

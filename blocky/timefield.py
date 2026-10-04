@@ -5,19 +5,24 @@ import customtkinter as ctk
 from blocky import theme
 
 
+def digits(text: str) -> bool:
+    """Whether the text is only the digits 0-9; str.isdigit() also accepts characters like '²' that int() rejects."""
+    return text.isascii() and text.isdigit()
+
+
 def allowed(text: str, maximum: int) -> bool:
     """Whether a box may hold this text while the user types: at most two digits, not above the maximum."""
-    return text == "" or (text.isdigit() and len(text) <= 2 and int(text) <= maximum)
+    return text == "" or (digits(text) and len(text) <= 2 and int(text) <= maximum)
 
 
 def step(text: str, delta: int, maximum: int) -> str:
-    value = int(text) if text.isdigit() else 0
+    value = int(text) if digits(text) else 0
     return f"{(value + delta) % (maximum + 1):02d}"
 
 
 def finish(text: str, previous: str) -> str:
     """The value a box settles on when the user leaves it: padded, or the previous value if left empty."""
-    return f"{int(text):02d}" if text.isdigit() else previous
+    return f"{int(text):02d}" if digits(text) else previous
 
 
 class _Box(ctk.CTkEntry):

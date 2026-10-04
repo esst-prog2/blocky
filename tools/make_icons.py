@@ -2,6 +2,7 @@
 
 Run from the repository root: python tools/make_icons.py
 """
+
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont

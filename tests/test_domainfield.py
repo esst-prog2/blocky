@@ -17,12 +17,15 @@ def test_overly_long_text_is_refused():
     assert not allowed("a" * 254)
 
 
-@pytest.mark.parametrize("text, result", [
-    ("https://www.reddit.com/r/all?sort=new", "www.reddit.com"),
-    ("  Reddit.com  ", "reddit.com"),
-    ("nos.nl:443", "nos.nl"),
-    ("red dit.com", "reddit.com"),
-])
+@pytest.mark.parametrize(
+    "text, result",
+    [
+        ("https://www.reddit.com/r/all?sort=new", "www.reddit.com"),
+        ("  Reddit.com  ", "reddit.com"),
+        ("nos.nl:443", "nos.nl"),
+        ("red dit.com", "reddit.com"),
+    ],
+)
 def test_pastes_are_cleaned(text, result):
     assert cleaned_paste(text) == result
 
@@ -47,12 +50,15 @@ def test_hint_for_a_domain_already_listed():
     assert hint("Reddit.com", ["reddit.com"]) == (False, "reddit.com is already in the list")
 
 
-@pytest.mark.parametrize("text, expected", [
-    ("chess.com", False),
-    ("chess", False),
-    ("reddit.com", False),
-    ("lichess.org", True),
-    ("Chess.org", True),
-])
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        ("chess.com", False),
+        ("chess", False),
+        ("reddit.com", False),
+        ("lichess.org", True),
+        ("Chess.org", True),
+    ],
+)
 def test_edit_can_only_be_saved_when_valid_changed_and_not_a_duplicate(text, expected):
     assert can_save_edit(text, "chess.com", ["reddit.com", "chess.com"]) is expected

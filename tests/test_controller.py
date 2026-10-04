@@ -21,8 +21,8 @@ def make(tmp_path):
             clock=lambda: clock["now"],
         )
 
-    factory.clock = clock
-    factory.path = tmp_path / "config.yaml"
+    factory.clock = clock  # type: ignore[attr-defined]
+    factory.path = tmp_path / "config.yaml"  # type: ignore[attr-defined]
     return factory
 
 

@@ -1,0 +1,23 @@
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+# Errors, likely bugs, outdated syntax and import order; the stricter default set flags naive datetimes,
+# which Blocky uses on purpose because everything runs on one PC in local time.
+select = ["E", "W", "F", "I", "B", "UP", "SIM", "RUF"]
+# E501: the formatter keeps code within 120; only long strings (the block page CSS, test data) go over.
+# SIM105: try/except/pass with a comment says why the error is ignored more clearly than contextlib.suppress.
+# RUF001: the en dashes in the history text are intended.
+ignore = ["E501", "SIM105", "RUF001"]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["blocky", "tests"]
+check_untyped_defs = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+
+[[tool.mypy.overrides]]
+module = ["customtkinter"]
+ignore_missing_imports = true

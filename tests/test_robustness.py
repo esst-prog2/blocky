@@ -27,7 +27,7 @@ def test_checker_keeps_running_after_unexpected_error(tmp_path):
             raise RuntimeError("unexpected")
         stop.set()
 
-    checker.sync = sync_that_fails_once
+    checker.sync = sync_that_fails_once  # type: ignore[method-assign]
     try:
         checker.run(stop, interval=0)
     except RuntimeError:
@@ -114,7 +114,7 @@ def test_background_error_is_logged_once_while_it_repeats(tmp_path):
             stop.set()
         raise OSError("hosts file is locked")
 
-    checker.sync = sync_that_keeps_failing
+    checker.sync = sync_that_keeps_failing  # type: ignore[method-assign]
     checker.run(stop, interval=0)
 
     lines = error_log.read_text(encoding="utf-8").splitlines()

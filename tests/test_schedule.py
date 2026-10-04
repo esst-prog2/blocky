@@ -42,7 +42,9 @@ def test_weekday_must_be_in_range():
         validate(Schedule(weekdays=[7]))
 
 
-@pytest.mark.parametrize("text, stored", [("9:00", "09:00"), ("09:00", "09:00"), (" 17:30 ", "17:30"), ("0:05", "00:05")])
+@pytest.mark.parametrize(
+    "text, stored", [("9:00", "09:00"), ("09:00", "09:00"), (" 17:30 ", "17:30"), ("0:05", "00:05")]
+)
 def test_time_is_accepted_as_hours_and_minutes(text, stored):
     assert parse_time(text) == stored
 

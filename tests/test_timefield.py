@@ -18,13 +18,16 @@ def test_minute_box_allows_up_to_59():
     assert not allowed("60", 59)
 
 
-@pytest.mark.parametrize("text, delta, maximum, result", [
-    ("09", 1, 23, "10"),
-    ("23", 1, 23, "00"),
-    ("00", -1, 23, "23"),
-    ("59", 1, 59, "00"),
-    ("", 1, 59, "01"),
-])
+@pytest.mark.parametrize(
+    "text, delta, maximum, result",
+    [
+        ("09", 1, 23, "10"),
+        ("23", 1, 23, "00"),
+        ("00", -1, 23, "23"),
+        ("59", 1, 59, "00"),
+        ("", 1, 59, "01"),
+    ],
+)
 def test_stepping_wraps_around(text, delta, maximum, result):
     assert step(text, delta, maximum) == result
 

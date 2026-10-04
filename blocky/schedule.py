@@ -11,7 +11,7 @@ class Schedule:
 
 
 def parse_time(text: str) -> str:
-    match = re.fullmatch(r"(\d{1,2}):(\d{2})", text.strip())
+    match = re.fullmatch(r"([0-9]{1,2}):([0-9]{2})", text.strip())
     if not match or int(match[1]) > 23 or int(match[2]) > 59:
         raise ValueError("Use a time like 09:00")
     return f"{int(match[1]):02d}:{match[2]}"

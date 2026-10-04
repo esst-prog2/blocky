@@ -54,17 +54,23 @@ def describe_schedule(weekdays: list[int], start: str, end: str) -> str:
 def rows(events: list[dict], overrides: list[dict]) -> list[Row]:
     """All recorded changes, newest first."""
     found = [
-        (datetime.fromisoformat(entry["timestamp"]), EVENTS.get(entry["type"], entry["type"]),
-         entry.get("item", ""), entry.get("details", ""))
+        (
+            datetime.fromisoformat(entry["timestamp"]),
+            EVENTS.get(entry["type"], entry["type"]),
+            entry.get("item", ""),
+            entry.get("details", ""),
+        )
         for entry in events
     ]
     for entry in overrides:
         undo = entry.get("type") == "undo"
-        found.append((
-            datetime.fromisoformat(entry["timestamp"]),
-            EVENTS["undo" if undo else "override"],
-            entry["domain"],
-            "" if undo else entry.get("reason", ""),
-        ))
+        found.append(
+            (
+                datetime.fromisoformat(entry["timestamp"]),
+                EVENTS["undo" if undo else "override"],
+                entry["domain"],
+                "" if undo else entry.get("reason", ""),
+            )
+        )
     ordered = sorted(enumerate(found), key=lambda pair: (pair[1][0], pair[0]), reverse=True)
     return [Row(*row) for _, row in ordered]

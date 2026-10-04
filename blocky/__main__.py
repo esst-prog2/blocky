@@ -69,9 +69,7 @@ def main() -> None:
     worker = threading.Thread(target=checker.run, args=(stop,), daemon=True)
     worker.start()
 
-    server, server_warning = start_block_page(
-        lambda: rules.snapshot(config_module.load(config_path), datetime.now())
-    )
+    server, server_warning = start_block_page(lambda: rules.snapshot(config_module.load(config_path), datetime.now()))
 
     try:
         App(
