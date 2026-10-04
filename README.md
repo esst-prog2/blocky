@@ -31,7 +31,7 @@ in between   a background checker compares the current time against each
 - A live status panel showing which domains are currently blocked and time remaining until the next change
 - A manual override: pick a domain, type a required reason, and it's unblocked until the current scheduled block window ends — logged with domain, timestamp, and reason. The override can be undone at any time, which re-blocks the domain at once; the history keeps the override line and adds an "override undone" line
 - A history tab listing past overrides
-- A shared shortlist of productive suggestions, defined once in the app, shown on a local page served by the app; a Brave extension sends the tab there whenever a blocked domain is requested or a new tab is opened
+- A shared shortlist of productive suggestions, defined once in the app, shown on the block page served by the app; a Brave extension sends the tab there whenever a blocked domain is requested
 **Not this term:**
 - Blocking specific pages/paths rather than whole domains (would need a proxy or browser extension)
 - Multiple named schedule profiles (e.g. "Study Mode" vs "Deep Work") — one active schedule only
@@ -63,7 +63,7 @@ in between   a background checker compares the current time against each
 - **Data/privacy.** All data is local config (my own block list and schedule) with no personal or sensitive third-party data involved, so the full real setup can be shown in class.
 ## Tech
  
-Python, with a `customtkinter` UI for a modern look with minimal setup overhead. A local HTTP server in the app serves the shortlist and block page; a Brave extension (Chromium, Manifest V3) redirects blocked requests and replaces the new-tab page. Config (block list + schedule) is stored as YAML under the hood but never hand-edited — all changes go through the app.
+Python, with a `customtkinter` UI for a modern look with minimal setup overhead. A local HTTP server in the app serves the block page with the shortlist; a Brave extension (Chromium, Manifest V3) redirects blocked requests to it. Config (block list + schedule) is stored as YAML under the hood but never hand-edited — all changes go through the app.
 
 ## Running it
 

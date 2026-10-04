@@ -24,8 +24,8 @@ def fetch(server, path):
         return response.status, response.headers.get("Content-Type"), response.read().decode("utf-8")
 
 
-def test_home_shows_escaped_shortlist(server):
-    status, _, body = fetch(server, "/")
+def test_blocked_page_shows_escaped_shortlist(server):
+    status, _, body = fetch(server, "/blocked?domain=reddit.com")
     assert status == 200
     assert "10-minute walk" in body
     assert "&lt;b&gt;read&lt;/b&gt;" in body
@@ -82,8 +82,8 @@ def test_server_refuses_connections_after_stop():
         urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=2)
 
 
-# "/about" sorts before the real paths, "/nope" after them.
-@pytest.mark.parametrize("path", ["/nope", "/about"])
+# "/" was the new tab's page; "/about" sorts before the real paths, "/nope" after them.
+@pytest.mark.parametrize("path", ["/", "/nope", "/about"])
 def test_unknown_path_returns_404(server, path):
     with pytest.raises(urllib.error.HTTPError) as error:
         fetch(server, path)

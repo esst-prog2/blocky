@@ -5,7 +5,7 @@ import pytest
 from blocky import config as config_module
 from blocky import rules
 from blocky.controller import Controller, warning_text
-from blocky.server import render_home
+from blocky.server import render_blocked
 
 MONDAY_2PM = datetime(2026, 10, 5, 14, 0)
 
@@ -99,7 +99,7 @@ def test_suggestions_are_added_edited_and_removed_one_at_a_time(make):
     controller.remove_suggestion(0)
     assert controller.config.shortlist == ["Tidy the desk"]
     state = rules.snapshot(config_module.load(make.path), MONDAY_2PM)
-    assert "Tidy the desk" in render_home(state)
+    assert "Tidy the desk" in render_blocked(state, "reddit.com")
 
 
 def test_duplicate_or_empty_suggestion_is_refused(make):

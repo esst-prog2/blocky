@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Blocky",
   "version": "0.1.0",
-  "description": "Shows Blocky's suggestions in new tabs and sends blocked sites to them.",
+  "description": "Sends blocked sites to Blocky's block page, with your suggestions.",
   "permissions": [
     "webNavigation",
     "alarms"
@@ -13,9 +13,6 @@
   "background": {
     "service_worker": "background.js",
     "type": "module"
-  },
-  "chrome_url_overrides": {
-    "newtab": "newtab.html"
   },
   "icons": {
     "16": "icons/icon-16.png",
