@@ -6,4 +6,4 @@
 
 ## 2. Record
 
-- [ ] 2.1 Log the change in `PLANNING_LOG.md` and archive this change
+- [x] 2.1 Log the change in `PLANNING_LOG.md` and archive this change
