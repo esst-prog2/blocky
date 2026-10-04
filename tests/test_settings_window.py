@@ -163,34 +163,34 @@ def test_redraw_never_shows_another_tab_in_between(window, monkeypatch):
 def open_font_list(app):
     app.tabs.set("Settings")
     app.update()
-    app.font_menu_button.invoke()
+    app.font_list.button.invoke()
     app.update()
-    return app.font_list
+    return app.font_list.popup
 
 
 def visible_fonts(app):
-    canvas = app.font_scroll._parent_canvas
+    canvas = app.font_list.scroll._parent_canvas
     top, bottom = canvas.winfo_rooty(), canvas.winfo_rooty() + canvas.winfo_height()
     return [
         name
-        for name, option in app.font_options.items()
+        for name, option in app.font_list.options.items()
         if top - 1 <= option.winfo_rooty() and option.winfo_rooty() + option.winfo_height() <= bottom + 1
     ]
 
 
 def test_font_button_shows_the_current_font_in_itself(window):
     app = window(Settings(font="Corbel"))
-    assert app.font_menu_button.cget("font").cget("family") == "Corbel"
-    assert app.font_menu_button.cget("text").startswith("Corbel")
+    assert app.font_list.button.cget("font").cget("family") == "Corbel"
+    assert app.font_list.button.cget("text").startswith("Corbel")
 
 
 def test_font_list_shows_each_font_in_itself(window):
     app = window()
     open_font_list(app)
-    assert list(app.font_options) == list(settings_module.FONTS)
-    for name, option in app.font_options.items():
+    assert list(app.font_list.options) == list(settings_module.FONTS)
+    for name, option in app.font_list.options.items():
         assert option.cget("font").cget("family") == t.font_spec("body", name)[0]
-    assert app.font_options["Segoe UI Variable"].cget("fg_color") == t.DEEP  # the current one stands out
+    assert app.font_list.options["Segoe UI Variable"].cget("fg_color") == t.DEEP  # the current one stands out
 
 
 @pytest.mark.parametrize("size", settings_module.TEXT_SIZES)
@@ -204,14 +204,14 @@ def test_font_list_shows_four_whole_rows_with_the_current_font(window, size, fon
     assert len(rows) == 4
     assert rows[0] == first
     assert font in rows
-    assert app.font_list.winfo_width() == app.font_menu_button.winfo_width()
+    assert app.font_list.popup.winfo_width() == app.font_list.button.winfo_width()
 
 
 def test_wheel_moves_the_font_list_one_row_and_not_the_page(window):
     app = window(Settings(text_size="extra-large"))
     open_font_list(app)
     page = app.settings_scroll._parent_canvas.yview()
-    wheel = app.font_options["Segoe UI"]._canvas
+    wheel = app.font_list.options["Segoe UI"]._canvas
     for expected in ("Segoe UI", "Bahnschrift"):
         wheel.event_generate("<MouseWheel>", delta=-120, x=5, y=5)
         app.update()
@@ -231,17 +231,17 @@ def test_font_list_closes_with_escape_a_second_click_or_a_click_elsewhere(window
     popup = open_font_list(app)
     popup.event_generate("<Escape>")
     app.update()
-    assert app.font_list is None
+    assert app.font_list.popup is None
 
     open_font_list(app)
-    app.font_menu_button.invoke()
+    app.font_list.button.invoke()
     app.update()
-    assert app.font_list is None
+    assert app.font_list.popup is None
 
     popup = open_font_list(app)
     popup.event_generate("<Button-1>", x=-50, y=-50)
     app.update()
-    assert app.font_list is None
+    assert app.font_list.popup is None
     assert app.controller.config.settings.font == "Segoe UI Variable"
 
 
@@ -250,15 +250,15 @@ def test_a_click_inside_the_font_list_keeps_it_open(window):
     popup = open_font_list(app)
     popup.event_generate("<Button-1>", x=5, y=5)
     app.update()
-    assert app.font_list is popup
+    assert app.font_list.popup is popup
 
 
 def test_font_choice_changes_the_window_and_is_kept(window, tmp_path):
     app = window()
     open_font_list(app)
-    app.font_options["Georgia"].invoke()
+    app.font_list.options["Georgia"].invoke()
     app.update()
-    assert app.font_list is None
+    assert app.font_list.popup is None
     assert app.tabs.get() == "Settings"
     assert app.status_label.cget("font").cget("family") == "Georgia"
     assert app.list_title.cget("font").cget("family") == "Georgia"
@@ -417,7 +417,7 @@ def test_font_list_keeps_the_button_width_when_its_monitor_scaling_changes(windo
     app = window()
     popup = open_font_list(app)
     width = popup.winfo_width()
-    assert width == app.font_menu_button.winfo_width()
+    assert width == app.font_list.button.winfo_width()
     real = ScalingTracker.get_window_dpi_scaling
     monkeypatch.setattr(ScalingTracker, "get_window_dpi_scaling", lambda w: real(w) / 2 if w is popup else real(w))
     ScalingTracker.check_dpi_scaling()  # what customtkinter runs every 100 ms
@@ -431,7 +431,7 @@ def test_closed_font_list_is_no_longer_tracked_for_dpi(window):
     app = window()
     popup = open_font_list(app)
     assert popup in ScalingTracker.window_dpi_scaling_dict
-    app._close_font_list()
+    app.font_list.close()
     assert popup not in ScalingTracker.window_dpi_scaling_dict
     assert popup not in ScalingTracker.window_widgets_dict
 

@@ -3,6 +3,7 @@
 from dataclasses import asdict, dataclass, replace
 
 from blocky.clock import TimeStyle
+from blocky.language import LANGUAGES, marked
 
 DARK_THEMES = ("forest", "navy")
 LIGHT_THEMES = ("sand", "aqua", "blossom")
@@ -24,6 +25,19 @@ TEXT_SIZES = {"small": 0.9, "normal": 1.0, "large": 1.15, "extra-large": 1.3}
 TIME_FORMATS = ("24h", "12h")
 FIRST_DAYS = {"monday": 0, "saturday": 5, "sunday": 6}  # the first days used around the world
 
+# Theme and text size names as shown, in English; the window shows them translated.
+NAMES = {
+    "forest": marked("Forest"),
+    "navy": marked("Navy"),
+    "sand": marked("Sand"),
+    "aqua": marked("Aqua"),
+    "blossom": marked("Blossom"),
+    "small": marked("Small"),
+    "normal": marked("Normal"),
+    "large": marked("Large"),
+    "extra-large": marked("Extra large"),
+}
+
 PERSONALIZE_KEY = r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
 INTERNATIONAL_KEY = r"Control Panel\International"
 
@@ -37,6 +51,7 @@ class Settings:
     text_size: str = "normal"
     time_format: str = FOLLOW_WINDOWS
     first_day: str = FOLLOW_WINDOWS
+    language: str = FOLLOW_WINDOWS
 
 
 CHOICES = {
@@ -47,6 +62,7 @@ CHOICES = {
     "text_size": tuple(TEXT_SIZES),
     "time_format": (FOLLOW_WINDOWS, *TIME_FORMATS),
     "first_day": (FOLLOW_WINDOWS, *FIRST_DAYS),
+    "language": (FOLLOW_WINDOWS, *LANGUAGES),
 }
 
 
@@ -115,8 +131,20 @@ def windows_time() -> WindowsTime:
     )
 
 
-def time_style(settings: Settings, windows: WindowsTime) -> TimeStyle:
-    """The time format and first day the window uses: the chosen ones, or Windows' under Follow Windows."""
+def time_style(settings: Settings, windows: WindowsTime, language: str = "en") -> TimeStyle:
+    """The time format and first day the window uses: the chosen ones, or Windows' under Follow Windows.
+
+    `language` is the effective language, which sets the day and month names and the AM/PM markers.
+    """
     twelve_hour = windows.twelve_hour if settings.time_format == FOLLOW_WINDOWS else settings.time_format == "12h"
     first_day = windows.first_day if settings.first_day == FOLLOW_WINDOWS else FIRST_DAYS[settings.first_day]
-    return TimeStyle(twelve_hour=twelve_hour, first_day=first_day)
+    return TimeStyle(twelve_hour=twelve_hour, first_day=first_day, language=language)
+
+
+def effective_language(settings: Settings, windows: str) -> str:
+    """The language Blocky writes in: the chosen one, or under Follow Windows Windows' display language.
+
+    English when Windows uses a language Blocky does not have.
+    """
+    chosen = windows if settings.language == FOLLOW_WINDOWS else settings.language
+    return chosen if chosen in LANGUAGES else "en"

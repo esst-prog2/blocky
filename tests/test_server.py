@@ -273,3 +273,71 @@ def test_state_for_the_extension_keeps_24_hour_time():
         assert heading(fetch(srv, "/reddit.com")[2]) == "reddit.com is blocked until 5:00 PM"
     finally:
         srv.stop()
+
+
+# Languages
+
+
+def in_language(code, twelve_hour=False, **extra):
+    return {**state(), "timeStyle": {"twelveHour": twelve_hour, "firstDay": 0}, "language": code, **extra}
+
+
+@pytest.mark.parametrize(
+    "code, blocked, not_blocked, lead",
+    [
+        (
+            "en",
+            "reddit.com is blocked until 17:00",
+            "example.com is not blocked right now",
+            "Try one of these instead:",
+        ),
+        (
+            "nl",
+            "reddit.com is geblokkeerd tot 17:00",
+            "example.com is nu niet geblokkeerd",
+            "Probeer in plaats daarvan",
+        ),
+        ("hu", "reddit.com tiltva eddig: 17:00", "example.com most nincs tiltva", "Próbáld inkább ezek egyikét:"),
+    ],
+)
+def test_block_page_in_each_language(code, blocked, not_blocked, lead):
+    page = render_blocked(in_language(code), "reddit.com")
+    assert heading(page) == blocked
+    assert f'<html lang="{code}">' in page
+    assert lead in page
+    assert "<li>10-minute walk</li>" in page  # suggestions as typed
+    assert heading(render_blocked(in_language(code), "example.com")) == not_blocked
+
+
+def test_block_page_in_hungarian_12_hour_time():
+    page = render_blocked(in_language("hu", twelve_hour=True), "reddit.com")
+    assert heading(page) == "reddit.com tiltva eddig: du. 5:00"
+    assert '<span class="chip">du. 5:00</span>' in page
+
+
+def test_empty_shortlist_in_dutch():
+    page = render_blocked({**in_language("nl"), "shortlist": []}, "reddit.com")
+    assert "Nog geen suggesties. Voeg ze toe in Blocky." in page
+
+
+@pytest.mark.parametrize("code", [None, "fr", 3, "NL"])
+def test_missing_or_unknown_language_gives_english(code):
+    page = render_blocked({**state(), "language": code}, "reddit.com")
+    assert heading(page) == "reddit.com is blocked until 17:00"
+    assert '<html lang="en">' in page
+
+
+def test_domain_is_still_escaped_in_another_language():
+    page = render_blocked({**in_language("nl"), "blocked": ["<x>.com"]}, "<x>.com")
+    assert "<strong>&lt;x&gt;.com</strong>" in page
+
+
+def test_state_for_the_extension_keeps_its_fields_in_another_language():
+    srv = Server(lambda: in_language("hu", twelve_hour=True), port=0, page_port=None)
+    srv.start()
+    try:
+        status, _, body = fetch(srv, "/api/state")
+    finally:
+        srv.stop()
+    data = json.loads(body)
+    assert (status, data["windowEnd"], data["blocked"]) == (200, "17:00", ["reddit.com", "www.reddit.com"])

@@ -2,6 +2,7 @@ import threading
 from pathlib import Path
 
 from blocky.files import write_safely
+from blocky.language import shown
 
 HOSTS_PATH = Path(r"C:\Windows\System32\drivers\etc\hosts")
 BEGIN = "# BEGIN BLOCKY"
@@ -22,16 +23,16 @@ def render(text: str, hostnames: list[str]) -> str:
         marker = line.strip()
         if marker == BEGIN:
             if inside:
-                raise ValueError("Nested Blocky section in the hosts file")
+                raise ValueError(shown("Nested Blocky section in the hosts file"))
             inside = True
         elif marker == END:
             if not inside:
-                raise ValueError("Blocky section end without a start in the hosts file")
+                raise ValueError(shown("Blocky section end without a start in the hosts file"))
             inside = False
         elif not inside:
             kept.append(line)
     if inside:
-        raise ValueError("Unterminated Blocky section in the hosts file")
+        raise ValueError(shown("Unterminated Blocky section in the hosts file"))
     if hostnames:
         kept.extend([BEGIN, *(f"127.0.0.1 {host}" for host in hostnames), END])
     return "".join(line + newline for line in kept)

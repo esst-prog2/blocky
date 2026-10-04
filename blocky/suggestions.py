@@ -1,3 +1,5 @@
+from blocky.language import _
+
 MAX_LENGTH = 120
 
 
@@ -5,12 +7,12 @@ def check(text: str, existing: list[str], original: str | None = None) -> str:
     """Return the suggestion as it will be stored, or raise ValueError saying why it cannot be."""
     cleaned = " ".join(text.split())
     if not cleaned:
-        raise ValueError("Type a suggestion")
+        raise ValueError(_("Type a suggestion"))
     if len(cleaned) > MAX_LENGTH:
-        raise ValueError(f"Keep it to {MAX_LENGTH} characters")
+        raise ValueError(_("Keep it to {count} characters", count=MAX_LENGTH))
     others = [item.lower() for item in existing if item != original]
     if cleaned.lower() in others:
-        raise ValueError(f"“{cleaned}” is already in the list")
+        raise ValueError(_("“{text}” is already in the list", text=cleaned))
     return cleaned
 
 

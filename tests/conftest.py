@@ -5,7 +5,7 @@ import customtkinter as ctk
 import pytest
 from hypothesis import settings
 
-from blocky import theme
+from blocky import language, theme
 from blocky.app import App
 from blocky.settings import WindowsTime
 
@@ -16,10 +16,12 @@ settings.load_profile(os.environ.get("HYPOTHESIS_PROFILE", "default"))
 
 @pytest.fixture(autouse=True)
 def default_look():
-    # The current theme is module state; every test starts and ends with today's look.
+    # The current theme and language are module state; every test starts and ends with today's look, in English.
     theme.apply()
+    language.apply("en")
     yield
     theme.apply()
+    language.apply("en")
 
 
 @pytest.fixture
@@ -30,6 +32,8 @@ def open_app():
         # Follow Windows would read this machine's regional settings; tests expect 24-hour time and Monday first
         # unless they choose otherwise (GitHub's Windows runner uses US settings).
         kwargs.setdefault("windows_time", lambda: WindowsTime())
+        # Likewise Windows' display language: English unless a test chooses another (the owner's Windows is Dutch).
+        kwargs.setdefault("windows_language", lambda: "en")
         for attempt in range(3):
             try:
                 return App(*args, **kwargs)

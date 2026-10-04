@@ -1,8 +1,20 @@
+from datetime import datetime
 from itertools import pairwise
 
 import pytest
 
-from blocky.clock import TimeStyle, day_order, describe_days, describe_schedule, format_hhmm, format_time
+from blocky.clock import (
+    TimeStyle,
+    day_name,
+    day_order,
+    describe_days,
+    describe_schedule,
+    format_date,
+    format_duration,
+    format_hhmm,
+    format_time,
+    full_day_name,
+)
 
 TWELVE = TimeStyle(twelve_hour=True)
 SUNDAY_FIRST = TimeStyle(first_day=6)
@@ -73,3 +85,96 @@ def test_time_style_cannot_change_in_place():
 
     with pytest.raises(dataclasses.FrozenInstanceError):
         DEFAULT_STYLE.twelve_hour = True  # type: ignore[misc]
+
+
+# Languages
+
+DUTCH = TimeStyle(language="nl")
+HUNGARIAN = TimeStyle(language="hu")
+SUNDAY_4_OCT_1705 = datetime(2026, 10, 4, 17, 5)
+
+
+@pytest.mark.parametrize(
+    "style, text",
+    [
+        (TimeStyle(), "Sun 4 Oct 2026, 17:05"),
+        (DUTCH, "zo 4 okt 2026, 17:05"),
+        (HUNGARIAN, "2026. okt. 4. (V), 17:05"),
+        (TimeStyle(twelve_hour=True), "Sun 4 Oct 2026, 5:05 PM"),
+        (TimeStyle(twelve_hour=True, language="nl"), "zo 4 okt 2026, 5:05 p.m."),
+        (TimeStyle(twelve_hour=True, language="hu"), "2026. okt. 4. (V), du. 5:05"),
+    ],
+)
+def test_history_date_in_each_language(style, text):
+    assert format_date(SUNDAY_4_OCT_1705, style) == text
+
+
+@pytest.mark.parametrize("month", range(1, 13))
+def test_every_month_matches_the_c_locale_in_english(month):
+    moment = datetime(2026, month, 1, 9, 0)
+    assert format_date(moment, TimeStyle()) == f"{moment:%a} 1 {moment:%b %Y}, 09:00"
+
+
+@pytest.mark.parametrize(
+    "code, midnight, noon, evening",
+    [
+        ("en", "12:00 AM", "12:00 PM", "5:05 PM"),
+        ("nl", "12:00 a.m.", "12:00 p.m.", "5:05 p.m."),
+        ("hu", "de. 12:00", "du. 12:00", "du. 5:05"),
+    ],
+)
+def test_twelve_hour_markers_in_each_language(code, midnight, noon, evening):
+    style = TimeStyle(twelve_hour=True, language=code)
+    assert [format_time(0, 0, style), format_time(12, 0, style), format_time(17, 5, style)] == [midnight, noon, evening]
+
+
+@pytest.mark.parametrize("code", ["en", "nl", "hu"])
+def test_24_hour_times_are_the_same_in_every_language(code):
+    assert format_time(17, 5, TimeStyle(language=code)) == "17:05"
+
+
+@pytest.mark.parametrize(
+    "code, short, full",
+    [
+        ("en", "Mon Tue Wed Thu Fri Sat Sun", "Monday Sunday"),
+        ("nl", "ma di wo do vr za zo", "maandag zondag"),
+        ("hu", "H K Sze Cs P Szo V", "hétfő vasárnap"),
+    ],
+)
+def test_day_names_in_each_language(code, short, full):
+    style = TimeStyle(language=code)
+    assert " ".join(day_name(day, style) for day in range(7)) == short
+    assert f"{full_day_name(0, style)} {full_day_name(6, style)}" == full
+
+
+@pytest.mark.parametrize(
+    "code, text", [("en", "Mon–Fri, 09:00–17:00"), ("nl", "ma–vr, 09:00–17:00"), ("hu", "H–P, 09:00–17:00")]
+)
+def test_schedule_description_in_each_language(code, text):
+    assert describe_schedule([0, 1, 2, 3, 4], "09:00", "17:00", TimeStyle(language=code)) == text
+
+
+def test_no_days_in_each_language(monkeypatch):
+    from blocky import language
+
+    monkeypatch.setitem(language.NL, "no days", "geen dagen")
+    assert describe_days([], DUTCH) == "geen dagen"
+
+
+@pytest.mark.parametrize(
+    "code, short, long", [("en", "0h 05m", "12h 30m"), ("nl", "0u 05m", "12u 30m"), ("hu", "0ó 05p", "12ó 30p")]
+)
+def test_durations_in_each_language(code, short, long):
+    assert format_duration(5, code) == short
+    assert format_duration(750, code) == long
+
+
+def test_unknown_language_writes_english():
+    style = TimeStyle(twelve_hour=True, language="fr")
+    assert format_date(SUNDAY_4_OCT_1705, style) == "Sun 4 Oct 2026, 5:05 PM"
+    assert format_duration(65, "fr") == "1h 05m"
+
+
+@pytest.mark.parametrize(("minutes", "text"), [(59, "0h 59m"), (60, "1h 00m"), (180, "3h 00m"), (61 * 60, "61h 00m")])
+def test_durations_split_hours_at_sixty_minutes(minutes, text):
+    assert format_duration(minutes, "en") == text

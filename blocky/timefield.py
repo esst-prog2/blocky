@@ -73,10 +73,13 @@ class _Box(ctk.CTkEntry):
 class TimeField(ctk.CTkFrame):
     """An HH : MM time input that only ever holds a valid time; in 12-hour form an hour from 1 to 12 and AM/PM."""
 
-    def __init__(self, parent: ctk.CTkFrame, value: str, twelve_hour: bool = False) -> None:
+    def __init__(
+        self, parent: ctk.CTkFrame, value: str, twelve_hour: bool = False, periods: tuple[str, str] = ("AM", "PM")
+    ) -> None:
         super().__init__(parent, fg_color="transparent")
         saved = time.fromisoformat(value)
         self.twelve_hour = twelve_hour
+        self.periods = periods  # the markers for before and after noon, in the user's language
         if twelve_hour:
             hour, pm = to_twelve_hour(saved.hour)
             self.hour = _Box(self, hour, 12, minimum=1, pad=False)
@@ -90,7 +93,7 @@ class TimeField(ctk.CTkFrame):
         if twelve_hour:
             self.period = ctk.CTkSegmentedButton(
                 self,
-                values=["AM", "PM"],
+                values=list(periods),
                 font=theme.font("button"),
                 height=theme.CONTROL_HEIGHT,
                 corner_radius=8,
@@ -101,12 +104,12 @@ class TimeField(ctk.CTkFrame):
                 unselected_hover_color=theme.HOVER,
                 text_color=theme.ON_DEEP,
             )
-            self.period.set("PM" if pm else "AM")
+            self.period.set(periods[pm])
             self.period.pack(side="left", padx=(theme.GAP, 0))
 
     def get(self) -> str:
         """The time as stored: 24-hour 'HH:MM'."""
         hour = int(self.hour.settle())
         if self.period is not None:
-            hour = to_24_hour(hour, self.period.get() == "PM")
+            hour = to_24_hour(hour, self.period.get() == self.periods[1])
         return f"{hour:02d}:{self.minute.settle()}"
