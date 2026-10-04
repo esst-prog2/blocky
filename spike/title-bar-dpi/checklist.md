@@ -15,7 +15,7 @@ Do the steps below for v1 first (to see today's behaviour), then for v2:
 |---|---|---|
 | 1 | Start the window on the laptop screen | Title bar and contents normal size? |
 | 2 | Drag the window to the monitor | Title bar the right size for the monitor? Contents the right size? Does the window grow, shrink or jump? |
-| 3 | On the monitor, resize the window by its edge, then maximise it and restore it | Does it behave normally? |
+| 3 | On the monitor, drag the window's bottom-right corner to make it bigger, then click the square button at the top right to maximise it, and click it again to restore it | Does the window end up the size you expect, or does it grow, shrink or jump by itself? |
 | 4 | On the monitor, open Settings and the font list | Is the list as wide as its button, four rows tall? |
 | 5 | Change the theme on the monitor | Does the window redraw normally? |
 | 6 | Drag the window back to the laptop screen | Title bar and contents back to normal? Any growth or jump? |
