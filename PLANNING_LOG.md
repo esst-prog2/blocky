@@ -234,3 +234,5 @@
 2026-10-04 | Running the tests in parallel (pytest-xdist) was measured and dropped: 160 s instead of 170 s, and a window test failed under the load | agent decided
 2026-10-04 | The title bar that stays at the laptop's size on a second monitor is checked in a spike after settings-appearance, as its own change | you decided
 2026-10-04 | settings-appearance manual check PASSED: themes, fonts and sizes in the window, the block page in Brave, Follow Windows, Reset with Undo, and the font list on the second monitor | observed by you
+2026-10-04 | Spike title-bar-dpi question: does the title bar match each monitor's scaling with per-monitor v2 DPI mode instead of customtkinter's per-monitor v1, without breaking the rest of the window? | agent proposed, you decided
+2026-10-04 | Spike title-bar-dpi answer criteria: six steps in spike/title-bar-dpi/checklist.md, run in v1 and then v2 with spike/title-bar-dpi/run.py; pass = in v2 the title bar has the right size on both screens and nothing grows, shrinks, jumps or has a wrong size that v1 does not also show | agent proposed
