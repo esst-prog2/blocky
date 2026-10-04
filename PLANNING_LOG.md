@@ -146,3 +146,4 @@
 2026-10-04 | Survivors went from 135 to 37 with new tests for the real gaps; the 37 left are judged harmless: tuning constants (retry count and delay, check interval), layout sizes, `is` vs `==` on objects CPython shares, index changes Tk clamps on an empty box, YAML key order, split limits that give the same result, wheel deltas of 0 or 1 that Windows does not send, and the first of a repeated URL parameter | agent decided
 2026-10-04 | Overrides saved without a "type" field (written by the first version) must keep working in rules and history; now covered by tests | agent decided
 2026-10-04 | server's mutation tests include test_extension_files, which guards the port the extension shares with the app; widget tests share one tk_root fixture in tests/conftest.py | agent decided
+2026-10-04 | test/rigorous-checks merged into main and pushed, which starts the CI workflow's first run | you decided
