@@ -10,5 +10,5 @@
 ## 3. Checks and record
 
 - [x] 3.1 Run ruff check, ruff format --check, mypy, pytest and the extension tests, and verify all pass
-- [ ] 3.2 Manual check by the owner: after reloading the extension, a blocked site opens at `blocky.localhost/<domain>` in Brave
-- [ ] 3.3 Log the change in `PLANNING_LOG.md`, update the README and archive this change
+- [x] 3.2 Manual check by the owner: after reloading the extension, a blocked site opens at `blocky.localhost/<domain>` in Brave
+- [x] 3.3 Log the change in `PLANNING_LOG.md`, update the README and archive this change

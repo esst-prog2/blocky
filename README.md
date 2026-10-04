@@ -63,7 +63,7 @@ in between   a background checker compares the current time against each
 - **Data/privacy.** All data is local config (my own block list and schedule) with no personal or sensitive third-party data involved, so the full real setup can be shown in class.
 ## Tech
  
-Python, with a `customtkinter` UI for a modern look with minimal setup overhead. A local HTTP server in the app serves the block page with the shortlist; a Brave extension (Chromium, Manifest V3) redirects blocked requests to it. Config (block list + schedule) is stored as YAML under the hood but never hand-edited — all changes go through the app.
+Python, with a `customtkinter` UI for a modern look with minimal setup overhead. A local HTTP server in the app serves the block page with the shortlist at `blocky.localhost/<domain>` (port 80 when it is free, otherwise `blocky.localhost:8765`); a Brave extension (Chromium, Manifest V3) redirects blocked requests to it. Config (block list + schedule) is stored as YAML under the hood but never hand-edited — all changes go through the app.
 
 ## Running it
 
