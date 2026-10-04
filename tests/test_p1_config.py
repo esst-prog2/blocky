@@ -77,6 +77,7 @@ def test_damaged_part_of_a_config_is_named_in_the_warning(tmp_path, text, reason
     path.write_text(text, encoding="utf-8")
     config, warning = config_module.load_or_recover(path, MONDAY_2PM)
     assert config == Config()
+    assert warning is not None
     assert reason in warning
     assert len(list(tmp_path.glob("config.yaml.damaged-*"))) == 1
 
@@ -91,6 +92,7 @@ def test_invalid_domains_in_a_good_config_are_skipped_with_a_warning(tmp_path):
     path.write_text("domains:\n- reddit.com\n- not a domain\n", encoding="utf-8")
     config, warning = config_module.load_or_recover(path, MONDAY_2PM)
     assert config.domains == ["reddit.com"]
+    assert warning is not None
     assert "not a domain" in warning
     assert path.exists()
 
@@ -114,5 +116,6 @@ def test_config_without_events_loads_with_an_empty_history(tmp_path):
 def test_config_with_a_broken_history_entry_counts_as_damaged(tmp_path):
     path = tmp_path / "config.yaml"
     path.write_text("domains: []\nevents:\n- type: site_added\n  timestamp: yesterday\n", encoding="utf-8")
-    config, warning = config_module.load_or_recover(path, MONDAY_2PM)
+    _, warning = config_module.load_or_recover(path, MONDAY_2PM)
+    assert warning is not None
     assert "history entry" in warning

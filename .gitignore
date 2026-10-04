@@ -216,3 +216,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Mutation testing results (tools/mutation_test.py)
+.mutation/

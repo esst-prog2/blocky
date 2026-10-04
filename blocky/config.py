@@ -119,5 +119,6 @@ def load_or_recover(path: Path, now: datetime) -> tuple[Config, str | None]:
 
 def save(path: Path, config: Config) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    text = yaml.safe_dump(asdict(config), sort_keys=False, allow_unicode=True)
+    # Escaping non-ASCII keeps every character intact; PyYAML would read an unescaped U+0085 back as a space.
+    text = yaml.safe_dump(asdict(config), sort_keys=False, allow_unicode=False)
     write_safely(path, text.encode("utf-8"))

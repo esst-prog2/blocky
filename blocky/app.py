@@ -36,10 +36,17 @@ class App(ctk.CTk):
 
         self._build_header()
         self.tabs = ctk.CTkTabview(
-            self, fg_color=t.BACKGROUND, anchor="nw", corner_radius=0, border_width=0,
-            segmented_button_fg_color=t.CARD, segmented_button_selected_color=t.DEEP,
-            segmented_button_selected_hover_color=t.DEEP, segmented_button_unselected_color=t.CARD,
-            segmented_button_unselected_hover_color=t.HOVER, text_color=t.TEXT,
+            self,
+            fg_color=t.BACKGROUND,
+            anchor="nw",
+            corner_radius=0,
+            border_width=0,
+            segmented_button_fg_color=t.CARD,
+            segmented_button_selected_color=t.DEEP,
+            segmented_button_selected_hover_color=t.DEEP,
+            segmented_button_unselected_color=t.CARD,
+            segmented_button_unselected_hover_color=t.HOVER,
+            text_color=t.TEXT,
         )
         # CTkTabview has no font option; its tab buttons are styled through the inner segmented button.
         self.tabs._segmented_button.configure(font=t.font("button"), height=36, corner_radius=8)
@@ -243,7 +250,9 @@ class App(ctk.CTk):
         self.list_title = t.label(box, "", "title")
         self.list_title.pack(fill="x", padx=t.PAD, pady=(t.PAD - 2, t.GAP))
         self.domain_list = ctk.CTkScrollableFrame(
-            box, fg_color="transparent", scrollbar_button_color=t.DISABLED,
+            box,
+            fg_color="transparent",
+            scrollbar_button_color=t.DISABLED,
             scrollbar_button_hover_color=t.BORDER,
         )
         self.domain_list.pack(fill="both", expand=True, padx=t.PAD - 6, pady=(0, t.PAD - 6))
@@ -263,14 +272,14 @@ class App(ctk.CTk):
             t.list_entry_focus(entry)
             entry.insert(0, domain)
             entry.pack(side="left", fill="x", expand=True, padx=(6, t.GAP))
-            save = t.quiet_button(
-                row, "Save", lambda i=index, e=entry: self._edit_domain(i, e.get()), width=64
-            )
+            save = t.quiet_button(row, "Save", lambda i=index, e=entry: self._edit_domain(i, e.get()), width=64)
             save.pack(side="left", padx=(0, 2))
             t.set_enabled(save, False)
-            entry.on_change = lambda e=entry, b=save, original=domain: t.set_enabled(
-                b, can_save_edit(e.get(), original, self.controller.config.domains)
-            )
+
+            def check_edit(e: DomainField = entry, b: ctk.CTkButton = save, original: str = domain) -> None:
+                t.set_enabled(b, can_save_edit(e.get(), original, self.controller.config.domains))
+
+            entry.on_change = check_edit
             remove = t.quiet_button(row, "Remove", lambda i=index: self._remove_domain(i), width=80)
             t.danger_on_hover(remove)
             remove.pack(side="left")
@@ -372,7 +381,9 @@ class App(ctk.CTk):
         self.shortlist_title = t.label(box, "", "title")
         self.shortlist_title.pack(fill="x", padx=t.PAD, pady=(t.PAD - 2, t.GAP))
         self.suggestion_list = ctk.CTkScrollableFrame(
-            box, fg_color="transparent", scrollbar_button_color=t.DISABLED,
+            box,
+            fg_color="transparent",
+            scrollbar_button_color=t.DISABLED,
             scrollbar_button_hover_color=t.BORDER,
         )
         self.suggestion_list.pack(fill="both", expand=True, padx=t.PAD - 6, pady=(0, t.PAD - 6))
@@ -390,9 +401,7 @@ class App(ctk.CTk):
         shortlist = self.controller.config.shortlist
         self.shortlist_title.configure(text=f"Suggestions ({len(shortlist)})")
         if not shortlist:
-            t.label(self.suggestion_list, "No suggestions yet. Add one above.", "body", t.MUTED).pack(
-                fill="x", padx=6
-            )
+            t.label(self.suggestion_list, "No suggestions yet. Add one above.", "body", t.MUTED).pack(fill="x", padx=6)
         for index, suggestion in enumerate(shortlist):
             row = ctk.CTkFrame(self.suggestion_list, fg_color="transparent")
             row.pack(fill="x", pady=(0, t.GAP - 2))
@@ -452,14 +461,17 @@ class App(ctk.CTk):
         header = self._history_row(body, [name for name, _ in self.HISTORY_COLUMNS], header=True)
         header.pack(fill="x", padx=(6, 22))
         self.history_list = ctk.CTkScrollableFrame(
-            body, fg_color="transparent", scrollbar_button_color=t.DISABLED,
+            body,
+            fg_color="transparent",
+            scrollbar_button_color=t.DISABLED,
             scrollbar_button_hover_color=t.BORDER,
         )
         self.history_list.pack(fill="both", expand=True)
         self._render_history()
 
-    def _history_row(self, parent: ctk.CTkFrame, cells: list[str], header: bool = False,
-                     shaded: bool = False) -> ctk.CTkFrame:
+    def _history_row(
+        self, parent: ctk.CTkFrame, cells: list[str], header: bool = False, shaded: bool = False
+    ) -> ctk.CTkFrame:
         """One table row. Every cell has a fixed, DPI-scaled width, so the columns line up from row to row."""
         row = ctk.CTkFrame(parent, fg_color=t.HOVER if shaded else "transparent", corner_radius=6)
         for column, ((_, width), text) in enumerate(zip(self.HISTORY_COLUMNS, cells, strict=True)):

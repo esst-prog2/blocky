@@ -186,7 +186,7 @@ def started(tmp_path, monkeypatch):
     config_path = tmp_path / "Blocky" / "config.yaml"
     hosts_path = tmp_path / "hosts"
     hosts_path.write_text("127.0.0.1 localhost\n", encoding="utf-8")
-    seen = {"servers": []}
+    seen: dict = {"servers": []}
 
     def server(load_state):
         seen["servers"].append(FakeServer(load_state))

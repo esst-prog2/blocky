@@ -3,6 +3,7 @@
 Every text colour below has at least 4.5:1 contrast on the surface it is used on,
 and input borders at least 3:1, so the window stays readable (WCAG AA).
 """
+
 import customtkinter as ctk
 
 # Palette
@@ -63,18 +64,34 @@ def label(parent, text: str = "", role: str = "body", color: str = TEXT, **kwarg
 
 def primary_button(parent, text: str, command, **kwargs) -> ctk.CTkButton:
     return ctk.CTkButton(
-        parent, text=text, command=command, font=font("button"), height=CONTROL_HEIGHT,
-        corner_radius=8, fg_color=PRIMARY, hover_color=PRIMARY_HOVER,
-        text_color=ON_PRIMARY, text_color_disabled=DISABLED_TEXT, **kwargs,
+        parent,
+        text=text,
+        command=command,
+        font=font("button"),
+        height=CONTROL_HEIGHT,
+        corner_radius=8,
+        fg_color=PRIMARY,
+        hover_color=PRIMARY_HOVER,
+        text_color=ON_PRIMARY,
+        text_color_disabled=DISABLED_TEXT,
+        **kwargs,
     )
 
 
 def quiet_button(parent, text: str, command, color: str = SAGE, **kwargs) -> ctk.CTkButton:
     """A text-only button for secondary or destructive actions."""
     return ctk.CTkButton(
-        parent, text=text, command=command, font=font("button"), height=CONTROL_HEIGHT,
-        corner_radius=8, fg_color="transparent", hover_color=HOVER,
-        text_color=color, text_color_disabled=DISABLED_TEXT, **kwargs,
+        parent,
+        text=text,
+        command=command,
+        font=font("button"),
+        height=CONTROL_HEIGHT,
+        corner_radius=8,
+        fg_color="transparent",
+        hover_color=HOVER,
+        text_color=color,
+        text_color_disabled=DISABLED_TEXT,
+        **kwargs,
     )
 
 
@@ -87,8 +104,14 @@ def set_enabled(button: ctk.CTkButton, enabled: bool) -> None:
 
 def entry_style() -> dict:
     return {
-        "height": CONTROL_HEIGHT, "corner_radius": 8, "border_width": 1, "border_color": BORDER,
-        "fg_color": BACKGROUND, "text_color": TEXT, "placeholder_text_color": MUTED, "font": font("body"),
+        "height": CONTROL_HEIGHT,
+        "corner_radius": 8,
+        "border_width": 1,
+        "border_color": BORDER,
+        "fg_color": BACKGROUND,
+        "text_color": TEXT,
+        "placeholder_text_color": MUTED,
+        "font": font("body"),
     }
 
 
@@ -98,33 +121,64 @@ def entry(parent, **kwargs) -> ctk.CTkEntry:
 
 def option_menu(parent, values: list[str], **kwargs) -> ctk.CTkOptionMenu:
     return ctk.CTkOptionMenu(
-        parent, values=values, height=CONTROL_HEIGHT, corner_radius=8, font=font("body"),
-        dropdown_font=font("body"), fg_color=BACKGROUND, button_color=BACKGROUND,
-        button_hover_color=HOVER, text_color=TEXT, dropdown_fg_color=CARD,
-        dropdown_hover_color=DEEP, dropdown_text_color=TEXT, **kwargs,
+        parent,
+        values=values,
+        height=CONTROL_HEIGHT,
+        corner_radius=8,
+        font=font("body"),
+        dropdown_font=font("body"),
+        fg_color=BACKGROUND,
+        button_color=BACKGROUND,
+        button_hover_color=HOVER,
+        text_color=TEXT,
+        dropdown_fg_color=CARD,
+        dropdown_hover_color=DEEP,
+        dropdown_text_color=TEXT,
+        **kwargs,
     )
 
 
 def checkbox(parent, text: str) -> ctk.CTkCheckBox:
     return ctk.CTkCheckBox(
-        parent, text=text, font=font("body"), text_color=TEXT, fg_color=PRIMARY,
-        hover_color=PRIMARY_HOVER, border_color=BORDER, checkmark_color=ON_PRIMARY,
-        corner_radius=6, border_width=2, width=72,
+        parent,
+        text=text,
+        font=font("body"),
+        text_color=TEXT,
+        fg_color=PRIMARY,
+        hover_color=PRIMARY_HOVER,
+        border_color=BORDER,
+        checkmark_color=ON_PRIMARY,
+        corner_radius=6,
+        border_width=2,
+        width=72,
     )
 
 
 def textbox(parent, **kwargs) -> ctk.CTkTextbox:
     return ctk.CTkTextbox(
-        parent, font=font("body"), fg_color=BACKGROUND, text_color=TEXT, border_width=1,
-        border_color=BORDER, corner_radius=8, scrollbar_button_color=DISABLED,
-        scrollbar_button_hover_color=BORDER, **kwargs,
+        parent,
+        font=font("body"),
+        fg_color=BACKGROUND,
+        text_color=TEXT,
+        border_width=1,
+        border_color=BORDER,
+        corner_radius=8,
+        scrollbar_button_color=DISABLED,
+        scrollbar_button_hover_color=BORDER,
+        **kwargs,
     )
 
 
 def chip(parent, text: str, fg_color: str = BACKGROUND) -> ctk.CTkLabel:
     return ctk.CTkLabel(
-        parent, text=text, font=font("caption"), text_color=TEXT, fg_color=fg_color,
-        corner_radius=12, height=26, padx=10,
+        parent,
+        text=text,
+        font=font("caption"),
+        text_color=TEXT,
+        fg_color=fg_color,
+        corner_radius=12,
+        height=26,
+        padx=10,
     )
 
 
@@ -145,6 +199,8 @@ class Message(ctk.CTkLabel):
             self._sync()
 
     def _sync(self) -> None:
+        if self._pack_options is None:
+            return
         if self.cget("text"):
             super().pack(**self._pack_options)
         else:
@@ -166,7 +222,7 @@ def danger_on_hover(button: ctk.CTkButton) -> None:
 
 
 def _colorref(hex_color: str) -> int:
-    red, green, blue = (int(hex_color[i:i + 2], 16) for i in (1, 3, 5))
+    red, green, blue = (int(hex_color[i : i + 2], 16) for i in (1, 3, 5))
     return red | green << 8 | blue << 16
 
 

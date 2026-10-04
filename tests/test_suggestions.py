@@ -7,14 +7,21 @@ def test_spaces_are_tidied():
     assert check("  10-minute   walk ", []) == "10-minute walk"
 
 
-@pytest.mark.parametrize("text, message", [
-    ("", "Type a suggestion"),
-    ("   ", "Type a suggestion"),
-    ("x" * (MAX_LENGTH + 1), "Keep it to 120 characters"),
-])
+@pytest.mark.parametrize(
+    "text, message",
+    [
+        ("", "Type a suggestion"),
+        ("   ", "Type a suggestion"),
+        ("x" * (MAX_LENGTH + 1), "Keep it to 120 characters"),
+    ],
+)
 def test_empty_or_long_suggestions_are_refused(text, message):
     with pytest.raises(ValueError, match=message):
         check(text, [])
+
+
+def test_a_suggestion_of_the_maximum_length_is_accepted():
+    assert check("x" * MAX_LENGTH, []) == "x" * MAX_LENGTH
 
 
 def test_duplicates_are_refused_ignoring_case():
@@ -35,6 +42,8 @@ def test_hint_explains_a_duplicate():
     assert hint("walk", ["Walk"]) == (False, "\u201cwalk\u201d is already in the list")
 
 
-@pytest.mark.parametrize("text, expected", [("Walk", False), ("Read", False), ("Run", True), ("", False)])
+@pytest.mark.parametrize(
+    "text, expected", [("Walk", False), (" Walk ", False), ("Read", False), ("Run", True), ("Yoga", True), ("", False)]
+)
 def test_edit_can_only_be_saved_when_valid_and_changed(text, expected):
     assert can_save_edit(text, "Walk", ["Walk", "Read"]) is expected

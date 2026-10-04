@@ -46,6 +46,7 @@ def _handler(load_state: Callable[[], dict]) -> type[BaseHTTPRequestHandler]:
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self) -> None:
             url = urlparse(self.path)
+            body: str | bytes
             if url.path == "/":
                 body, content_type = render_home(load_state()), "text/html; charset=utf-8"
             elif url.path == "/blocked":

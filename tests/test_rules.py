@@ -2,7 +2,7 @@ from datetime import datetime
 
 import pytest
 
-from blocky.config import Config
+from blocky.config import Config, load, save
 from blocky.rules import (
     blocked_domains,
     override,
@@ -111,3 +111,23 @@ def test_status_text_with_every_domain_overridden_says_nothing_blocked():
     config = make_config()
     override(config, "reddit.com", "work thread", at(5, 14))
     assert status_text(config, at(5, 14)) == "Window active, nothing blocked — 3h 00m remaining"
+
+
+def test_status_text_shows_hours_and_minutes():
+    assert status_text(make_config(), at(5, 15, 2)) == "Blocking active — 1h 58m remaining"
+
+
+def test_undo_still_counts_after_the_config_is_read_back(tmp_path):
+    config = make_config()
+    override(config, "reddit.com", "reason", at(5, 14))
+    undo_override(config, "reddit.com", at(5, 14, 30))
+    save(tmp_path / "config.yaml", config)
+    assert released_until(load(tmp_path / "config.yaml"), at(5, 14, 31)) == {}
+
+
+def test_override_saved_without_a_type_still_counts():
+    # Blocky's first version wrote overrides without a "type".
+    config = make_config(
+        overrides=[{"domain": "reddit.com", "timestamp": "2026-10-05T14:00:00", "until": "2026-10-05T17:00:00"}]
+    )
+    assert released_until(config, at(5, 14, 30)) == {"reddit.com": at(5, 17)}

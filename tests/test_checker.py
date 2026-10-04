@@ -64,3 +64,26 @@ def test_an_unwritable_error_log_does_not_stop_the_checker(tmp_path):
     blocker.write_text("", encoding="utf-8")
     log_error(blocker / "errors.log", "Background check failed")
     assert blocker.read_text(encoding="utf-8") == ""
+
+
+def test_error_log_folder_is_created(tmp_path):
+    log = tmp_path / "Blocky" / "logs" / "errors.log"
+    log_error(log, "Background check failed")
+    assert "Background check failed" in log.read_text(encoding="utf-8")
+
+
+def test_a_repeating_error_is_logged_once(tmp_path):
+    # A folder where the config should be: reading it fails the same way, with a newly built message each time.
+    config_path = tmp_path / "config.yaml"
+    config_path.mkdir()
+    log = tmp_path / "errors.log"
+    checker = Checker(config_path, tmp_path / "hosts", error_log=log)
+
+    stop = threading.Event()
+    worker = threading.Thread(target=checker.run, args=(stop, 0.01))
+    worker.start()
+    time.sleep(0.3)
+    stop.set()
+    worker.join(timeout=2)
+    assert checker.last_error is not None
+    assert len(log.read_text(encoding="utf-8").splitlines()) == 1

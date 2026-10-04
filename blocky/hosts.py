@@ -14,7 +14,11 @@ def render(text: str, hostnames: list[str]) -> str:
     newline = "\r\n" if "\r\n" in text else "\n"
     kept: list[str] = []
     inside = False
-    for line in text.splitlines():
+    # Split on line breaks only: splitlines() would also split other programs' lines at characters like U+0085.
+    lines = text.replace("\r\n", "\n").split("\n")
+    if lines[-1] == "":
+        lines.pop()
+    for line in lines:
         marker = line.strip()
         if marker == BEGIN:
             if inside:
