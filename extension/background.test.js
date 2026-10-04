@@ -1,8 +1,11 @@
 import { beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { blockPageUrl } from "./logic.js";
-
-const active = { blocked: ["reddit.com", "www.reddit.com"], windowEnd: "17:00", shortlist: [] };
+const active = {
+  blocked: ["reddit.com", "www.reddit.com"],
+  windowEnd: "17:00",
+  shortlist: [],
+  pageOrigin: "http://blocky.localhost",
+};
 const listeners = {};
 const listen = (name) => ({ addListener: (listener) => (listeners[name] = listener) });
 let updates;
@@ -32,7 +35,7 @@ beforeEach(() => {
 test("navigating to a blocked site in a tab shows the block page", async () => {
   listeners.navigate({ frameId: 0, tabId: 7, url: "https://old.reddit.com/r/all" });
   await settle();
-  assert.deepEqual(updates, [[7, blockPageUrl("old.reddit.com")]]);
+  assert.deepEqual(updates, [[7, "http://blocky.localhost/old.reddit.com"]]);
 });
 
 test("navigating to an unblocked site leaves the tab alone", async () => {
@@ -56,7 +59,7 @@ test("browser pages are never redirected", async () => {
 test("in-page navigation to a blocked site shows the block page", async () => {
   listeners.history({ frameId: 0, tabId: 8, url: "https://www.reddit.com/r/all" });
   await settle();
-  assert.deepEqual(updates, [[8, blockPageUrl("www.reddit.com")]]);
+  assert.deepEqual(updates, [[8, "http://blocky.localhost/www.reddit.com"]]);
 });
 
 test("nothing is blocked when Blocky is not running", async () => {
@@ -86,7 +89,7 @@ test("the sweep sends already open blocked tabs to the block page", async () => 
     { id: 3, url: "brave://newtab" },
   ];
   await listeners.alarm({ name: "sweep-open-tabs" });
-  assert.deepEqual(updates, [[1, blockPageUrl("reddit.com")]]);
+  assert.deepEqual(updates, [[1, "http://blocky.localhost/reddit.com"]]);
 });
 
 test("other alarms do not sweep tabs", async () => {

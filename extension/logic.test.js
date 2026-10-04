@@ -43,8 +43,19 @@ test("does not redirect a subdomain when the window is inactive", () => {
   assert.equal(shouldRedirect(inactive, "old.reddit.com"), false);
 });
 
-test("block page URL points at the app and encodes the domain", () => {
-  assert.equal(blockPageUrl("reddit.com"), `${APP_ORIGIN}/blocked?domain=reddit.com`);
+test("block page URL uses the address the app gives and encodes the domain", () => {
+  const state = { pageOrigin: "http://blocky.localhost" };
+  assert.equal(blockPageUrl(state, "reddit.com"), "http://blocky.localhost/reddit.com");
+  assert.equal(blockPageUrl(state, "a b.com"), "http://blocky.localhost/a%20b.com");
+});
+
+test("block page URL uses the port the app gives when port 80 was taken", () => {
+  const state = { pageOrigin: "http://blocky.localhost:8765" };
+  assert.equal(blockPageUrl(state, "reddit.com"), "http://blocky.localhost:8765/reddit.com");
+});
+
+test("block page URL falls back to the old address for an app without pageOrigin", () => {
+  assert.equal(blockPageUrl({}, "reddit.com"), `${APP_ORIGIN}/blocked?domain=reddit.com`);
 });
 
 test("blockedHostname returns the hostname of a blocked web address", () => {
