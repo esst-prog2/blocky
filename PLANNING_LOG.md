@@ -147,3 +147,4 @@
 2026-10-04 | Overrides saved without a "type" field (written by the first version) must keep working in rules and history; now covered by tests | agent decided
 2026-10-04 | server's mutation tests include test_extension_files, which guards the port the extension shares with the app; widget tests share one tk_root fixture in tests/conftest.py | agent decided
 2026-10-04 | test/rigorous-checks merged into main and pushed, which starts the CI workflow's first run | you decided
+2026-10-04 | First CI run (Checks #1 on 303d290) PASSED in 1m 38s on GitHub Actions | observed by you
