@@ -13,9 +13,10 @@ async function redirectIfBlocked(tabId, url) {
   if (!url.startsWith("http")) {
     return;
   }
-  const hostname = blockedHostname(await fetchState(), url);
+  const state = await fetchState();
+  const hostname = blockedHostname(state, url);
   if (hostname) {
-    chrome.tabs.update(tabId, { url: blockPageUrl(hostname) });
+    chrome.tabs.update(tabId, { url: blockPageUrl(state, hostname) });
   }
 }
 
@@ -42,7 +43,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   for (const tab of tabs) {
     const hostname = blockedHostname(state, tab.url);
     if (hostname) {
-      chrome.tabs.update(tab.id, { url: blockPageUrl(hostname) });
+      chrome.tabs.update(tab.id, { url: blockPageUrl(state, hostname) });
     }
   }
 });

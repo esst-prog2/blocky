@@ -1,13 +1,18 @@
 import html
 import json
+import re
 import threading
 from collections.abc import Callable
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, quote, unquote, urlparse
 
 HOST = "127.0.0.1"
 PORT = 8765
+# Browsers resolve every *.localhost name to this machine, so the block page needs no hosts entry.
+PAGE_HOST = "blocky.localhost"
+# The block page's own port: 80 keeps the port out of the address bar.
+PAGE_PORT = 80
 FAVICON = Path(__file__).with_name("assets") / "blocky.ico"
 
 # Same palette as the app window (see blocky/theme.py); every text colour passes WCAG AA on its background.
@@ -38,18 +43,35 @@ def render_blocked(state: dict, domain: str) -> str:
     return PAGE.format(body=f"<h1>{message}</h1>" + _suggestions(state["shortlist"]))
 
 
-def _handler(load_state: Callable[[], dict]) -> type[BaseHTTPRequestHandler]:
+def page_origin(port: int) -> str:
+    """The address the block page is served at; port 80 needs no port number in it."""
+    return f"http://{PAGE_HOST}" if port == 80 else f"http://{PAGE_HOST}:{port}"
+
+
+def _handler(load_state: Callable[[], dict], origin: Callable[[], str]) -> type[BaseHTTPRequestHandler]:
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self) -> None:
             url = urlparse(self.path)
             body: str | bytes
+            page = re.fullmatch(r"/([^/]+\.[^/]+)", url.path)
             if url.path == "/blocked":
+                # The address before blocky.localhost, still used by an extension that was not reloaded.
                 domain = parse_qs(url.query).get("domain", [""])[0].lower()
-                body, content_type = render_blocked(load_state(), domain), "text/html; charset=utf-8"
+                if not domain:
+                    self.send_error(404)
+                    return
+                self.send_response(302)
+                self.send_header("Location", f"{origin()}/{quote(domain, safe='')}")
+                self.send_header("Content-Length", "0")
+                self.end_headers()
+                return
             elif url.path == "/api/state":
-                body, content_type = json.dumps(load_state()), "application/json"
+                body, content_type = json.dumps({**load_state(), "pageOrigin": origin()}), "application/json"
             elif url.path == "/favicon.ico":
                 body, content_type = FAVICON.read_bytes(), "image/x-icon"
+            elif page:
+                domain = unquote(page[1]).lower()
+                body, content_type = render_blocked(load_state(), domain), "text/html; charset=utf-8"
             else:
                 self.send_error(404)
                 return
@@ -67,13 +89,31 @@ def _handler(load_state: Callable[[], dict]) -> type[BaseHTTPRequestHandler]:
 
 
 class Server:
-    def __init__(self, load_state: Callable[[], dict], port: int = PORT) -> None:
-        self._httpd = ThreadingHTTPServer((HOST, port), _handler(load_state))
-        self.port = self._httpd.server_address[1]
+    """Serves the state on `port` and the block page on `page_port` too, when that port is free."""
+
+    def __init__(self, load_state: Callable[[], dict], port: int = PORT, page_port: int | None = PAGE_PORT) -> None:
+        handler = _handler(load_state, lambda: self.page_origin)
+        self._servers = [ThreadingHTTPServer((HOST, port), handler)]
+        self.port = self._servers[0].server_address[1]
+        self.page_origin = page_origin(self.port)
+        if page_port is not None:
+            try:
+                page_server = ThreadingHTTPServer((HOST, page_port), handler)
+            except OSError:
+                pass  # port taken or not allowed: the block page stays on the main port
+            else:
+                self._servers.append(page_server)
+                self.page_origin = page_origin(page_server.server_address[1])
+
+        self._started = False
 
     def start(self) -> None:
-        threading.Thread(target=self._httpd.serve_forever, daemon=True).start()
+        for httpd in self._servers:
+            threading.Thread(target=httpd.serve_forever, daemon=True).start()
+        self._started = True
 
     def stop(self) -> None:
-        self._httpd.shutdown()
-        self._httpd.server_close()
+        for httpd in self._servers:
+            if self._started:
+                httpd.shutdown()  # waits for serve_forever, so only after start()
+            httpd.server_close()
