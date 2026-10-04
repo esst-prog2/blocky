@@ -75,3 +75,13 @@ def tk_root():
                 raise
     yield root
     root.destroy()
+
+
+WINDOW_FIXTURES = {"open_app", "tk_root"}
+
+
+def pytest_collection_modifyitems(items):
+    # Tests that open a real window are slow; `pytest -m "not window"` runs everything else.
+    for item in items:
+        if WINDOW_FIXTURES & set(getattr(item, "fixturenames", ())):
+            item.add_marker(pytest.mark.window)

@@ -249,7 +249,7 @@ def test_twelve_hour_schedule_in_another_language(window, code, pm):
 
 
 @pytest.mark.parametrize("font", ["Segoe UI Variable", "Verdana"])
-@pytest.mark.parametrize("code", ["nl", "hu"])
+@pytest.mark.parametrize("code", ["en", "nl", "hu"])
 @pytest.mark.parametrize("number", range(len(SAMPLE_SETTINGS)))
 def test_every_text_fits_at_extra_large_in_the_smallest_window(window, code, font, number):
     settings = replace(SAMPLE_SETTINGS[number], language=code, text_size="extra-large", font=font)
@@ -257,8 +257,18 @@ def test_every_text_fits_at_extra_large_in_the_smallest_window(window, code, fon
     app.geometry(f"{app._min_width}x{app._min_height}")
     app.update()
     assert tabs_fit(app)
-    # History's table cells wrap within fixed columns, in English as well; they are left out here.
-    table = {text for row in app.history_table() for text in row}
-    table |= {language.translate(name, code).upper() for name, _width in app.HISTORY_COLUMNS}
     for tab in TABS:
-        assert [text for text in cut_off(app, tab) if text not in table] == [], tab
+        assert cut_off(app, tab) == [], tab
+
+
+def test_history_details_wrap_again_when_the_window_grows(window):
+    app = window(Settings(text_size="extra-large"))
+    app.geometry(f"{app._min_width}x{app._min_height}")
+    app.select_tab("History")
+    app.update()
+    narrow = [row.winfo_children()[3].cget("wraplength") for row in app.history_list.winfo_children()]
+    app.geometry(f"{app._min_width + 400}x{app._min_height}")
+    app.update()
+    wide = [row.winfo_children()[3].cget("wraplength") for row in app.history_list.winfo_children()]
+    assert all(after > before for before, after in zip(narrow, wide, strict=True))
+    assert cut_off(app, "History") == []

@@ -732,7 +732,8 @@ class App(ctk.CTk):
     def _history_row(
         self, parent: ctk.CTkFrame, cells: list[str], header: bool = False, shaded: bool = False, accent: bool = False
     ) -> ctk.CTkFrame:
-        """One table row. Every cell has a fixed, DPI-scaled width, so the columns line up from row to row."""
+        """One table row. Every cell but the last has a fixed, DPI-scaled width, so the columns line up from row to row;
+        the last takes the room that is left and wraps within it, however narrow the window."""
         row = ctk.CTkFrame(parent, fg_color=t.HOVER if shaded else "transparent", corner_radius=6)
         for column, ((_name, width), text) in enumerate(zip(self.HISTORY_COLUMNS, cells, strict=True)):
             if header:
@@ -743,9 +744,32 @@ class App(ctk.CTk):
             else:
                 role, color = "body", t.MUTED if column == 0 else t.TEXT
             last = width == 0
-            cell = t.label(row, text, role, color, width=t.px(width or 120), wraplength=t.px(width or 210) - 12)
+            if last:
+                cell = t.label(row, text, role, color, width=0, wraplength=t.px(210) - 12)
+                cell.bind("<Configure>", lambda _event, c=cell: self._schedule_wrap(c), add="+")
+            else:
+                cell = t.label(row, text, role, color, width=t.px(width), wraplength=t.px(width) - 12)
             cell.pack(side="left", fill="x", expand=last, anchor="n", padx=(12 if column == 0 else 0, 8), pady=7)
         return row
+
+    @staticmethod
+    def _schedule_wrap(cell: ctk.CTkLabel) -> None:
+        # After the layout has settled, not inside the event: customtkinter also passes this binding to the inner
+        # label, which shrinks to its wrap length, so wrapping at its width right away would keep shrinking it.
+        if not getattr(cell, "wrap_pending", False):
+            cell.wrap_pending = True
+            cell.after_idle(lambda: App._wrap_to_width(cell))
+
+    @staticmethod
+    def _wrap_to_width(cell: ctk.CTkLabel) -> None:
+        """Wrap a label's text at the width the row gives it, so none of it is cut off."""
+        if not cell.winfo_exists():
+            return
+        cell.wrap_pending = False
+        # The cell itself fills its column, whatever the wrap length; its inner label follows the text.
+        wraplength = max(int(cell._reverse_widget_scaling(cell.winfo_width())) - 12, 40)
+        if cell.cget("wraplength") != wraplength:
+            cell.configure(wraplength=wraplength)
 
     def _render_history(self) -> None:
         for child in self.history_list.winfo_children():
