@@ -32,8 +32,21 @@ jobs:
       - name: Type check
         run: python -m mypy
 
+      # Diagnostic branch only: five full runs to catch the intermittent startup-test failure;
+      # error lines become annotations, which can be read without logging in.
       - name: Python tests
-        run: python -m pytest
+        shell: pwsh
+        run: |
+          $failed = 0
+          foreach ($run in 1..5) {
+            python -m pytest -q -p no:cacheprovider | Tee-Object -Variable output
+            if ($LASTEXITCODE -ne 0) {
+              $failed++
+              $output | Where-Object { $_ -match '^(E |FAILED)' } | ForEach-Object { Write-Output "::error title=run $run::$_" }
+            }
+          }
+          Write-Output "$failed of 5 runs failed"
+          if ($failed) { exit 1 }
 
       - name: Extension tests
         run: node --test "extension/*.test.js"
