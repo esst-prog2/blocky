@@ -6,6 +6,7 @@ A passing test means Blocky behaves as expected; a failing test is a gap. Result
 import subprocess
 import sys
 import time
+import tkinter
 from datetime import datetime
 from pathlib import Path
 
@@ -58,22 +59,45 @@ def test_9a_docker_lines_are_unchanged_by_blocking_and_unblocking(tmp_path):
 # 9b
 
 
-@pytest.mark.xfail(strict=True, reason="gap: Blocky writes back the hosts file as it read it (spike p1-lifecycle)")
 def test_9b_a_docker_change_made_while_blocky_writes_survives(tmp_path, monkeypatch):
     path = tmp_path / "hosts"
     path.write_bytes((WINDOWS_PART + DOCKER).encode("utf-8"))
     moved = DOCKER.replace("10.67.73.13", "10.67.80.2")  # Docker updates its address after a network change
-    real_write = hosts.write_safely
+    real_render = hosts.render
+    calls: list[str] = []
 
-    def docker_writes_first(target, data):
+    def docker_writes_meanwhile(text, hostnames):
         # Docker Desktop writes its new address after Blocky has read the file and before Blocky writes it back.
-        target.write_bytes((WINDOWS_PART + moved).encode("utf-8"))
-        real_write(target, data)
+        if not calls:
+            path.write_bytes((WINDOWS_PART + moved).encode("utf-8"))
+        calls.append(text)
+        return real_render(text, hostnames)
 
-    monkeypatch.setattr(hosts, "write_safely", docker_writes_first)
+    monkeypatch.setattr(hosts, "render", docker_writes_meanwhile)
     hosts.apply(["reddit.com"], path)
 
-    assert docker_lines(path.read_bytes().decode("utf-8")) == moved
+    written = path.read_bytes().decode("utf-8")
+    assert docker_lines(written) == moved
+    assert "127.0.0.1 reddit.com" in written
+    assert len(calls) == 2  # read again once, after Docker's write
+
+
+def test_9b_a_program_that_keeps_writing_does_not_stop_blocking(tmp_path, monkeypatch):
+    path = tmp_path / "hosts"
+    path.write_bytes((WINDOWS_PART + DOCKER).encode("utf-8"))
+    real_render = hosts.render
+    calls: list[str] = []
+
+    def writes_every_time(text, hostnames):
+        calls.append(text)
+        path.write_bytes((WINDOWS_PART + DOCKER + f"# change {len(calls)}\n").encode("utf-8"))
+        return real_render(text, hostnames)
+
+    monkeypatch.setattr(hosts, "render", writes_every_time)
+    hosts.apply(["reddit.com"], path)
+
+    assert len(calls) == hosts.REREAD_ATTEMPTS  # gives up re-reading after a few tries
+    assert "127.0.0.1 reddit.com" in path.read_text(encoding="utf-8")  # and still blocks
 
 
 # 7a
@@ -128,3 +152,86 @@ def test_7a_a_new_start_after_a_kill_removes_the_entries(tmp_path):
     assert hosts.BEGIN not in after
     assert after == WINDOWS_PART + DOCKER
     assert not list(tmp_path.glob("hosts.tmp"))
+
+
+# 6: Windows ends the session while Blocky is open
+
+
+def test_6_the_window_removes_the_blocking_when_windows_ends_the_session(tmp_path, open_app):
+    calls: list[int] = []
+    app = open_app(tmp_path / "config.yaml", hosts_path=tmp_path / "hosts", session_ending=lambda: calls.append(1))
+    app.update()
+    # What Tk runs when Windows sends WM_QUERYENDSESSION.
+    app.tk.call(app.protocol("WM_SAVE_YOURSELF"))
+    assert calls == [1]
+    with pytest.raises(tkinter.TclError):  # the window is closed
+        app.winfo_exists()
+
+
+def test_6_stopping_twice_is_harmless(tmp_path):
+    import threading
+
+    from blocky.__main__ import stop_blocking
+
+    config_path, hosts_path = tmp_path / "config.yaml", tmp_path / "hosts"
+    hosts_path.write_bytes((WINDOWS_PART + DOCKER).encode("utf-8"))
+    config_module.save(config_path, Config(domains=["reddit.com"], schedule=all_day_today()))
+    checker = Checker(config_path, hosts_path)
+    stop = threading.Event()
+    worker = threading.Thread(target=checker.run, args=(stop, 60))
+    worker.start()
+    deadline = time.monotonic() + 15
+    while "127.0.0.1 reddit.com" not in hosts_path.read_text(encoding="utf-8"):
+        assert time.monotonic() < deadline
+        time.sleep(0.05)
+
+    stop_blocking(stop, worker, checker, tmp_path / "errors.log")  # when Windows ends the session
+    stop_blocking(stop, worker, checker, tmp_path / "errors.log")  # and again as the window closes
+
+    assert not worker.is_alive()
+    assert hosts_path.read_text(encoding="utf-8") == WINDOWS_PART + DOCKER
+    assert not (tmp_path / "errors.log").exists()
+
+
+def test_6_main_gives_the_window_the_cleanup(tmp_path, monkeypatch):
+    import blocky.__main__ as startup
+
+    stopped: list[str] = []
+
+    class FakeChecker:
+        last_error = None
+
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def run(self, stop):
+            stop.wait()
+
+        def request_sync(self):
+            pass
+
+    class FakeApp:
+        def __init__(self, *args, session_ending=None, **kwargs):
+            self.session_ending = session_ending
+
+        def mainloop(self):
+            assert self.session_ending is not None
+            self.session_ending()  # Windows ends the session while the window is open
+            assert stopped == ["stopped"]
+
+    def record_stop(stop, worker, checker, error_log):
+        stop.set()
+        stopped.append("stopped")
+
+    monkeypatch.setattr(startup.dpi, "follow_each_monitor", lambda: True)
+    monkeypatch.setattr(startup, "is_admin", lambda: True)
+    monkeypatch.setattr(startup.ctypes.windll.shell32, "SetCurrentProcessExplicitAppUserModelID", lambda _id: 0)
+    monkeypatch.setattr(startup.config_module, "default_path", lambda: tmp_path / "config.yaml")
+    monkeypatch.setattr(startup, "Checker", FakeChecker)
+    monkeypatch.setattr(startup, "App", FakeApp)
+    monkeypatch.setattr(startup, "start_block_page", lambda _load: (None, None))
+    monkeypatch.setattr(startup, "stop_blocking", record_stop)
+
+    startup.main()
+
+    assert stopped == ["stopped", "stopped"]  # once at the session's end, once as Blocky closes

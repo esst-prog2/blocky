@@ -193,8 +193,9 @@ def started(tmp_path, monkeypatch):
         return seen["servers"][-1]
 
     class Window:
-        def __init__(self, path, warning, sync):
+        def __init__(self, path, warning, sync, session_ending):
             seen["warning"] = warning
+            seen["session ending"] = session_ending
 
         def mainloop(self):
             # Room for one retry (checker.RETRY_INTERVAL) if the first hosts write hits a brief lock.

@@ -7,6 +7,7 @@ from blocky.language import shown
 HOSTS_PATH = Path(r"C:\Windows\System32\drivers\etc\hosts")
 BEGIN = "# BEGIN BLOCKY"
 END = "# END BLOCKY"
+REREAD_ATTEMPTS = 5  # how often the file is read again when another program keeps writing it
 # Normally only the background check writes; the lock keeps any second writer from colliding.
 _write_lock = threading.Lock()
 
@@ -43,10 +44,19 @@ def apply(hostnames: list[str], path: Path = HOSTS_PATH) -> bool:
         return _apply(hostnames, path)
 
 
+def _read(path: Path) -> str:
+    return path.read_bytes().decode("utf-8", errors="surrogateescape") if path.exists() else ""
+
+
 def _apply(hostnames: list[str], path: Path) -> bool:
-    text = path.read_bytes().decode("utf-8", errors="surrogateescape") if path.exists() else ""
-    updated = render(text, hostnames)
-    if updated == text:
-        return False
+    for _ in range(REREAD_ATTEMPTS):
+        text = _read(path)
+        updated = render(text, hostnames)
+        if updated == text:
+            return False
+        # Another program (such as Docker Desktop) may have written the file since it was read; writing now would
+        # put back its old lines. Then start again from what it wrote.
+        if _read(path) == text:
+            break
     write_safely(path, updated.encode("utf-8", errors="surrogateescape"))
     return True
