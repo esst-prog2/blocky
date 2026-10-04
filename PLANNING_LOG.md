@@ -212,3 +212,6 @@
 2026-10-04 | Start with Windows is on after the first start and can be switched off in Settings | you decided
 2026-10-04 | 12-hour schedule fields: an hour field from 1 to 12 with an AM/PM switch | agent decided
 2026-10-04 | When Blocky is not running as administrator it starts the scheduled task if it exists, and otherwise asks UAC once and creates it; the shortcut stays the same | agent decided
+2026-10-04 | Spike block-page-address question: can the block page live at blocky.localhost/<domain> in Brave instead of http://127.0.0.1:8765/blocked?domain=<domain>? | agent proposed, you decided
+2026-10-04 | Spike block-page-address answer criteria: five checks in spike/block-page-address/checklist.md with a mock page on port 80 and the fallback 8766; pass = all load, the address bar shows blocky.localhost/reddit.com without "Not secure", the icon shows, and Brave never tries HTTPS (logged on port 443) | agent proposed
+2026-10-04 | Spike block-page-address answer: pass on all five checks; Brave shows blocky.localhost/reddit.com without "Not secure", loads it from a link and from a script redirect, shows the icon, never tries HTTPS, and shows blocky.localhost:8766/reddit.com on a fallback port | observed by you
