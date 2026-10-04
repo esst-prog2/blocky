@@ -24,9 +24,10 @@ As planned on 2026-10-04, now to be set up by the installer:
 Found in spike p1-lifecycle (2026-10-04, `spike/p1-lifecycle/results.md`):
 
 - When Windows restarts or shuts down with Blocky open, or Blocky is ended by force or crashes, or the power goes, Blocky's entries stay in the hosts file. They keep blocking, also after the window has ended, until Blocky starts again; then it removes them within about 30 seconds.
-- Blocky itself is to handle the normal case: cleaning up when Windows announces a shutdown (decided 2026-10-04, after the spike). It cannot help when it is killed or loses power.
+- Blocky itself cannot fix this. It now handles Windows' end-of-session notice (WM_SAVE_YOURSELF) and removes its entries when it gets it, which works when the notice is sent to its window, but at real restarts on 2026-10-04 the cleanup never ran: Windows did not deliver the notice in time, or ended Blocky first (possibly because it runs as administrator; not investigated further). It can never help when Blocky is killed or loses power. **So the installer's boot-time cleanup is the real fix.**
 - **The installer's part:** a task that runs at boot as SYSTEM (before anyone logs in) and removes the lines between `# BEGIN BLOCKY` and `# END BLOCKY` when no block window is active, or simply starts Blocky's own background check. That covers crashes and power loss too. Combined with start with Windows (item 2), the leftovers are gone at the latest when the user logs in.
 - Check it with the p1-lifecycle checklist cases 6 and 7b; they should then pass without starting Blocky by hand.
+- If the reason Windows skips Blocky's cleanup matters later: a small probe that logs the shutdown notices it receives, run once normally and once as administrator during a restart, would show whether elevation is the cause.
 
 ## 4. Guard against running Blocky twice
 
