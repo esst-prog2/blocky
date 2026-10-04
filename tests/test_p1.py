@@ -201,6 +201,13 @@ def started(tmp_path, monkeypatch):
             while "reddit.com" not in hosts_path.read_text(encoding="utf-8") and time.monotonic() < deadline:
                 time.sleep(0.05)
             seen["hosts while open"] = hosts_path.read_text(encoding="utf-8")
+            # Shown if the hosts entries never appear, to tell a failed write from a sync that never ran.
+            error_log = config_path.parent / "errors.log"
+            seen["diagnosis"] = {
+                "warning": seen["warning"](),
+                "hosts.tmp left": (tmp_path / "hosts.tmp").exists(),
+                "errors.log": error_log.read_text(encoding="utf-8") if error_log.exists() else None,
+            }
             seen["server running"] = seen["servers"][0].running
             if seen.get("crash"):
                 raise RuntimeError("window crashed")
@@ -225,7 +232,7 @@ def test_startup_blocks_while_open_and_cleans_up_on_close(started):
 
     startup.main()
 
-    assert "127.0.0.1 reddit.com" in seen["hosts while open"]
+    assert "127.0.0.1 reddit.com" in seen["hosts while open"], seen["diagnosis"]
     assert seen["server running"]
     assert seen["warning"]() == ""
     assert hosts_path.read_text(encoding="utf-8") == "127.0.0.1 localhost\n"
