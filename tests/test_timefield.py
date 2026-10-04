@@ -1,6 +1,6 @@
 import pytest
 
-from blocky.timefield import TimeField, allowed, finish, step
+from blocky.timefield import TimeField, allowed, finish, step, to_24_hour, to_twelve_hour
 
 
 @pytest.mark.parametrize("text", ["", "0", "9", "09", "23"])
@@ -99,3 +99,76 @@ def test_typing_is_checked_against_each_box_maximum(field):
     field.minute.insert(0, "60")
     assert field.hour.get() == ""
     assert field.minute.get() == ""
+
+
+# 12-hour form
+
+
+@pytest.mark.parametrize(
+    "hour, twelve",
+    [(0, (12, False)), (1, (1, False)), (11, (11, False)), (12, (12, True)), (13, (1, True)), (23, (11, True))],
+)
+def test_hours_in_twelve_hour_form(hour, twelve):
+    assert to_twelve_hour(hour) == twelve
+    assert to_24_hour(*twelve) == hour
+
+
+def test_twelve_hour_box_steps_from_12_to_1_and_back():
+    assert step("12", 1, 12, minimum=1, pad=False) == "1"
+    assert step("1", -1, 12, minimum=1, pad=False) == "12"
+    assert step("9", 1, 12, minimum=1, pad=False) == "10"
+
+
+def test_twelve_hour_box_does_not_settle_on_zero():
+    assert finish("0", "9", minimum=1, pad=False) == "9"
+    assert finish("07", "9", minimum=1, pad=False) == "7"
+
+
+@pytest.fixture
+def twelve(tk_root):
+    def make(value):
+        time_field = TimeField(tk_root, value, twelve_hour=True)
+        time_field.pack()
+        tk_root.update()
+        return time_field
+
+    return make
+
+
+@pytest.mark.parametrize(
+    "saved, hour, period", [("09:00", "9", "AM"), ("17:30", "5", "PM"), ("00:00", "12", "AM"), ("12:15", "12", "PM")]
+)
+def test_twelve_hour_field_shows_the_saved_time(twelve, saved, hour, period):
+    field = twelve(saved)
+    assert (field.hour.get(), field.period.get()) == (hour, period)
+    assert field.get() == saved
+
+
+@pytest.mark.parametrize(
+    "hour, minute, period, stored",
+    [("12", "30", "AM", "00:30"), ("12", "30", "PM", "12:30"), ("5", "30", "PM", "17:30"), ("9", "00", "AM", "09:00")],
+)
+def test_twelve_hour_field_saves_24_hour_time(twelve, hour, minute, period, stored):
+    field = twelve("08:00")
+    field.hour._set(hour)
+    field.minute._set(minute)
+    field.period.set(period)
+    assert field.get() == stored
+
+
+def test_twelve_hour_field_wraps_from_12_to_1_without_changing_am_pm(twelve):
+    field = twelve("12:00")
+    press(field.hour, "<Up>")
+    assert (field.hour.get(), field.period.get()) == ("1", "PM")
+    assert field.get() == "13:00"
+
+
+def test_twelve_hour_field_refuses_hours_above_12(twelve):
+    field = twelve("09:00")
+    field.hour.delete(0, "end")
+    field.hour.insert(0, "13")
+    assert field.hour.get() == ""
+
+
+def test_24_hour_field_has_no_am_pm(field):
+    assert field.period is None

@@ -1,6 +1,8 @@
-"""The user's appearance settings, their defaults, and how stored values are checked."""
+"""The user's settings, their defaults, and how stored values are checked."""
 
 from dataclasses import asdict, dataclass, replace
+
+from blocky.clock import TimeStyle
 
 DARK_THEMES = ("forest", "navy")
 LIGHT_THEMES = ("sand", "aqua", "blossom")
@@ -19,8 +21,11 @@ FONTS = (
     "Constantia",
 )
 TEXT_SIZES = {"small": 0.9, "normal": 1.0, "large": 1.15, "extra-large": 1.3}
+TIME_FORMATS = ("24h", "12h")
+FIRST_DAYS = {"monday": 0, "saturday": 5, "sunday": 6}  # the first days used around the world
 
 PERSONALIZE_KEY = r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
+INTERNATIONAL_KEY = r"Control Panel\International"
 
 
 @dataclass(frozen=True)
@@ -30,6 +35,8 @@ class Settings:
     light_theme: str = "sand"
     font: str = "Segoe UI Variable"
     text_size: str = "normal"
+    time_format: str = FOLLOW_WINDOWS
+    first_day: str = FOLLOW_WINDOWS
 
 
 CHOICES = {
@@ -38,6 +45,8 @@ CHOICES = {
     "light_theme": LIGHT_THEMES,
     "font": FONTS,
     "text_size": tuple(TEXT_SIZES),
+    "time_format": (FOLLOW_WINDOWS, *TIME_FORMATS),
+    "first_day": (FOLLOW_WINDOWS, *FIRST_DAYS),
 }
 
 
@@ -75,3 +84,39 @@ def windows_is_light() -> bool:
     except (ImportError, OSError):
         return False
     return value == 1
+
+
+@dataclass(frozen=True)
+class WindowsTime:
+    """Windows' own regional choices: 12-hour clock, and the first day of the week (0 Monday to 6 Sunday)."""
+
+    twelve_hour: bool = False
+    first_day: int = 0
+
+
+def _international(name: str) -> str | None:
+    try:
+        import winreg
+
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, INTERNATIONAL_KEY) as key:
+            value, _ = winreg.QueryValueEx(key, name)
+    except (ImportError, OSError):
+        return None
+    return value if isinstance(value, str) else None
+
+
+def windows_time() -> WindowsTime:
+    """Windows' short time format and first day of the week; 24-hour and Monday for what cannot be read."""
+    short_time = _international("sShortTime") or ""
+    first_day = _international("iFirstDayOfWeek") or ""
+    return WindowsTime(
+        twelve_hour="h" in short_time and "H" not in short_time,
+        first_day=int(first_day) if first_day.isascii() and first_day.isdigit() and int(first_day) < 7 else 0,
+    )
+
+
+def time_style(settings: Settings, windows: WindowsTime) -> TimeStyle:
+    """The time format and first day the window uses: the chosen ones, or Windows' under Follow Windows."""
+    twelve_hour = windows.twelve_hour if settings.time_format == FOLLOW_WINDOWS else settings.time_format == "12h"
+    first_day = windows.first_day if settings.first_day == FOLLOW_WINDOWS else FIRST_DAYS[settings.first_day]
+    return TimeStyle(twelve_hour=twelve_hour, first_day=first_day)

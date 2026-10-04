@@ -68,6 +68,8 @@ Python, with a `customtkinter` UI for a modern look with minimal setup overhead.
 
 The Settings tab changes how Blocky looks: five themes (Forest and Navy are dark; Sand, Aqua and Blossom are light) or Follow Windows, which uses a chosen dark and light theme to match Windows' app mode; ten fonts that come with Windows; and four text sizes. Changes show at once, also on the block page, and are saved in the `settings` section of the config. Reset to default puts them back to Forest, Segoe UI Variable and Normal, with Undo. The colours are in `blocky/theme.py`; `tests/test_theme.py` checks their contrast. After changing a theme's colours, redraw the icons with `.venv\Scripts\python tools\make_icons.py` (needs Pillow: `.venv\Scripts\python -m pip install pillow`).
 
+Under Language and time, the time format (24-hour, or 12-hour such as 5:00 PM) and the first day of the week (Monday, Saturday or Sunday) follow Windows' regional settings until you choose. The time format applies to the Status and History tabs, the block page and the schedule fields, which get an AM/PM switch; the first day sets the order of the days on the Schedule tab and in History. Windows' settings are read when Blocky starts and when a setting changes. The schedule is always stored in 24-hour form.
+
 ## Running it
 
 1. Install Python 3.11 or newer. Keep the project outside OneDrive or other synced folders: syncing interferes with git and with Blocky's own file writes.

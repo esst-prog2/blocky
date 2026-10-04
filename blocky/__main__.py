@@ -43,7 +43,7 @@ def stop_blocking(stop: threading.Event, worker: threading.Thread, checker: Chec
 
 
 def page_state(config_path: Path) -> dict:
-    """What the block page shows, in the theme, font and text size the window uses."""
+    """What the block page shows, in the theme, font, text size and time format the window uses."""
     config = config_module.load(config_path)
     settings = config.settings
     windows_light = settings.theme == settings_module.FOLLOW_WINDOWS and settings_module.windows_is_light()
@@ -52,7 +52,10 @@ def page_state(config_path: Path) -> dict:
         "font": settings.font,
         "text_size": settings.text_size,
     }
-    return {**rules.snapshot(config, datetime.now()), "appearance": appearance}
+    style = settings_module.time_style(settings, settings_module.windows_time())
+    time_style = {"twelveHour": style.twelve_hour, "firstDay": style.first_day}
+    # windowEnd stays "HH:MM": the extension reads it; the page shows it in the user's format.
+    return {**rules.snapshot(config, datetime.now()), "appearance": appearance, "timeStyle": time_style}
 
 
 def start_block_page(load_state) -> tuple[Server | None, str | None]:

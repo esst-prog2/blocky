@@ -1,3 +1,4 @@
+import dataclasses
 from datetime import datetime
 
 import pytest
@@ -275,7 +276,9 @@ def test_block_page_state_carries_the_effective_appearance(tmp_path, monkeypatch
     chosen = Settings(theme=FOLLOW_WINDOWS, dark_theme="navy", light_theme="aqua", font="Georgia", text_size="large")
     config_module.save(path, Config(domains=["reddit.com"], settings=chosen))
     monkeypatch.setattr(settings_module, "windows_is_light", lambda: True)
+    monkeypatch.setattr(settings_module, "windows_time", lambda: settings_module.WindowsTime(True, 6))
     assert page_state(path)["appearance"] == {"theme": "aqua", "font": "Georgia", "text_size": "large"}
+    assert page_state(path)["timeStyle"] == {"twelveHour": True, "firstDay": 6}
     monkeypatch.setattr(settings_module, "windows_is_light", lambda: False)
     assert page_state(path)["appearance"]["theme"] == "navy"
     assert page_state(path)["shortlist"] == []
@@ -287,3 +290,100 @@ def test_settings_cannot_change_in_place():
 
     with pytest.raises(dataclasses.FrozenInstanceError):
         Settings().theme = "navy"  # type: ignore[misc]
+
+
+# Time format and first day of the week
+
+
+def test_time_settings_follow_windows_by_default():
+    assert Settings().time_format == FOLLOW_WINDOWS
+    assert Settings().first_day == FOLLOW_WINDOWS
+
+
+def test_part_one_config_loads_with_both_time_settings_at_follow_windows(tmp_path):
+    config, warning = load_text(tmp_path, "settings:\n  theme: navy\n  font: Calibri\n  text_size: large\n")
+    assert config.settings == Settings(theme="navy", font="Calibri", text_size="large")
+    assert (config.settings.time_format, config.settings.first_day) == (FOLLOW_WINDOWS, FOLLOW_WINDOWS)
+    assert warning is None
+
+
+@pytest.mark.parametrize(
+    "field, bad", [("time_format", "12"), ("time_format", True), ("first_day", "wednesday"), ("first_day", 6)]
+)
+def test_wrong_time_settings_fall_back_on_their_own(tmp_path, field, bad):
+    chosen = Settings(theme="aqua", time_format="12h", first_day="sunday")
+    config, warning = load_text(tmp_path, yaml.safe_dump({"settings": {**settings_module.to_data(chosen), field: bad}}))
+    assert config.settings == dataclasses.replace(chosen, **{field: FOLLOW_WINDOWS})
+    assert warning is None
+
+
+WINDOWS_12 = settings_module.WindowsTime(twelve_hour=True, first_day=6)
+WINDOWS_24 = settings_module.WindowsTime(twelve_hour=False, first_day=0)
+
+
+@pytest.mark.parametrize("windows", [WINDOWS_12, WINDOWS_24, settings_module.WindowsTime(first_day=2)])
+@pytest.mark.parametrize("time_format", [FOLLOW_WINDOWS, "24h", "12h"])
+@pytest.mark.parametrize("first_day", [FOLLOW_WINDOWS, "monday", "saturday", "sunday"])
+def test_time_style_for_every_combination(windows, time_format, first_day):
+    style = settings_module.time_style(Settings(time_format=time_format, first_day=first_day), windows)
+    assert style.twelve_hour == (windows.twelve_hour if time_format == FOLLOW_WINDOWS else time_format == "12h")
+    expected_day = {"monday": 0, "saturday": 5, "sunday": 6}.get(first_day, windows.first_day)
+    assert style.first_day == expected_day
+
+
+def fake_international(monkeypatch, values):
+    import contextlib
+    import winreg
+
+    def query(_key, name):
+        if name not in values:
+            raise FileNotFoundError(name)
+        return values[name], winreg.REG_SZ
+
+    monkeypatch.setattr(winreg, "OpenKey", lambda *_args: contextlib.nullcontext())
+    monkeypatch.setattr(winreg, "QueryValueEx", query)
+
+
+@pytest.mark.parametrize(
+    "short_time, twelve_hour", [("HH:mm", False), ("H:mm", False), ("h:mm tt", True), ("hh:mm tt", True), ("", False)]
+)
+def test_windows_time_format_is_read_from_the_short_time(monkeypatch, short_time, twelve_hour):
+    fake_international(monkeypatch, {"sShortTime": short_time, "iFirstDayOfWeek": "0"})
+    assert settings_module.windows_time().twelve_hour is twelve_hour
+
+
+@pytest.mark.parametrize(
+    "value, first_day",
+    [*[(str(day), day) for day in range(7)], ("7", 0), ("8", 0), ("10", 0), ("x", 0), ("", 0), ("²", 0)],
+)
+def test_windows_first_day_is_read_from_the_registry(monkeypatch, value, first_day):
+    fake_international(monkeypatch, {"sShortTime": "HH:mm", "iFirstDayOfWeek": value})
+    assert settings_module.windows_time().first_day == first_day
+
+
+def test_unreadable_windows_time_means_24_hour_and_monday(monkeypatch):
+    fake_international(monkeypatch, {})
+    assert settings_module.windows_time() == settings_module.WindowsTime(twelve_hour=False, first_day=0)
+
+    import winreg
+
+    def fail(*_args):
+        raise OSError("no such key")
+
+    monkeypatch.setattr(winreg, "OpenKey", fail)
+    assert settings_module.windows_time() == settings_module.WindowsTime(twelve_hour=False, first_day=0)
+
+
+def test_windows_values_of_the_wrong_type_are_ignored(monkeypatch):
+    fake_international(monkeypatch, {"sShortTime": 12, "iFirstDayOfWeek": 6})
+    assert settings_module.windows_time() == settings_module.WindowsTime(twelve_hour=False, first_day=0)
+
+
+def test_windows_time_defaults_are_24_hour_and_monday():
+    # The test windows and the window's starting state rely on these defaults.
+    assert settings_module.WindowsTime() == settings_module.WindowsTime(twelve_hour=False, first_day=0)
+
+
+def test_windows_time_cannot_change_in_place():
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        settings_module.WindowsTime().first_day = 6  # type: ignore[misc]

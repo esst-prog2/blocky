@@ -7,6 +7,7 @@ from blocky import history, rules
 from blocky import schedule as schedule_module
 from blocky import suggestions as suggestions_module
 from blocky.checker import Checker
+from blocky.clock import DEFAULT_STYLE, TimeStyle
 from blocky.config import Config
 from blocky.domains import validate
 from blocky.schedule import Schedule
@@ -74,7 +75,9 @@ class Controller:
         schedule_module.validate(schedule)
         if schedule != self.config.schedule:
             details = history.describe_schedule(schedule.weekdays, schedule.start, schedule.end)
-            self._record("schedule_changed", "", details)
+            # The days and times themselves too, so History can show them in whatever format is chosen later.
+            fields = {"weekdays": list(schedule.weekdays), "start": schedule.start, "end": schedule.end}
+            self._record("schedule_changed", "", details, **fields)
         self.config.schedule = schedule
         self.save()
 
@@ -107,9 +110,9 @@ class Controller:
         self.set_settings(Settings())
         return before
 
-    def _record(self, kind: str, item: str, details: str = "") -> None:
+    def _record(self, kind: str, item: str, details: str = "", **fields: object) -> None:
         timestamp = self.clock().isoformat(timespec="seconds")
-        self.config.events.append({"type": kind, "timestamp": timestamp, "item": item, "details": details})
+        self.config.events.append({"type": kind, "timestamp": timestamp, "item": item, "details": details, **fields})
 
     def override(self, domain: str, reason: str) -> None:
         rules.override(self.config, domain, reason, self.clock())
@@ -128,5 +131,5 @@ class Controller:
             "overridable": rules.overridable_domains(self.config, now),
         }
 
-    def history_rows(self) -> list[history.Row]:
-        return history.rows(self.config.events, self.config.overrides)
+    def history_rows(self, style: TimeStyle = DEFAULT_STYLE) -> list[history.Row]:
+        return history.rows(self.config.events, self.config.overrides, style)
