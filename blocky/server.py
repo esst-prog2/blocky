@@ -7,22 +7,73 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, quote, unquote, urlparse
 
+from blocky import settings as settings_module
+from blocky.theme import THEMES
+
 HOST = "127.0.0.1"
 PORT = 8765
 # Browsers resolve every *.localhost name to this machine, so the block page needs no hosts entry.
 PAGE_HOST = "blocky.localhost"
 # The block page's own port: 80 keeps the port out of the address bar.
 PAGE_PORT = 80
-FAVICON = Path(__file__).with_name("assets") / "blocky.ico"
+ASSETS = Path(__file__).with_name("assets")
 
-# Same palette as the app window (see blocky/theme.py); every text colour passes WCAG AA on its background.
 PAGE = (
     '<!doctype html><html lang="en"><head><meta charset="utf-8">'
     '<meta name="viewport" content="width=device-width,initial-scale=1"><title>Blocky</title>'
-    '<link rel="icon" href="/favicon.ico">'
-    "<style>html{{background:#273338;color:#F1F4EC;font-family:'Segoe UI Variable Text','Segoe UI',system-ui,sans-serif;font-size:16px}}body{{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;box-sizing:border-box}}main{{width:min(560px,100%);background:#2F3E44;border-radius:16px;padding:40px;box-sizing:border-box;border-top:6px solid #2B5748}}.brand{{color:#9CB080;font-weight:700;font-size:15px;letter-spacing:.04em;margin:0 0 24px}}h1{{font-family:'Segoe UI Variable Display','Segoe UI',system-ui,sans-serif;font-size:28px;line-height:1.25;margin:0 0 12px;overflow-wrap:anywhere}}.lead,.muted{{color:#A9B5AD;margin:0 0 20px}}ul{{list-style:none;padding:0;margin:0;display:grid;gap:8px}}li{{background:#273338;border-radius:10px;padding:14px 16px;border-left:3px solid #9CB080}}</style>"
-    '</head><body><main><p class="brand">Blocky</p>{body}</main></body></html>'
+    '<link rel="icon" href="{icon}">'
+    "<style>{css}</style>"
+    '</head><body><main><p class="brand"><img src="{icon}" alt="" width="20" height="20">Blocky</p>{body}</main>'
+    "</body></html>"
 )
+# The page's colours are the window's theme roles (see blocky/theme.py), so every text colour passes WCAG AA.
+CSS = (
+    ":root{{--background:{BACKGROUND};--card:{CARD};--deep:{DEEP};--on-deep:{ON_DEEP};--text:{TEXT};"
+    "--muted:{MUTED};--accent:{ACCENT}}}"
+    "html{{background:var(--background);color:var(--text);font-family:{text_font};font-size:{size}px}}"
+    "body{{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;box-sizing:border-box}}"
+    "main{{width:min(560px,100%);background:var(--card);border-radius:16px;padding:40px;box-sizing:border-box;"
+    "border-top:6px solid var(--deep)}}"
+    ".brand{{display:flex;align-items:center;gap:8px;color:var(--accent);font-weight:700;font-size:.9375rem;"
+    "letter-spacing:.04em;margin:0 0 24px}}"
+    "h1{{font-family:{display_font};font-size:1.75rem;font-weight:400;line-height:1.35;margin:0 0 12px;"
+    "overflow-wrap:anywhere}}"
+    "h1 strong{{font-weight:700}}"
+    ".chip{{display:inline-block;background:var(--deep);color:var(--on-deep);border-radius:999px;"
+    "padding:0 .45em;font-weight:600;white-space:nowrap}}"
+    ".lead,.muted{{color:var(--muted);margin:0 0 20px}}"
+    "ul{{list-style:none;padding:0;margin:0;display:grid;gap:8px}}"
+    "li{{background:var(--background);border-radius:10px;padding:14px 16px;border-left:3px solid var(--accent)}}"
+)
+FALLBACK_FONTS = "'Segoe UI',system-ui,sans-serif"
+
+
+def _appearance(state: dict) -> tuple[str, str, float]:
+    """Theme, font and text scale for the page; today's look when the state has none or an unknown one."""
+    chosen = state.get("appearance") or {}
+    theme, font, size = (str(chosen.get(key)) for key in ("theme", "font", "text_size"))
+    return (
+        theme if theme in THEMES else "forest",
+        font if font in settings_module.FONTS else "Segoe UI Variable",
+        settings_module.TEXT_SIZES.get(size, 1.0),
+    )
+
+
+def page_css(theme: str, font: str, scale: float) -> str:
+    if font == "Segoe UI Variable":
+        text_font, display_font = "'Segoe UI Variable Text'", "'Segoe UI Variable Display'"
+    else:
+        text_font = display_font = f"'{font}'"
+    return CSS.format(
+        **THEMES[theme],
+        text_font=f"{text_font},{FALLBACK_FONTS}",
+        display_font=f"{display_font},{FALLBACK_FONTS}",
+        size=f"{16 * scale:g}",
+    )
+
+
+def favicon_path(theme: str) -> Path:
+    return ASSETS / f"blocky-{theme}.ico"
 
 
 def _suggestions(items: list[str]) -> str:
@@ -36,11 +87,18 @@ def _suggestions(items: list[str]) -> str:
 
 
 def render_blocked(state: dict, domain: str) -> str:
+    theme, font, scale = _appearance(state)
+    name = f"<strong>{html.escape(domain)}</strong>"
     if any(domain == blocked or domain.endswith(f".{blocked}") for blocked in state["blocked"]):
-        message = f"{html.escape(domain)} is blocked until {html.escape(state['windowEnd'] or '')}"
+        message = f'{name} is blocked until <span class="chip">{html.escape(state["windowEnd"] or "")}</span>'
     else:
-        message = f"{html.escape(domain)} is not blocked right now"
-    return PAGE.format(body=f"<h1>{message}</h1>" + _suggestions(state["shortlist"]))
+        message = f"{name} is not blocked right now"
+    # The theme in the icon address keeps Brave from showing the previous theme's icon from its cache.
+    return PAGE.format(
+        icon=f"/favicon.ico?theme={theme}",
+        css=page_css(theme, font, scale),
+        body=f"<h1>{message}</h1>" + _suggestions(state["shortlist"]),
+    )
 
 
 def page_origin(port: int) -> str:
@@ -68,7 +126,10 @@ def _handler(load_state: Callable[[], dict], origin: Callable[[], str]) -> type[
             elif url.path == "/api/state":
                 body, content_type = json.dumps({**load_state(), "pageOrigin": origin()}), "application/json"
             elif url.path == "/favicon.ico":
-                body, content_type = FAVICON.read_bytes(), "image/x-icon"
+                theme = parse_qs(url.query).get("theme", [""])[0]
+                if theme not in THEMES:
+                    theme = _appearance(load_state())[0]
+                body, content_type = favicon_path(theme).read_bytes(), "image/x-icon"
             elif page:
                 domain = unquote(page[1]).lower()
                 body, content_type = render_blocked(load_state(), domain), "text/html; charset=utf-8"

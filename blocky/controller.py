@@ -10,6 +10,7 @@ from blocky.checker import Checker
 from blocky.config import Config
 from blocky.domains import validate
 from blocky.schedule import Schedule
+from blocky.settings import Settings
 
 
 def warning_text(background_error: str | None, *startup_warnings: str | None) -> str:
@@ -95,6 +96,16 @@ class Controller:
         removed = self.config.shortlist.pop(index)
         self._record("suggestion_removed", removed)
         self.save()
+
+    def set_settings(self, settings: Settings) -> None:
+        self.config.settings = settings
+        config_module.save(self.config_path, self.config)  # nothing to block or unblock, so no hosts sync
+
+    def reset_settings(self) -> Settings:
+        """Put every setting back to its default and return the settings from before, for Undo."""
+        before = self.config.settings
+        self.set_settings(Settings())
+        return before
 
     def _record(self, kind: str, item: str, details: str = "") -> None:
         timestamp = self.clock().isoformat(timespec="seconds")

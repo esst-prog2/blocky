@@ -27,7 +27,7 @@ def finish(text: str, previous: str) -> str:
 
 class _Box(ctk.CTkEntry):
     def __init__(self, parent: ctk.CTkFrame, value: int, maximum: int) -> None:
-        super().__init__(parent, justify="center", **{**theme.entry_style(), "width": 48})
+        super().__init__(parent, justify="center", **{**theme.entry_style(), "width": theme.px(48)})
         self.maximum = maximum
         self.settled = f"{value:02d}"
         self.insert(0, self.settled)
@@ -63,7 +63,7 @@ class TimeField(ctk.CTkFrame):
         saved = time.fromisoformat(value)
         self.hour = _Box(self, saved.hour, 23)
         self.hour.pack(side="left")
-        theme.label(self, ":", "title", theme.MUTED, width=14, anchor="center").pack(side="left", padx=2)
+        theme.label(self, ":", "title", theme.MUTED, width=theme.px(14), anchor="center").pack(side="left", padx=2)
         self.minute = _Box(self, saved.minute, 59)
         self.minute.pack(side="left")
 

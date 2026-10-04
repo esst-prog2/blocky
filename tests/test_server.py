@@ -1,11 +1,15 @@
 import json
+import re
 import socket
 import threading
 import urllib.request
+from pathlib import Path
 
 import pytest
 
-from blocky.server import PAGE_HOST, Server, page_origin
+from blocky import settings as settings_module
+from blocky.server import PAGE_HOST, Server, page_origin, render_blocked
+from blocky.theme import THEMES
 
 
 def state(blocked=("reddit.com", "www.reddit.com")):
@@ -26,6 +30,13 @@ def fetch(server, path):
         return response.status, response.headers.get("Content-Type"), response.read().decode("utf-8")
 
 
+def heading(body):
+    """The page's sentence as a reader sees it, without its markup."""
+    match = re.search(r"<h1>(.*?)</h1>", body)
+    assert match is not None
+    return re.sub(r"<[^>]+>", "", match[1])
+
+
 def test_blocked_page_shows_escaped_shortlist(server):
     status, _, body = fetch(server, "/reddit.com")
     assert status == 200
@@ -35,27 +46,27 @@ def test_blocked_page_shows_escaped_shortlist(server):
 
 def test_blocked_page_names_domain_and_window_end(server):
     _, _, body = fetch(server, "/reddit.com")
-    assert "reddit.com is blocked until 17:00" in body
+    assert heading(body) == "reddit.com is blocked until 17:00"
 
 
 def test_unblocked_domain_is_reported_as_not_blocked(server):
     _, _, body = fetch(server, "/example.com")
-    assert "example.com is not blocked right now" in body
+    assert heading(body) == "example.com is not blocked right now"
 
 
 def test_domain_sorting_after_a_blocked_one_is_reported_as_not_blocked(server):
     _, _, body = fetch(server, "/youtube.com")
-    assert "youtube.com is not blocked right now" in body
+    assert heading(body) == "youtube.com is not blocked right now"
 
 
 def test_blocked_page_names_a_subdomain_as_blocked(server):
     _, _, body = fetch(server, "/old.reddit.com")
-    assert "old.reddit.com is blocked until 17:00" in body
+    assert heading(body) == "old.reddit.com is blocked until 17:00"
 
 
 def test_lookalike_domain_is_reported_as_not_blocked(server):
     _, _, body = fetch(server, "/notreddit.com")
-    assert "notreddit.com is not blocked right now" in body
+    assert heading(body) == "notreddit.com is not blocked right now"
 
 
 def test_state_endpoint_returns_json(server):
@@ -101,7 +112,7 @@ def test_favicon_is_served(server):
 
 def test_pages_link_the_favicon(server):
     _, _, body = fetch(server, "/reddit.com")
-    assert '<link rel="icon" href="/favicon.ico">' in body
+    assert '<link rel="icon" href="/favicon.ico?theme=forest">' in body
 
 
 def test_page_address_has_no_port_on_port_80():
@@ -117,7 +128,7 @@ def test_block_page_is_also_served_on_a_free_page_port():
         assert [httpd.server_address[0] for httpd in srv._servers] == ["127.0.0.1", "127.0.0.1"]
         assert srv.page_origin == f"http://blocky.localhost:{page_port}"
         with urllib.request.urlopen(f"http://127.0.0.1:{page_port}/reddit.com") as response:
-            assert "reddit.com is blocked until 17:00" in response.read().decode("utf-8")
+            assert heading(response.read().decode("utf-8")) == "reddit.com is blocked until 17:00"
     finally:
         srv.stop()
 
@@ -153,5 +164,82 @@ def test_earlier_address_without_a_domain_returns_404(server):
 
 def test_domain_in_the_address_is_escaped_on_the_page(server):
     _, _, body = fetch(server, "/%3Cb%3E.com")
-    assert "&lt;b&gt;.com is not blocked right now" in body
+    assert heading(body) == "&lt;b&gt;.com is not blocked right now"
     assert "<b>.com" not in body
+
+
+def themed(theme="forest", font="Segoe UI Variable", text_size="normal"):
+    return {**state(), "appearance": {"theme": theme, "font": font, "text_size": text_size}}
+
+
+@pytest.mark.parametrize("theme", settings_module.THEMES)
+def test_block_page_uses_the_theme_colours_and_icon(theme):
+    body = render_blocked(themed(theme), "reddit.com")
+    colours = THEMES[theme]
+    for role in ("BACKGROUND", "CARD", "DEEP", "ON_DEEP", "TEXT", "MUTED", "ACCENT"):
+        assert colours[role] in body
+    assert f'<link rel="icon" href="/favicon.ico?theme={theme}">' in body
+    assert f'<img src="/favicon.ico?theme={theme}" alt=""' in body
+
+
+def test_block_page_uses_the_font_and_text_size():
+    body = render_blocked(themed("aqua", "Georgia", "large"), "reddit.com")
+    assert "font-family:'Georgia','Segoe UI',system-ui,sans-serif" in body
+    assert "font-size:18.4px" in body  # 16px at 115 %
+
+
+def test_block_page_keeps_segoe_ui_variable_families_by_default():
+    body = render_blocked(state(), "reddit.com")
+    assert "font-family:'Segoe UI Variable Text'" in body
+    assert "font-family:'Segoe UI Variable Display'" in body
+    assert "font-size:16px" in body
+    assert THEMES["forest"]["BACKGROUND"] in body
+
+
+def test_unknown_appearance_falls_back_to_todays_look():
+    body = render_blocked(themed("purple", "Comic Sans", "huge"), "reddit.com")
+    assert "/favicon.ico?theme=forest" in body
+    assert "font-size:16px" in body
+
+
+def test_domain_and_end_time_stand_out_without_a_script():
+    body = render_blocked(themed("sand"), "reddit.com")
+    assert '<h1><strong>reddit.com</strong> is blocked until <span class="chip">17:00</span></h1>' in body
+    assert "<script" not in body.lower()
+
+
+def test_emphasised_domain_is_still_escaped():
+    body = render_blocked(themed(), "<b>.com")
+    assert "<strong>&lt;b&gt;.com</strong> is not blocked right now" in body
+
+
+@pytest.mark.parametrize("theme", settings_module.THEMES)
+def test_favicon_follows_the_theme_in_its_address(server, theme):
+    with urllib.request.urlopen(f"http://127.0.0.1:{server.port}/favicon.ico?theme={theme}") as response:
+        assert (
+            response.read() == (Path(__file__).parent.parent / "blocky" / "assets" / f"blocky-{theme}.ico").read_bytes()
+        )
+
+
+def test_favicon_without_a_theme_follows_the_current_theme():
+    srv = Server(lambda: themed("navy"), port=0, page_port=None)
+    srv.start()
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{srv.port}/favicon.ico") as response:
+            assert (
+                response.read() == (Path(__file__).parent.parent / "blocky" / "assets" / "blocky-navy.ico").read_bytes()
+            )
+    finally:
+        srv.stop()
+
+
+def test_theme_change_shows_on_the_next_load():
+    current = {"theme": "forest"}
+    srv = Server(lambda: themed(current["theme"]), port=0, page_port=None)
+    srv.start()
+    try:
+        assert THEMES["forest"]["CARD"] in fetch(srv, "/reddit.com")[2]
+        current["theme"] = "blossom"
+        assert THEMES["blossom"]["CARD"] in fetch(srv, "/reddit.com")[2]
+    finally:
+        srv.stop()
