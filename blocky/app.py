@@ -203,8 +203,10 @@ class App(ctk.CTk):
         windows_is_light: Callable[[], bool] = settings_module.windows_is_light,
         windows_time: Callable[[], settings_module.WindowsTime] = settings_module.windows_time,
         windows_language: Callable[[], str] = language.windows_language,
+        session_ending: Callable[[], None] | None = None,
     ) -> None:
         self.controller = Controller(config_path, hosts_path, clock, sync)
+        self.session_ending = session_ending
         self.windows_is_light = windows_is_light
         self._windows_light = False
         self.windows_time = windows_time
@@ -215,6 +217,9 @@ class App(ctk.CTk):
         self._apply_settings()
         super().__init__(fg_color=t.BACKGROUND)
         self.title("Blocky")
+        # Tk passes on Windows' notice that the session ends (shut down, restart, sign out) as this protocol. Windows
+        # does not wait for Blocky to close normally, so the blocking is removed right away.
+        self.protocol("WM_SAVE_YOURSELF", self._end_session)
         self.geometry("{}x{}".format(*self._fit(t.px(760), t.px(660))))
         self.warning = warning
         self._tick_id: str | None = None
@@ -315,6 +320,11 @@ class App(ctk.CTk):
         self._build(selected)
         self.update_idletasks()
         self.settings_scroll._parent_canvas.yview_moveto(settings_position)
+
+    def _end_session(self) -> None:
+        if self.session_ending is not None:
+            self.session_ending()
+        self.destroy()
 
     def _schedule_redraw(self) -> None:
         # Not right away: the button that was clicked is destroyed by the redraw while its handler still runs.

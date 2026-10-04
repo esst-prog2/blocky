@@ -52,6 +52,7 @@ def show_admin_needed() -> None:
 
 
 def stop_blocking(stop: threading.Event, worker: threading.Thread, checker: Checker, error_log: Path) -> None:
+    """Stop the background check and remove Blocky's hosts entries; safe to call again."""
     stop.set()
     checker.request_sync()
     worker.join()
@@ -118,6 +119,8 @@ def main() -> None:
             config_path,
             warning=lambda: warning_text(checker.last_error, server_warning, config_warning),
             sync=checker.request_sync,
+            # When Windows shuts down with Blocky open it ends the process before the cleanup below would run.
+            session_ending=lambda: stop_blocking(stop, worker, checker, error_log),
         ).mainloop()
     finally:
         stop_blocking(stop, worker, checker, error_log)
