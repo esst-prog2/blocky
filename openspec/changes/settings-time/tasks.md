@@ -13,7 +13,7 @@
 
 ## 3. History
 
-- [ ] 3.1 Record `weekdays`, `start` and `end` in new schedule events next to `details`, and let `history.rows()` take a `TimeStyle` and build schedule details from the fields, or from older `details` text that follows the earlier pattern; verify with tests for new events, old matching text in both formats, non-matching text shown as stored, and a property test that any text either reformats to the same days and times or comes back unchanged
+- [x] 3.1 Record `weekdays`, `start` and `end` in new schedule events next to `details`, and let `history.rows()` take a `TimeStyle` and build schedule details from the fields, or from older `details` text that follows the earlier pattern; verify with tests for new events, old matching text in both formats, non-matching text shown as stored, and a property test that any text either reformats to the same days and times or comes back unchanged
 
 ## 4. Window
 

@@ -258,3 +258,13 @@ def test_config_with_no_weekdays_still_loads(tmp_path):
     config, warning = config_module.load_or_recover(path, MONDAY_2PM)
     assert config.schedule.weekdays == []
     assert warning is None
+
+
+def test_schedule_change_stores_its_days_and_times(make):
+    controller = make()
+    controller.set_schedule([6, 0, 1], "8:30", "16:00")
+    event = controller.config.events[-1]
+    assert event["type"] == "schedule_changed"
+    assert (event["weekdays"], event["start"], event["end"]) == ([6, 0, 1], "08:30", "16:00")
+    assert event["details"] == "Mon, Tue, Sun, 08:30–16:00"  # still there for older Blocky versions
+    assert config_module.load(make.path).events[-1] == event
