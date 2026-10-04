@@ -2,7 +2,9 @@ import threading
 import time
 from datetime import datetime
 
+from blocky import checker as checker_module
 from blocky import config as config_module
+from blocky import hosts
 from blocky.checker import Checker, log_error
 from blocky.config import Config
 from blocky.hosts import BEGIN
@@ -87,3 +89,36 @@ def test_a_repeating_error_is_logged_once(tmp_path):
     worker.join(timeout=2)
     assert checker.last_error is not None
     assert len(log.read_text(encoding="utf-8").splitlines()) == 1
+
+
+def test_a_failed_update_is_retried_within_seconds(tmp_path, monkeypatch):
+    config_path = tmp_path / "config.yaml"
+    hosts_path = tmp_path / "hosts"
+    hosts_path.write_text("127.0.0.1 localhost\n", encoding="utf-8")
+    config_module.save(config_path, Config(domains=["reddit.com"]))
+    real_apply = hosts.apply
+    attempts = []
+
+    def locked_once(hostnames, path):
+        attempts.append(hostnames)
+        if len(attempts) == 1:
+            raise PermissionError(13, "The hosts file is in use")
+        return real_apply(hostnames, path)
+
+    monkeypatch.setattr(hosts, "apply", locked_once)
+    monkeypatch.setattr(checker_module, "RETRY_INTERVAL", 0.1, raising=False)
+    checker = Checker(config_path, hosts_path, clock=lambda: datetime(2026, 10, 5, 14, 0))
+
+    stop = threading.Event()
+    worker = threading.Thread(target=checker.run, args=(stop, 60))
+    worker.start()
+    deadline = time.monotonic() + 5
+    while "reddit.com" not in hosts_path.read_text(encoding="utf-8") and time.monotonic() < deadline:
+        time.sleep(0.05)
+    text = hosts_path.read_text(encoding="utf-8")
+
+    stop.set()
+    checker.request_sync()
+    worker.join(timeout=2)
+    assert "127.0.0.1 reddit.com" in text
+    assert checker.last_error is None
