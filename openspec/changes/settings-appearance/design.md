@@ -44,7 +44,7 @@ These are the values of the approved preview; the contrast test (below) checks a
 Alternative considered: deriving the light themes from the four palette colours at runtime. Rejected: a fixed table is easier to read, review and test, and the colours were chosen by eye.
 
 ### Switching by redraw, not by recolouring
-`theme.apply(appearance)` sets the module's current role values and fonts; `App` then destroys its contents and builds them again with the same `_build_*` methods it uses at start, re-selects the tab that was open, repaints the Windows title bar and sets the theme's icon. Text typed but not yet added (a new site, a reason) is lost on a redraw; a settings change happens in the Settings tab, where nothing else is being typed.
+`theme.apply(appearance)` sets the module's current role values and fonts; `App` then destroys its contents and builds them again with the same `_build_*` methods it uses at start, selects the tab that was open before anything is painted (so no other tab shows in between), repaints the Windows title bar and sets the theme's icon. Text typed but not yet added (a new site, a reason) is lost on a redraw; a settings change happens in the Settings tab, where nothing else is being typed.
 
 Colour defaults in helper signatures become `None` and are looked up when the helper runs, so every helper call made after `apply` gets the new values. A test builds the window in one theme, switches to another, and walks every widget to check that no colour from the first theme is left.
 
@@ -58,7 +58,7 @@ Reset acts at once and shows "Settings reset." with an Undo button (pattern: act
 ### Fonts and text size
 `font(role)` keeps its roles (display, title, body, caption, button, brand) and takes family and scale from the current appearance. Segoe UI Variable keeps its separate Display, Text and Semibold families; for the other nine fonts, display and brand use the family in bold, title and button in bold, body and caption in normal weight. Sizes are multiplied by 0.9, 1.0, 1.15 or 1.3 and rounded. Fixed sizes (control height, chip height, wrap lengths) scale with the text size so larger text does not get clipped.
 
-In the Settings tab the fonts are shown as ten buttons in a grid, each labelled with the font's name in that font, because a drop-down menu can only show one font for all its entries.
+In the Settings tab the font is chosen from a drop-down list: a button showing the current font in itself opens a list under it (above it when there is no room) that shows four fonts at a time, each in its own font, and scrolls one whole row per wheel notch. A standard Tk menu cannot do this, since it shows every entry in one font and never scrolls, so the list is a small borderless window that closes on a choice, Escape, a second click on the button or a click elsewhere. (The first version showed ten buttons in a grid; the owner preferred a scrollable list after the manual check.)
 
 ### Settings are stored in config.yaml under `settings`
 A new `Settings` dataclass in `blocky/settings.py` holds `theme` (one of the five names or `follow-windows`), `dark_theme`, `light_theme`, `font` and `text_size`. Loading checks each field on its own and replaces a missing or unknown value with its default; the settings section never raises `DamagedConfig`, so a typo in the settings cannot make Blocky set the whole config aside. `Config` gains a `settings` field; config files without it load with the defaults.

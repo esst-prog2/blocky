@@ -142,16 +142,123 @@ def test_clicking_a_theme_tile_chooses_it(window):
     assert app.controller.config.settings.theme == "aqua"
 
 
-def test_font_buttons_each_show_their_own_font(window):
+def test_redraw_never_shows_another_tab_in_between(window, monkeypatch):
     app = window()
-    for name, button in app.font_buttons.items():
-        assert button.cget("font").cget("family") == t.font_spec("body", name)[0]
+    app.tabs.set("Settings")
+    app.update()
+    seen = []
+    real_update_idletasks = type(app).update_idletasks
+
+    def record(self):
+        seen.append(self.tabs.get() if hasattr(self, "tabs") and self.tabs.winfo_exists() else None)
+        real_update_idletasks(self)
+
+    monkeypatch.setattr(type(app), "update_idletasks", record)
+    choose(app, theme="navy")
+    assert seen
+    assert set(seen) - {None} == {"Settings"}
+
+
+def open_font_list(app):
+    app.tabs.set("Settings")
+    app.update()
+    app.font_menu_button.invoke()
+    app.update()
+    return app.font_list
+
+
+def visible_fonts(app):
+    canvas = app.font_scroll._parent_canvas
+    top, bottom = canvas.winfo_rooty(), canvas.winfo_rooty() + canvas.winfo_height()
+    return [
+        name
+        for name, option in app.font_options.items()
+        if top - 1 <= option.winfo_rooty() and option.winfo_rooty() + option.winfo_height() <= bottom + 1
+    ]
+
+
+def test_font_button_shows_the_current_font_in_itself(window):
+    app = window(Settings(font="Corbel"))
+    assert app.font_menu_button.cget("font").cget("family") == "Corbel"
+    assert app.font_menu_button.cget("text").startswith("Corbel")
+
+
+def test_font_list_shows_each_font_in_itself(window):
+    app = window()
+    open_font_list(app)
+    assert list(app.font_options) == list(settings_module.FONTS)
+    for name, option in app.font_options.items():
+        assert option.cget("font").cget("family") == t.font_spec("body", name)[0]
+    assert app.font_options["Segoe UI Variable"].cget("fg_color") == t.DEEP  # the current one stands out
+
+
+@pytest.mark.parametrize("size", settings_module.TEXT_SIZES)
+@pytest.mark.parametrize(
+    "font, first", [("Segoe UI Variable", "Segoe UI Variable"), ("Calibri", "Bahnschrift"), ("Constantia", "Verdana")]
+)
+def test_font_list_shows_four_whole_rows_with_the_current_font(window, size, font, first):
+    app = window(Settings(font=font, text_size=size))
+    open_font_list(app)
+    rows = visible_fonts(app)
+    assert len(rows) == 4
+    assert rows[0] == first
+    assert font in rows
+    assert app.font_list.winfo_width() == app.font_menu_button.winfo_width()
+
+
+def test_wheel_moves_the_font_list_one_row_and_not_the_page(window):
+    app = window(Settings(text_size="extra-large"))
+    open_font_list(app)
+    page = app.settings_scroll._parent_canvas.yview()
+    wheel = app.font_options["Segoe UI"]._canvas
+    for expected in ("Segoe UI", "Bahnschrift"):
+        wheel.event_generate("<MouseWheel>", delta=-120, x=5, y=5)
+        app.update()
+        assert visible_fonts(app)[0] == expected
+    for _ in range(10):
+        wheel.event_generate("<MouseWheel>", delta=-120, x=5, y=5)
+    app.update()
+    assert visible_fonts(app) == list(settings_module.FONTS[-4:])
+    wheel.event_generate("<MouseWheel>", delta=120, x=5, y=5)
+    app.update()
+    assert visible_fonts(app)[0] == settings_module.FONTS[-5]
+    assert app.settings_scroll._parent_canvas.yview() == page
+
+
+def test_font_list_closes_with_escape_a_second_click_or_a_click_elsewhere(window):
+    app = window()
+    popup = open_font_list(app)
+    popup.event_generate("<Escape>")
+    app.update()
+    assert app.font_list is None
+
+    open_font_list(app)
+    app.font_menu_button.invoke()
+    app.update()
+    assert app.font_list is None
+
+    popup = open_font_list(app)
+    popup.event_generate("<Button-1>", x=-50, y=-50)
+    app.update()
+    assert app.font_list is None
+    assert app.controller.config.settings.font == "Segoe UI Variable"
+
+
+def test_a_click_inside_the_font_list_keeps_it_open(window):
+    app = window()
+    popup = open_font_list(app)
+    popup.event_generate("<Button-1>", x=5, y=5)
+    app.update()
+    assert app.font_list is popup
 
 
 def test_font_choice_changes_the_window_and_is_kept(window, tmp_path):
     app = window()
-    app.font_buttons["Georgia"].invoke()
+    open_font_list(app)
+    app.font_options["Georgia"].invoke()
     app.update()
+    assert app.font_list is None
+    assert app.tabs.get() == "Settings"
     assert app.status_label.cget("font").cget("family") == "Georgia"
     assert app.list_title.cget("font").cget("family") == "Georgia"
     assert config_module.load(tmp_path / "config.yaml").settings.font == "Georgia"

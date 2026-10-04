@@ -20,6 +20,7 @@
 - [x] 3.3 Add Reset to default with the "Settings reset." message and Undo; verify with window tests that reset restores the defaults without touching block list, schedule or shortlist, that Undo brings back and saves the earlier settings, that the message survives the redraw, and that it disappears after the next settings change
 - [x] 3.4 Poll Windows' app mode every 2 seconds while Follow Windows is chosen and redraw only when it changes; verify with a test that fakes the registry value and checks the switch, and that an unreadable value means dark
 - [x] 3.5 Open every tab at Extra large in every theme and verify with a test that the window builds without errors and that the Settings tab scrolls to its last row at the smallest window size; check by hand that nothing is clipped
+- [x] 3.6 After the manual check: choose the font from a drop-down list showing four fonts at a time, each in its own font, and select the open tab before the redraw paints so no other tab shows in between; verify with window tests for four whole rows at every size, one row per wheel notch without moving the page, closing, and no other tab during a redraw
 
 ## 4. Icons
 
