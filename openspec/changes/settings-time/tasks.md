@@ -27,6 +27,6 @@
 ## 6. Checks and record
 
 - [x] 6.1 Run ruff check, ruff format --check, mypy, pytest and the extension tests and verify all pass
-- [ ] 6.2 Run `tools/mutation_test.py` on `clock` and `settings` (add `clock` to its module list) and add tests for real gaps
+- [x] 6.2 Run `tools/mutation_test.py` on `clock` and `settings` (add `clock` to its module list) and add tests for real gaps
 - [ ] 6.3 Manual check by the owner: both settings in the window and on the block page, Follow Windows after changing Windows' time format and first day (then restarting Blocky), typing a 12-hour schedule, and Reset to default
 - [ ] 6.4 Log the decisions in `PLANNING_LOG.md`, update the README, and archive this change

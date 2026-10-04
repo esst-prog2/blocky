@@ -249,3 +249,4 @@
 2026-10-04 | Follow Windows for time reads sShortTime and iFirstDayOfWeek at start and before each redraw, not while Blocky is open | agent proposed
 2026-10-04 | The Reset to default requirement is replaced by one without the Start with Windows exception, which moved to the installer level | agent proposed
 2026-10-04 | Text size sits next to Font when both fit in full, and below it otherwise (the window decides on every resize), so no button text is cut off; choice buttons size to their text instead of customtkinter's 140 minimum | you asked, agent decided
+2026-10-04 | Mutation testing on clock (127 killed, 3 survived) and settings (96 killed, 10 survived): tests added for Windows first-day values above 7, the frozen TimeStyle and WindowsTime, and WindowsTime's 24-hour Monday defaults; the rest are equivalent (comparisons that only see the offered values, is/== on small values, a strictly increasing position) | agent decided

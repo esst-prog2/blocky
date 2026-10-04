@@ -63,3 +63,13 @@ def test_saturday_first_groups_the_weekend_with_the_week():
 
 def test_schedule_description_in_twelve_hour_form():
     assert describe_schedule([0, 1, 2, 3, 4], "09:00", "17:00", TWELVE) == "Mon–Fri, 9:00 AM–5:00 PM"
+
+
+def test_time_style_cannot_change_in_place():
+    # DEFAULT_STYLE is shared as a default argument; changing it would change every caller.
+    import dataclasses
+
+    from blocky.clock import DEFAULT_STYLE
+
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        DEFAULT_STYLE.twelve_hour = True  # type: ignore[misc]

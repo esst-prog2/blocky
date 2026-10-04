@@ -353,7 +353,8 @@ def test_windows_time_format_is_read_from_the_short_time(monkeypatch, short_time
 
 
 @pytest.mark.parametrize(
-    "value, first_day", [*[(str(day), day) for day in range(7)], ("7", 0), ("x", 0), ("", 0), ("²", 0)]
+    "value, first_day",
+    [*[(str(day), day) for day in range(7)], ("7", 0), ("8", 0), ("10", 0), ("x", 0), ("", 0), ("²", 0)],
 )
 def test_windows_first_day_is_read_from_the_registry(monkeypatch, value, first_day):
     fake_international(monkeypatch, {"sShortTime": "HH:mm", "iFirstDayOfWeek": value})
@@ -376,3 +377,13 @@ def test_unreadable_windows_time_means_24_hour_and_monday(monkeypatch):
 def test_windows_values_of_the_wrong_type_are_ignored(monkeypatch):
     fake_international(monkeypatch, {"sShortTime": 12, "iFirstDayOfWeek": 6})
     assert settings_module.windows_time() == settings_module.WindowsTime(twelve_hour=False, first_day=0)
+
+
+def test_windows_time_defaults_are_24_hour_and_monday():
+    # The test windows and the window's starting state rely on these defaults.
+    assert settings_module.WindowsTime() == settings_module.WindowsTime(twelve_hour=False, first_day=0)
+
+
+def test_windows_time_cannot_change_in_place():
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        settings_module.WindowsTime().first_day = 6  # type: ignore[misc]
