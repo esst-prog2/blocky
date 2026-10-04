@@ -1,5 +1,6 @@
 import os
 import tkinter
+from pathlib import Path
 
 import customtkinter as ctk
 import pytest
@@ -24,22 +25,40 @@ def default_look():
     language.apply("en")
 
 
+def files_in(folder: Path) -> dict[Path, bytes]:
+    return {path: path.read_bytes() for path in folder.iterdir() if path.is_file()} if folder.is_dir() else {}
+
+
+def put_back(folder: Path, files: dict[Path, bytes]) -> None:
+    """Make the folder hold exactly these files again."""
+    for path in files_in(folder):
+        if path not in files:
+            path.unlink()
+    for path, content in files.items():
+        if not path.exists() or path.read_bytes() != content:
+            path.write_bytes(content)
+
+
 @pytest.fixture
 def open_app():
     # On this machine Tk sometimes cannot read its own library files while a window opens
     # (most likely antivirus scanning them), so opening is retried a few times.
-    def open_window(*args, **kwargs):
+    def open_window(config_path, *args, **kwargs):
         # Follow Windows would read this machine's regional settings; tests expect 24-hour time and Monday first
         # unless they choose otherwise (GitHub's Windows runner uses US settings).
         kwargs.setdefault("windows_time", lambda: WindowsTime())
         # Likewise Windows' display language: English unless a test chooses another (the owner's Windows is Dutch).
         kwargs.setdefault("windows_language", lambda: "en")
+        folder = Path(config_path).parent
+        # Blocky reads the config, and recovers a damaged one, before Tk starts; a retry must start from the same files.
+        before = files_in(folder)
         for attempt in range(3):
             try:
-                return App(*args, **kwargs)
+                return App(config_path, *args, **kwargs)
             except tkinter.TclError:
                 if attempt == 2:
                     raise
+                put_back(folder, before)
 
     return open_window
 

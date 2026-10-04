@@ -57,6 +57,34 @@ def test_damaged_config_opens_the_window_with_a_warning(tmp_path, open_app, text
     assert copies[0].read_text(encoding="utf-8") == text
 
 
+def test_a_retried_window_still_finds_the_damaged_config(tmp_path, open_app, monkeypatch):
+    # Tk sometimes fails to start on this machine after Blocky has already recovered the config; open_app retries.
+    import tkinter
+
+    import customtkinter as ctk
+
+    real_init = ctk.CTk.__init__
+    failures = {"left": 1}
+
+    def failing_once(self, *args, **kwargs):
+        if failures["left"]:
+            failures["left"] -= 1
+            raise tkinter.TclError("Can't find a usable init.tcl")
+        real_init(self, *args, **kwargs)
+
+    monkeypatch.setattr(ctk.CTk, "__init__", failing_once)
+    path = tmp_path / "config.yaml"
+    path.write_text(DAMAGED["invalid YAML"], encoding="utf-8")
+    window = open_app(path, hosts_path=tmp_path / "hosts", clock=lambda: MONDAY_2PM)
+    try:
+        window.update()
+        assert failures["left"] == 0  # the first attempt did fail
+        assert "config.yaml" in window.warning_label.cget("text")
+    finally:
+        window.destroy()
+    assert len(list(tmp_path.glob("config.yaml.damaged-*"))) == 1
+
+
 @pytest.mark.parametrize("text", DAMAGED.values(), ids=DAMAGED.keys())
 def test_damaged_config_writes_no_wrong_hosts_entries(tmp_path, text):
     path = tmp_path / "config.yaml"
