@@ -72,6 +72,8 @@ Under Language and time, the time format (24-hour, or 12-hour such as 5:00 PM) a
 
 Blocky speaks English, Dutch and Hungarian. The Language setting, also under Language and time, follows Windows' display language until you choose: Dutch or Hungarian when Windows uses one of them, in any region, and English otherwise. The language applies to the whole window, the History tab (event names, days and dates, also for earlier entries), the block page and the administrator message at start; `errors.log` stays English. The texts are in `blocky/language.py`, keyed by the English text, and the date formats in `blocky/clock.py`. `tests/test_translations.py` fails when a text has no Dutch or Hungarian entry. `.venv\Scripts\python tools	ranslation_review.py <file.md>` writes all three languages side by side for checking.
 
+Some things wait for a later installer level: starting without UAC prompts and with Windows, removing leftover blocking at boot, and a guard against running Blocky twice. They are collected in `docs/installer-level.md`.
+
 ## Running it
 
 1. Install Python 3.11 or newer. Keep the project outside OneDrive or other synced folders: syncing interferes with git and with Blocky's own file writes.
