@@ -229,3 +229,7 @@
 2026-10-04 | Manual check of settings-appearance: themes, block page, Follow Windows and Undo work; the font grid becomes a drop-down list showing four fonts at a time, each in its own font | observed by you, you decided
 2026-10-04 | The font list scrolls one whole row per wheel notch and opens above the button when there is no room below | agent decided
 2026-10-04 | A redraw selects the open tab before anything is painted, so changing a setting no longer flashes the Status tab | agent decided
+2026-10-04 | The six contrast pairs on HOVER below 4.5:1 (Forest ACCENT and DANGER, Navy MUTED, ACCENT and DANGER, Sand DANGER) are accepted; tests/test_theme.py keeps them as a list that may only shrink | you decided
+2026-10-04 | The font list is a plain Tk window instead of a customtkinter one, because customtkinter resized it to a third of its width on a monitor with other scaling; it gets the two methods customtkinter's DPI check calls and is untracked when it closes | agent decided
+2026-10-04 | Running the tests in parallel (pytest-xdist) was measured and dropped: 160 s instead of 170 s, and a window test failed under the load | agent decided
+2026-10-04 | The title bar that stays at the laptop's size on a second monitor is checked in a spike after settings-appearance, as its own change | you decided

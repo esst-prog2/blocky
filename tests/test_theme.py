@@ -23,8 +23,9 @@ PAIRS = [(text, surface, 4.5) for text, surface in TEXT_PAIRS] + [
     ("DISABLED_TEXT", "CARD", 3.0),  # disabled text button
 ]
 
-# Pairs in the approved colours that fall short today, all on HOVER (shaded History rows and buttons under the
-# pointer). Open question for the owner: fixing them changes Forest or the approved values. This list may only shrink.
+# Pairs in the approved colours that fall short, all on HOVER (shaded History rows and buttons under the pointer).
+# Accepted by the owner on 2026-10-04, since fixing them would change Forest or the approved values. This list may only
+# shrink: a new pair below the minimum fails the test.
 KNOWN_GAPS = {
     ("forest", "ACCENT", "HOVER"),
     ("forest", "DANGER", "HOVER"),

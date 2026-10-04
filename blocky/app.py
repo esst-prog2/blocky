@@ -23,6 +23,29 @@ FONT_LIST_WIDTH = 260
 FONT_LIST_ROWS = 4
 
 
+class _Popup(tkinter.Toplevel):
+    """A borderless Tk window for a drop-down list.
+
+    Not a customtkinter window: those resize themselves to their size in scaled units when their monitor's DPI
+    differs, which made the font list narrower than its button on a second monitor. customtkinter still tracks this
+    window for the widgets inside it, and its DPI check calls these two methods on every window it tracks.
+    """
+
+    def block_update_dimensions_event(self) -> None:
+        pass
+
+    def unblock_update_dimensions_event(self) -> None:
+        pass
+
+    def destroy(self) -> None:
+        from customtkinter.windows.widgets.scaling.scaling_tracker import ScalingTracker
+
+        # customtkinter forgets its own windows when they close, but not one it only tracks for their widgets.
+        ScalingTracker.window_widgets_dict.pop(self, None)
+        ScalingTracker.window_dpi_scaling_dict.pop(self, None)
+        super().destroy()
+
+
 class App(ctk.CTk):
     def __init__(
         self,
@@ -600,7 +623,7 @@ class App(ctk.CTk):
             anchor="w",
         )
         self.font_menu_button.pack(anchor="w", pady=(t.GAP, 0))
-        self.font_list: ctk.CTkToplevel | None = None
+        self.font_list: tkinter.Toplevel | None = None
         self.font_options: dict[str, ctk.CTkButton] = {}
 
         t.label(body, "Text size", "button").pack(fill="x", pady=(t.PAD, 0))
@@ -666,8 +689,14 @@ class App(ctk.CTk):
         A standard menu cannot do this: it shows every entry in one font and never scrolls.
         """
         current = self.controller.config.settings.font
-        popup = ctk.CTkToplevel(self, fg_color=t.BORDER)
+        button = self.font_menu_button
+        # Placed under the button before its widgets are made, so customtkinter scales them for that monitor.
+        popup = _Popup(self, background=t.BORDER)
+        popup.withdraw()
         popup.overrideredirect(True)
+        popup.wm_geometry(f"+{button.winfo_rootx()}+{button.winfo_rooty() + button.winfo_height() + 4}")
+        popup.deiconify()
+        popup.update_idletasks()
         box = ctk.CTkFrame(popup, fg_color=t.CARD, corner_radius=0)
         box.pack(fill="both", expand=True, padx=1, pady=1)
         row_height = t.CONTROL_HEIGHT + 4
@@ -689,7 +718,6 @@ class App(ctk.CTk):
         rows_pixels = FONT_LIST_ROWS * (self.font_options[settings_module.FONTS[1]].winfo_y() - first.winfo_y())
         popup.update()  # actual sizes: the scrollbar's minimum height stretches the list beyond what it asks for
         height = popup.winfo_height() - scroll._parent_canvas.winfo_height() + rows_pixels
-        button = self.font_menu_button
         x, y = button.winfo_rootx(), button.winfo_rooty() + button.winfo_height() + 4
         if y + height > popup.winfo_vrooty() + popup.winfo_vrootheight() - 60:  # no room above the taskbar
             y = button.winfo_rooty() - height - 4

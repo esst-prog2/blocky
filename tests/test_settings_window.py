@@ -406,3 +406,30 @@ def test_settings_scroll_to_the_last_row_at_the_smallest_size(window):
     button = app.reset_button
     assert top <= button.winfo_rooty()
     assert button.winfo_rooty() + button.winfo_height() <= bottom
+
+
+def test_font_list_keeps_the_button_width_when_its_monitor_scaling_changes(window, monkeypatch):
+    # On a second monitor customtkinter's DPI check re-scales every window it tracks; its own windows then resize to
+    # their size in scaled units, which made the list narrower than the button.
+    from customtkinter.windows.widgets.scaling.scaling_tracker import ScalingTracker
+
+    app = window()
+    popup = open_font_list(app)
+    width = popup.winfo_width()
+    assert width == app.font_menu_button.winfo_width()
+    real = ScalingTracker.get_window_dpi_scaling
+    monkeypatch.setattr(ScalingTracker, "get_window_dpi_scaling", lambda w: real(w) / 2 if w is popup else real(w))
+    ScalingTracker.check_dpi_scaling()  # what customtkinter runs every 100 ms
+    app.update()
+    assert popup.winfo_width() == width
+
+
+def test_closed_font_list_is_no_longer_tracked_for_dpi(window):
+    from customtkinter.windows.widgets.scaling.scaling_tracker import ScalingTracker
+
+    app = window()
+    popup = open_font_list(app)
+    assert popup in ScalingTracker.window_dpi_scaling_dict
+    app._close_font_list()
+    assert popup not in ScalingTracker.window_dpi_scaling_dict
+    assert popup not in ScalingTracker.window_widgets_dict
