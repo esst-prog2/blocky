@@ -233,3 +233,4 @@
 2026-10-04 | The font list is a plain Tk window instead of a customtkinter one, because customtkinter resized it to a third of its width on a monitor with other scaling; it gets the two methods customtkinter's DPI check calls and is untracked when it closes | agent decided
 2026-10-04 | Running the tests in parallel (pytest-xdist) was measured and dropped: 160 s instead of 170 s, and a window test failed under the load | agent decided
 2026-10-04 | The title bar that stays at the laptop's size on a second monitor is checked in a spike after settings-appearance, as its own change | you decided
+2026-10-04 | settings-appearance manual check PASSED: themes, fonts and sizes in the window, the block page in Brave, Follow Windows, Reset with Undo, and the font list on the second monitor | observed by you
