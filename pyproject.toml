@@ -23,4 +23,7 @@ module = ["customtkinter", "customtkinter.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
-markers = ['window: opens a real Tk window, which is slow; skip these with -m "not window"']
+markers = [
+    'window: opens a real Tk window, which is slow; skip these with -m "not window"',
+    "browser: drives Chromium with Blocky's extension through Playwright; skip these with -m \"not browser\"",
+]

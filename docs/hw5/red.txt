@@ -1,0 +1,384 @@
+FFFFFFFFFF                                                               [100%]
+================================== FAILURES ===================================
+_______________ test_a_blocked_site_shows_blockys_page[nos.nl] ________________
+
+browser = <BrowserContext browser=<Browser type=<BrowserType name=chromium executable_path=C:\Users\raymo\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe> version=153.0.8010.12>>
+site = 'nos.nl'
+
+    @pytest.mark.parametrize("site", SITES)
+    def test_a_blocked_site_shows_blockys_page(browser, site):
+        page = browser.new_page()
+        try:
+            page.goto(f"https://{site}/")
+        except sync_api.Error:
+            pass  # the extension replaces this navigation with the block page, or the connection is refused
+        # Polls the address: a refused connection may show the error page first, and the block page replaces it.
+>       sync_api.expect(page).to_have_url(f"http://blocky.localhost/{site}", timeout=10_000)
+E       AssertionError: Page URL expected to be 'http://blocky.localhost/nos.nl'
+E       Actual value: chrome-error://chromewebdata/ 
+E       Call log:
+E         - Expect "to_have_url" with timeout 10000ms
+E           23 × locator resolved to <html dir="ltr" lang="nl">…</html>
+E              - unexpected value "chrome-error://chromewebdata/"
+E       
+E       Aria snapshot:
+E       - heading "Deze site is niet bereikbaar" [level=1]
+E       - paragraph:
+E         - strong: nos.nl
+E         - text: heeft de verbinding geweigerd.
+E       - paragraph: "Probeer dit eens:"
+E       - list:
+E         - listitem: Controleer de verbinding
+E         - listitem:
+E           - link "Controleer de proxy en firewall":
+E             - /url: "#buttons"
+E       - text: ERR_CONNECTION_REFUSED
+E       - button "Opnieuw laden"
+E       - button "Details"
+
+tests\test_browser_block_page.py:97: AssertionError
+________________ test_a_blocked_site_shows_blockys_page[nu.nl] ________________
+
+browser = <BrowserContext browser=<Browser type=<BrowserType name=chromium executable_path=C:\Users\raymo\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe> version=153.0.8010.12>>
+site = 'nu.nl'
+
+    @pytest.mark.parametrize("site", SITES)
+    def test_a_blocked_site_shows_blockys_page(browser, site):
+        page = browser.new_page()
+        try:
+            page.goto(f"https://{site}/")
+        except sync_api.Error:
+            pass  # the extension replaces this navigation with the block page, or the connection is refused
+        # Polls the address: a refused connection may show the error page first, and the block page replaces it.
+>       sync_api.expect(page).to_have_url(f"http://blocky.localhost/{site}", timeout=10_000)
+E       AssertionError: Page URL expected to be 'http://blocky.localhost/nu.nl'
+E       Actual value: chrome-error://chromewebdata/ 
+E       Call log:
+E         - Expect "to_have_url" with timeout 10000ms
+E           23 × locator resolved to <html dir="ltr" lang="nl">…</html>
+E              - unexpected value "chrome-error://chromewebdata/"
+E       
+E       Aria snapshot:
+E       - heading "Deze site is niet bereikbaar" [level=1]
+E       - paragraph:
+E         - strong: nu.nl
+E         - text: heeft de verbinding geweigerd.
+E       - paragraph: "Probeer dit eens:"
+E       - list:
+E         - listitem: Controleer de verbinding
+E         - listitem:
+E           - link "Controleer de proxy en firewall":
+E             - /url: "#buttons"
+E       - text: ERR_CONNECTION_REFUSED
+E       - button "Opnieuw laden"
+E       - button "Details"
+
+tests\test_browser_block_page.py:97: AssertionError
+_____________ test_a_blocked_site_shows_blockys_page[reddit.com] ______________
+
+browser = <BrowserContext browser=<Browser type=<BrowserType name=chromium executable_path=C:\Users\raymo\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe> version=153.0.8010.12>>
+site = 'reddit.com'
+
+    @pytest.mark.parametrize("site", SITES)
+    def test_a_blocked_site_shows_blockys_page(browser, site):
+        page = browser.new_page()
+        try:
+            page.goto(f"https://{site}/")
+        except sync_api.Error:
+            pass  # the extension replaces this navigation with the block page, or the connection is refused
+        # Polls the address: a refused connection may show the error page first, and the block page replaces it.
+>       sync_api.expect(page).to_have_url(f"http://blocky.localhost/{site}", timeout=10_000)
+E       AssertionError: Page URL expected to be 'http://blocky.localhost/reddit.com'
+E       Actual value: chrome-error://chromewebdata/ 
+E       Call log:
+E         - Expect "to_have_url" with timeout 10000ms
+E           23 × locator resolved to <html dir="ltr" lang="nl">…</html>
+E              - unexpected value "chrome-error://chromewebdata/"
+E       
+E       Aria snapshot:
+E       - heading "Deze site is niet bereikbaar" [level=1]
+E       - paragraph:
+E         - strong: reddit.com
+E         - text: heeft de verbinding geweigerd.
+E       - paragraph: "Probeer dit eens:"
+E       - list:
+E         - listitem: Controleer de verbinding
+E         - listitem:
+E           - link "Controleer de proxy en firewall":
+E             - /url: "#buttons"
+E       - text: ERR_CONNECTION_REFUSED
+E       - button "Opnieuw laden"
+E       - button "Details"
+
+tests\test_browser_block_page.py:97: AssertionError
+________________ test_a_blocked_site_shows_blockys_page[x.com] ________________
+
+browser = <BrowserContext browser=<Browser type=<BrowserType name=chromium executable_path=C:\Users\raymo\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe> version=153.0.8010.12>>
+site = 'x.com'
+
+    @pytest.mark.parametrize("site", SITES)
+    def test_a_blocked_site_shows_blockys_page(browser, site):
+        page = browser.new_page()
+        try:
+            page.goto(f"https://{site}/")
+        except sync_api.Error:
+            pass  # the extension replaces this navigation with the block page, or the connection is refused
+        # Polls the address: a refused connection may show the error page first, and the block page replaces it.
+>       sync_api.expect(page).to_have_url(f"http://blocky.localhost/{site}", timeout=10_000)
+E       AssertionError: Page URL expected to be 'http://blocky.localhost/x.com'
+E       Actual value: chrome-error://chromewebdata/ 
+E       Call log:
+E         - Expect "to_have_url" with timeout 10000ms
+E           23 × locator resolved to <html dir="ltr" lang="nl">…</html>
+E              - unexpected value "chrome-error://chromewebdata/"
+E       
+E       Aria snapshot:
+E       - heading "Deze site is niet bereikbaar" [level=1]
+E       - paragraph:
+E         - strong: x.com
+E         - text: heeft de verbinding geweigerd.
+E       - paragraph: "Probeer dit eens:"
+E       - list:
+E         - listitem: Controleer de verbinding
+E         - listitem:
+E           - link "Controleer de proxy en firewall":
+E             - /url: "#buttons"
+E       - text: ERR_CONNECTION_REFUSED
+E       - button "Opnieuw laden"
+E       - button "Details"
+
+tests\test_browser_block_page.py:97: AssertionError
+_____________ test_a_blocked_site_shows_blockys_page[youtube.com] _____________
+
+browser = <BrowserContext browser=<Browser type=<BrowserType name=chromium executable_path=C:\Users\raymo\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe> version=153.0.8010.12>>
+site = 'youtube.com'
+
+    @pytest.mark.parametrize("site", SITES)
+    def test_a_blocked_site_shows_blockys_page(browser, site):
+        page = browser.new_page()
+        try:
+            page.goto(f"https://{site}/")
+        except sync_api.Error:
+            pass  # the extension replaces this navigation with the block page, or the connection is refused
+        # Polls the address: a refused connection may show the error page first, and the block page replaces it.
+>       sync_api.expect(page).to_have_url(f"http://blocky.localhost/{site}", timeout=10_000)
+E       AssertionError: Page URL expected to be 'http://blocky.localhost/youtube.com'
+E       Actual value: chrome-error://chromewebdata/ 
+E       Call log:
+E         - Expect "to_have_url" with timeout 10000ms
+E           23 × locator resolved to <html dir="ltr" lang="nl">…</html>
+E              - unexpected value "chrome-error://chromewebdata/"
+E       
+E       Aria snapshot:
+E       - heading "Deze site is niet bereikbaar" [level=1]
+E       - paragraph:
+E         - strong: youtube.com
+E         - text: heeft de verbinding geweigerd.
+E       - paragraph: "Probeer dit eens:"
+E       - list:
+E         - listitem: Controleer de verbinding
+E         - listitem:
+E           - link "Controleer de proxy en firewall":
+E             - /url: "#buttons"
+E       - text: ERR_CONNECTION_REFUSED
+E       - button "Opnieuw laden"
+E       - button "Details"
+
+tests\test_browser_block_page.py:97: AssertionError
+______________ test_a_blocked_site_shows_blockys_page[chess.com] ______________
+
+browser = <BrowserContext browser=<Browser type=<BrowserType name=chromium executable_path=C:\Users\raymo\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe> version=153.0.8010.12>>
+site = 'chess.com'
+
+    @pytest.mark.parametrize("site", SITES)
+    def test_a_blocked_site_shows_blockys_page(browser, site):
+        page = browser.new_page()
+        try:
+            page.goto(f"https://{site}/")
+        except sync_api.Error:
+            pass  # the extension replaces this navigation with the block page, or the connection is refused
+        # Polls the address: a refused connection may show the error page first, and the block page replaces it.
+>       sync_api.expect(page).to_have_url(f"http://blocky.localhost/{site}", timeout=10_000)
+E       AssertionError: Page URL expected to be 'http://blocky.localhost/chess.com'
+E       Actual value: chrome-error://chromewebdata/ 
+E       Call log:
+E         - Expect "to_have_url" with timeout 10000ms
+E           23 × locator resolved to <html dir="ltr" lang="nl">…</html>
+E              - unexpected value "chrome-error://chromewebdata/"
+E       
+E       Aria snapshot:
+E       - heading "Deze site is niet bereikbaar" [level=1]
+E       - paragraph:
+E         - strong: chess.com
+E         - text: heeft de verbinding geweigerd.
+E       - paragraph: "Probeer dit eens:"
+E       - list:
+E         - listitem: Controleer de verbinding
+E         - listitem:
+E           - link "Controleer de proxy en firewall":
+E             - /url: "#buttons"
+E       - text: ERR_CONNECTION_REFUSED
+E       - button "Opnieuw laden"
+E       - button "Details"
+
+tests\test_browser_block_page.py:97: AssertionError
+_____________ test_a_blocked_site_shows_blockys_page[manners.nl] ______________
+
+browser = <BrowserContext browser=<Browser type=<BrowserType name=chromium executable_path=C:\Users\raymo\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe> version=153.0.8010.12>>
+site = 'manners.nl'
+
+    @pytest.mark.parametrize("site", SITES)
+    def test_a_blocked_site_shows_blockys_page(browser, site):
+        page = browser.new_page()
+        try:
+            page.goto(f"https://{site}/")
+        except sync_api.Error:
+            pass  # the extension replaces this navigation with the block page, or the connection is refused
+        # Polls the address: a refused connection may show the error page first, and the block page replaces it.
+>       sync_api.expect(page).to_have_url(f"http://blocky.localhost/{site}", timeout=10_000)
+E       AssertionError: Page URL expected to be 'http://blocky.localhost/manners.nl'
+E       Actual value: chrome-error://chromewebdata/ 
+E       Call log:
+E         - Expect "to_have_url" with timeout 10000ms
+E           23 × locator resolved to <html dir="ltr" lang="nl">…</html>
+E              - unexpected value "chrome-error://chromewebdata/"
+E       
+E       Aria snapshot:
+E       - heading "Deze site is niet bereikbaar" [level=1]
+E       - paragraph:
+E         - strong: manners.nl
+E         - text: heeft de verbinding geweigerd.
+E       - paragraph: "Probeer dit eens:"
+E       - list:
+E         - listitem: Controleer de verbinding
+E         - listitem:
+E           - link "Controleer de proxy en firewall":
+E             - /url: "#buttons"
+E       - text: ERR_CONNECTION_REFUSED
+E       - button "Opnieuw laden"
+E       - button "Details"
+
+tests\test_browser_block_page.py:97: AssertionError
+______________ test_a_blocked_site_shows_blockys_page[temu.com] _______________
+
+browser = <BrowserContext browser=<Browser type=<BrowserType name=chromium executable_path=C:\Users\raymo\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe> version=153.0.8010.12>>
+site = 'temu.com'
+
+    @pytest.mark.parametrize("site", SITES)
+    def test_a_blocked_site_shows_blockys_page(browser, site):
+        page = browser.new_page()
+        try:
+            page.goto(f"https://{site}/")
+        except sync_api.Error:
+            pass  # the extension replaces this navigation with the block page, or the connection is refused
+        # Polls the address: a refused connection may show the error page first, and the block page replaces it.
+>       sync_api.expect(page).to_have_url(f"http://blocky.localhost/{site}", timeout=10_000)
+E       AssertionError: Page URL expected to be 'http://blocky.localhost/temu.com'
+E       Actual value: chrome-error://chromewebdata/ 
+E       Call log:
+E         - Expect "to_have_url" with timeout 10000ms
+E           23 × locator resolved to <html dir="ltr" lang="nl">…</html>
+E              - unexpected value "chrome-error://chromewebdata/"
+E       
+E       Aria snapshot:
+E       - heading "Deze site is niet bereikbaar" [level=1]
+E       - paragraph:
+E         - strong: temu.com
+E         - text: heeft de verbinding geweigerd.
+E       - paragraph: "Probeer dit eens:"
+E       - list:
+E         - listitem: Controleer de verbinding
+E         - listitem:
+E           - link "Controleer de proxy en firewall":
+E             - /url: "#buttons"
+E       - text: ERR_CONNECTION_REFUSED
+E       - button "Opnieuw laden"
+E       - button "Details"
+
+tests\test_browser_block_page.py:97: AssertionError
+___________ test_a_blocked_site_shows_blockys_page[hardverapro.hu] ____________
+
+browser = <BrowserContext browser=<Browser type=<BrowserType name=chromium executable_path=C:\Users\raymo\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe> version=153.0.8010.12>>
+site = 'hardverapro.hu'
+
+    @pytest.mark.parametrize("site", SITES)
+    def test_a_blocked_site_shows_blockys_page(browser, site):
+        page = browser.new_page()
+        try:
+            page.goto(f"https://{site}/")
+        except sync_api.Error:
+            pass  # the extension replaces this navigation with the block page, or the connection is refused
+        # Polls the address: a refused connection may show the error page first, and the block page replaces it.
+>       sync_api.expect(page).to_have_url(f"http://blocky.localhost/{site}", timeout=10_000)
+E       AssertionError: Page URL expected to be 'http://blocky.localhost/hardverapro.hu'
+E       Actual value: chrome-error://chromewebdata/ 
+E       Call log:
+E         - Expect "to_have_url" with timeout 10000ms
+E           23 × locator resolved to <html dir="ltr" lang="nl">…</html>
+E              - unexpected value "chrome-error://chromewebdata/"
+E       
+E       Aria snapshot:
+E       - heading "Deze site is niet bereikbaar" [level=1]
+E       - paragraph:
+E         - strong: hardverapro.hu
+E         - text: heeft de verbinding geweigerd.
+E       - paragraph: "Probeer dit eens:"
+E       - list:
+E         - listitem: Controleer de verbinding
+E         - listitem:
+E           - link "Controleer de proxy en firewall":
+E             - /url: "#buttons"
+E       - text: ERR_CONNECTION_REFUSED
+E       - button "Opnieuw laden"
+E       - button "Details"
+
+tests\test_browser_block_page.py:97: AssertionError
+____________ test_a_blocked_site_shows_blockys_page[linkedin.com] _____________
+
+browser = <BrowserContext browser=<Browser type=<BrowserType name=chromium executable_path=C:\Users\raymo\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe> version=153.0.8010.12>>
+site = 'linkedin.com'
+
+    @pytest.mark.parametrize("site", SITES)
+    def test_a_blocked_site_shows_blockys_page(browser, site):
+        page = browser.new_page()
+        try:
+            page.goto(f"https://{site}/")
+        except sync_api.Error:
+            pass  # the extension replaces this navigation with the block page, or the connection is refused
+        # Polls the address: a refused connection may show the error page first, and the block page replaces it.
+>       sync_api.expect(page).to_have_url(f"http://blocky.localhost/{site}", timeout=10_000)
+E       AssertionError: Page URL expected to be 'http://blocky.localhost/linkedin.com'
+E       Actual value: chrome-error://chromewebdata/ 
+E       Call log:
+E         - Expect "to_have_url" with timeout 10000ms
+E           23 × locator resolved to <html dir="ltr" lang="nl">…</html>
+E              - unexpected value "chrome-error://chromewebdata/"
+E       
+E       Aria snapshot:
+E       - heading "Deze site is niet bereikbaar" [level=1]
+E       - paragraph:
+E         - strong: linkedin.com
+E         - text: heeft de verbinding geweigerd.
+E       - paragraph: "Probeer dit eens:"
+E       - list:
+E         - listitem: Controleer de verbinding
+E         - listitem:
+E           - link "Controleer de proxy en firewall":
+E             - /url: "#buttons"
+E       - text: ERR_CONNECTION_REFUSED
+E       - button "Opnieuw laden"
+E       - button "Details"
+
+tests\test_browser_block_page.py:97: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_browser_block_page.py::test_a_blocked_site_shows_blockys_page[nos.nl]
+FAILED tests/test_browser_block_page.py::test_a_blocked_site_shows_blockys_page[nu.nl]
+FAILED tests/test_browser_block_page.py::test_a_blocked_site_shows_blockys_page[reddit.com]
+FAILED tests/test_browser_block_page.py::test_a_blocked_site_shows_blockys_page[x.com]
+FAILED tests/test_browser_block_page.py::test_a_blocked_site_shows_blockys_page[youtube.com]
+FAILED tests/test_browser_block_page.py::test_a_blocked_site_shows_blockys_page[chess.com]
+FAILED tests/test_browser_block_page.py::test_a_blocked_site_shows_blockys_page[manners.nl]
+FAILED tests/test_browser_block_page.py::test_a_blocked_site_shows_blockys_page[temu.com]
+FAILED tests/test_browser_block_page.py::test_a_blocked_site_shows_blockys_page[hardverapro.hu]
+FAILED tests/test_browser_block_page.py::test_a_blocked_site_shows_blockys_page[linkedin.com]
+10 failed in 158.55s (0:02:38)
